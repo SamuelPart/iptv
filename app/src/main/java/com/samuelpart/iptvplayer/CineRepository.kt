@@ -1,0 +1,511 @@
+package com.samuelpart.iptvplayer
+
+import android.content.Context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
+
+object CineRepository {
+    const val TMDB_API_KEY = "9decd750b7484d309d1ad88b5239ef93"
+
+    private var cachedCatalog: List<CineMedia>? = null
+
+    fun isRemotePlaylist(url: String): Boolean {
+        val lower = url.lowercase()
+        return lower.endsWith(".m3u") || lower.contains(".m3u?") || lower.contains("raw.githubusercontent.com") || lower.contains("archive.org/download") || lower.contains("github.com") || lower.endsWith(".txt") || lower.contains(".txt?")
+    }
+
+    suspend fun getCineCatalog(context: Context): List<CineMedia> = withContext(Dispatchers.IO) {
+        if (cachedCatalog != null) return@withContext cachedCatalog!!
+
+        val movies = mutableListOf<CineMedia>()
+        val episodes = mutableListOf<ParsedEpisode>()
+        val tvShows = mutableListOf<CineMedia>()
+
+        // 1. Read from res/raw/cine_catalog.m3u local resource first!
+        try {
+            val inputStream = context.resources.openRawResource(R.raw.cine_catalog)
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            parseM3uStream(reader, movies, episodes, tvShows)
+            reader.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // 2. Asynchronously fetch and parse the remote Bflix list from GitHub in real-time,
+        // and seamlessly merge all of its individual movies & series directly into the main lists!
+        val remoteUrl = "https://raw.githubusercontent.com/BrianRVP/Bflix34567/main/lista%20iptv%20de%20peliculas.txt"
+        try {
+            val url = java.net.URL(remoteUrl)
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 5000
+            conn.readTimeout = 5000
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            if (conn.responseCode == 200) {
+                val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                parseM3uStream(reader, movies, episodes, tvShows)
+                reader.close()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // Group episodes by TV show
+        val episodesByShow = episodes.groupBy {
+            val grp = it.group.lowercase()
+            when {
+                grp.contains("lucifer") -> "Lucifer"
+                grp.contains("vikings") -> "Vikings"
+                else -> it.group.split("Temporada")[0].trim()
+            }
+        }
+
+        for ((showName, showEpisodes) in episodesByShow) {
+            val showLogo = showEpisodes.firstOrNull()?.rawLogo ?: ""
+            val mappedEpisodes = showEpisodes.map { ep ->
+                val seasonNum = extractSeasonNumber(ep.group)
+                val epNum = extractEpisodeNumber(ep.title)
+                Episode(
+                    title = ep.title,
+                    url = ep.url,
+                    rawLogo = ep.rawLogo,
+                    season = seasonNum,
+                    episodeNumber = epNum
+                )
+            }.sortedWith(compareBy<Episode> { it.season }.thenBy { it.episodeNumber })
+
+            tvShows.add(
+                CineMedia(
+                    title = showName,
+                    searchTitle = showName,
+                    url = "",
+                    rawLogo = showLogo,
+                    type = "series",
+                    group = "Series",
+                    episodes = mappedEpisodes
+                )
+            )
+        }
+
+        // Group duplicates into alternate servers!
+        val groupedMovies = movies.groupBy { it.searchTitle.lowercase().trim() }
+        val uniqueMovies = mutableListOf<CineMedia>()
+
+        for ((_, movieGroup) in groupedMovies) {
+            val first = movieGroup.first()
+            val allUrls = movieGroup.map { it.url }.distinct()
+            
+            val uniqueMovie = CineMedia(
+                title = first.title,
+                searchTitle = first.searchTitle,
+                url = first.url,
+                rawLogo = first.rawLogo,
+                type = "movie",
+                group = first.group,
+                urls = ArrayList(allUrls)
+            )
+            uniqueMovies.add(uniqueMovie)
+        }
+
+        val fullCatalog = uniqueMovies + tvShows
+
+        cachedCatalog = fullCatalog
+
+        // Start non-blocking background pre-fetching for TMDb metadata/images
+        launchBackgroundPrefetch(fullCatalog)
+
+        return@withContext fullCatalog
+    }
+
+    private fun parseM3uStream(
+        reader: BufferedReader,
+        movies: MutableList<CineMedia>,
+        episodes: MutableList<ParsedEpisode>,
+        tvShows: MutableList<CineMedia>
+    ) {
+        var line: String?
+        var currentName = ""
+        var currentLogo = ""
+        var currentGroup = ""
+        var hasMetadata = false
+
+        while (reader.readLine().also { line = it } != null) {
+            val trimmed = line!!.trim()
+            if (trimmed.isEmpty() || trimmed.startsWith("#EXTM3U")) continue
+            if (trimmed.startsWith("++***")) continue
+            
+            if (trimmed.startsWith("#EXTINF:")) {
+                currentLogo = parseAttribute(trimmed, "tvg-logo") ?: parseAttribute(trimmed, "logo") ?: ""
+                currentGroup = parseAttribute(trimmed, "group-title") ?: ""
+                
+                val commaIndex = trimmed.lastIndexOf(',')
+                if (commaIndex != -1 && commaIndex < trimmed.length - 1) {
+                    val contentPart = trimmed.substring(commaIndex + 1).trim()
+                    
+                    // Check if it's the inline format
+                    val inlineParts = contentPart.split("++").filter { it.trim().isNotEmpty() }
+                    if (inlineParts.size >= 2) {
+                        val name = inlineParts[0].trim()
+                        val url = inlineParts[1].trim()
+                        
+                        val isSeries = currentGroup.lowercase().contains("temporada") || 
+                                       name.lowercase().contains("episodio") || 
+                                       isRemotePlaylist(url)
+                        
+                        if (isSeries) {
+                            if (isRemotePlaylist(url)) {
+                                tvShows.add(
+                                    CineMedia(
+                                        title = name,
+                                        searchTitle = cleanMediaTitle(name),
+                                        url = url,
+                                        rawLogo = currentLogo,
+                                        type = "series",
+                                        group = "Series"
+                                    )
+                                )
+                            } else {
+                                episodes.add(ParsedEpisode(name, url, currentLogo, currentGroup))
+                            }
+                        } else {
+                            movies.add(CineMedia(name, cleanMediaTitle(name), url, currentLogo, "movie", currentGroup))
+                        }
+                        hasMetadata = false
+                    } else {
+                        currentName = contentPart
+                        hasMetadata = true
+                    }
+                }
+            } else if (!trimmed.startsWith("#") && hasMetadata) {
+                val url = trimmed
+                val isSeries = currentGroup.lowercase().contains("temporada") || 
+                               currentName.lowercase().contains("episodio") || 
+                               isRemotePlaylist(url)
+                               
+                if (isSeries) {
+                    if (isRemotePlaylist(url)) {
+                        tvShows.add(
+                            CineMedia(
+                                title = currentName,
+                                searchTitle = cleanMediaTitle(currentName),
+                                url = url,
+                                rawLogo = currentLogo,
+                                type = "series",
+                                group = "Series"
+                            )
+                        )
+                    } else {
+                        episodes.add(ParsedEpisode(currentName, url, currentLogo, currentGroup))
+                    }
+                } else {
+                    movies.add(CineMedia(currentName, cleanMediaTitle(currentName), url, currentLogo, "movie", currentGroup))
+                }
+                hasMetadata = false
+            }
+        }
+    }
+
+    private fun launchBackgroundPrefetch(catalog: List<CineMedia>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            for (media in catalog) {
+                try {
+                    if (media.tmdbId == null) {
+                        fetchTmdMetadata(media)
+                        if (media.tmdbId != null) {
+                            fetchTmdTrailer(media)
+                        }
+                        // Sleep for 50ms between requests to avoid rate limits
+                        kotlinx.coroutines.delay(50)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun parseAttribute(line: String, attributeName: String): String? {
+        val patterns = listOf(
+            Regex("""$attributeName\s*=\s*"([^"]*)""""),
+            Regex("""$attributeName\s*=\s*'([^']*)'""")
+        )
+        for (pattern in patterns) {
+            val match = pattern.find(line)
+            if (match != null && match.groupValues.size > 1) {
+                return match.groupValues[1]
+            }
+        }
+        return null
+    }
+
+    private fun extractSeasonNumber(group: String): Int {
+        val regex = Regex("""Temporada\s*(\d+)""", RegexOption.IGNORE_CASE)
+        val match = regex.find(group)
+        return match?.groupValues?.get(1)?.toIntOrNull() ?: 1
+    }
+
+    private fun extractEpisodeNumber(title: String): Int {
+        val regex = Regex("""Episodio\s*(\d+)""", RegexOption.IGNORE_CASE)
+        val match = regex.find(title)
+        return match?.groupValues?.get(1)?.toIntOrNull() ?: 1
+    }
+
+    fun extractSeasonFromTitle(title: String): Int {
+        val sPattern = Regex("""S\s*(\d+)""", RegexOption.IGNORE_CASE)
+        sPattern.find(title)?.let { return it.groupValues[1].toInt() }
+        
+        val xPattern = Regex("""(\d+)\s*[xX]\s*\d+""")
+        xPattern.find(title)?.let { return it.groupValues[1].toInt() }
+        
+        val tempPattern = Regex("""Temp(?:orada)?\s*(\d+)""", RegexOption.IGNORE_CASE)
+        tempPattern.find(title)?.let { return it.groupValues[1].toInt() }
+        
+        return 1
+    }
+
+    fun extractEpisodeFromTitle(title: String, defaultNum: Int): Int {
+        val ePattern = Regex("""E\s*P?(?:isodio)?\s*(\d+)""", RegexOption.IGNORE_CASE)
+        ePattern.find(title)?.let { return it.groupValues[1].toInt() }
+        
+        val xPattern = Regex("""\d+\s*[xX]\s*(\d+)""")
+        xPattern.find(title)?.let { return it.groupValues[1].toInt() }
+        
+        val capPattern = Regex("""Cap(?:itulo)?\s*(\d+)""", RegexOption.IGNORE_CASE)
+        capPattern.find(title)?.let { return it.groupValues[1].toInt() }
+        
+        val numPattern = Regex("""\b(\d+)\s*$""")
+        numPattern.find(title)?.let { return it.groupValues[1].toInt() }
+        
+        return defaultNum
+    }
+
+    private fun cleanMediaTitle(title: String): String {
+        return title.replace(Regex("""\s+LEG\s*$""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""\s+DUB\s*$""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""–\s+A Vingança de Salazar""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex(""":\s+O Círculo Dourado""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""\s+PRO\s*$""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""\s+\(20\d\d\)\s*$"""), "")
+            .trim()
+    }
+
+    fun fetchTmdMetadata(media: CineMedia) {
+        try {
+            val searchType = if (media.type == "movie") "movie" else "tv"
+            val query = URLEncoder.encode(media.searchTitle, "UTF-8")
+            val urlString = "https://api.themoviedb.org/3/search/$searchType?api_key=$TMDB_API_KEY&query=$query&language=es"
+            
+            val url = URL(urlString)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 4000
+            conn.readTimeout = 4000
+            if (conn.responseCode == 200) {
+                val jsonStr = conn.inputStream.bufferedReader().use { it.readText() }
+                val response = JSONObject(jsonStr)
+                val results = response.optJSONArray("results")
+                if (results != null && results.length() > 0) {
+                    val firstResult = results.getJSONObject(0)
+                    media.tmdbId = firstResult.optInt("id")
+                    media.overview = firstResult.optString("overview")
+                    
+                    val posterPath = firstResult.optString("poster_path")
+                    if (!posterPath.isNullOrEmpty() && posterPath != "null") {
+                        media.posterUrl = "https://image.tmdb.org/t/p/w500$posterPath"
+                    } else {
+                        media.posterUrl = media.rawLogo
+                    }
+                    
+                    val backdropPath = firstResult.optString("backdrop_path")
+                    if (!backdropPath.isNullOrEmpty() && backdropPath != "null") {
+                        media.backdropUrl = "https://image.tmdb.org/t/p/w780$backdropPath"
+                    } else {
+                        media.backdropUrl = media.rawLogo
+                    }
+                    
+                    media.rating = firstResult.optDouble("vote_average", 0.0)
+                    media.releaseDate = firstResult.optString("release_date", "") 
+                        if (media.releaseDate.isNullOrEmpty()) media.releaseDate = firstResult.optString("first_air_date", "")
+                }
+            } else {
+                media.posterUrl = media.rawLogo
+                media.backdropUrl = media.rawLogo
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            media.posterUrl = media.rawLogo
+            media.backdropUrl = media.rawLogo
+        }
+    }
+
+    fun fetchTmdTrailer(media: CineMedia) {
+        val tmdbId = media.tmdbId ?: return
+        try {
+            val typeStr = if (media.type == "movie") "movie" else "tv"
+            var urlString = "https://api.themoviedb.org/3/$typeStr/$tmdbId/videos?api_key=$TMDB_API_KEY&language=es"
+            var key = getTrailerKeyFromJson(urlString)
+            
+            if (key == null) {
+                urlString = "https://api.themoviedb.org/3/$typeStr/$tmdbId/videos?api_key=$TMDB_API_KEY"
+                key = getTrailerKeyFromJson(urlString)
+            }
+            
+            if (key != null) {
+                media.trailerUrl = "https://www.youtube.com/watch?v=$key"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun fetchTmdCredits(media: CineMedia) {
+        val tmdbId = media.tmdbId ?: return
+        try {
+            val typeStr = if (media.type == "movie") "movie" else "tv"
+            val urlString = "https://api.themoviedb.org/3/$typeStr/$tmdbId/credits?api_key=$TMDB_API_KEY&language=es"
+            
+            val url = URL(urlString)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 4000
+            conn.readTimeout = 4000
+            if (conn.responseCode == 200) {
+                val jsonStr = conn.inputStream.bufferedReader().use { it.readText() }
+                val response = JSONObject(jsonStr)
+                val castArray = response.optJSONArray("cast")
+                if (castArray != null && castArray.length() > 0) {
+                    val castList = mutableListOf<CastMember>()
+                    val maxMembers = minOf(castArray.length(), 6) // Get top 6 cast members
+                    for (i in 0 until maxMembers) {
+                        val member = castArray.getJSONObject(i)
+                        val name = member.optString("name", "")
+                        val character = member.optString("character", "")
+                        val profilePath = member.optString("profile_path")
+                        val profileUrl = if (!profilePath.isNullOrEmpty() && profilePath != "null") {
+                            "https://image.tmdb.org/t/p/w185$profilePath"
+                        } else {
+                            null
+                        }
+                        castList.add(CastMember(name, character, profileUrl))
+                    }
+                    media.cast = castList
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun getTrailerKeyFromJson(urlString: String): String? {
+        try {
+            val url = URL(urlString)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 3000
+            conn.readTimeout = 3000
+            if (conn.responseCode == 200) {
+                val jsonStr = conn.inputStream.bufferedReader().use { it.readText() }
+                val response = JSONObject(jsonStr)
+                val results = response.optJSONArray("results")
+                if (results != null && results.length() > 0) {
+                    var fallbackKey: String? = null
+                    for (i in 0 until results.length()) {
+                        val video = results.getJSONObject(i)
+                        val site = video.optString("site", "")
+                        val type = video.optString("type", "")
+                        val key = video.optString("key", "")
+                        
+                        if (site.lowercase() == "youtube" && key.isNotEmpty()) {
+                            if (type.lowercase() == "trailer") {
+                                return key
+                            }
+                            fallbackKey = key
+                        }
+                    }
+                    return fallbackKey
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    suspend fun fetchEpisodesFromPlaylist(playlistUrl: String): List<Episode> = withContext(Dispatchers.IO) {
+        val list = mutableListOf<Episode>()
+        try {
+            val url = URL(playlistUrl)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 8000
+            conn.readTimeout = 8000
+            if (conn.responseCode == 200) {
+                val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                var line: String?
+                var currentTitle = ""
+                var currentLogo = ""
+                var hasMetadata = false
+                
+                var count = 1
+                while (reader.readLine().also { line = it } != null) {
+                    val trimmed = line!!.trim()
+                    if (trimmed.isEmpty() || trimmed.startsWith("#EXTM3U")) continue
+                    
+                    if (trimmed.startsWith("#EXTINF:")) {
+                        currentLogo = parseAttribute(trimmed, "tvg-logo") ?: parseAttribute(trimmed, "logo") ?: ""
+                        val commaIndex = trimmed.lastIndexOf(',')
+                        if (commaIndex != -1 && commaIndex < trimmed.length - 1) {
+                            currentTitle = trimmed.substring(commaIndex + 1).trim()
+                            hasMetadata = true
+                        }
+                    } else if (!trimmed.startsWith("#") && hasMetadata) {
+                        val videoUrl = trimmed
+                        val season = extractSeasonFromTitle(currentTitle)
+                        val epNum = extractEpisodeFromTitle(currentTitle, count)
+                        list.add(
+                            Episode(
+                                title = currentTitle,
+                                url = videoUrl,
+                                rawLogo = currentLogo,
+                                season = season,
+                                episodeNumber = epNum
+                            )
+                        )
+                        count++
+                        hasMetadata = false
+                    }
+                }
+                reader.close()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return@withContext list
+    }
+
+    suspend fun fetchUrlsFromPlaylist(playlistUrl: String): List<String> = withContext(Dispatchers.IO) {
+        val list = mutableListOf<String>()
+        try {
+            val url = URL(playlistUrl)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 8000
+            conn.readTimeout = 8000
+            if (conn.responseCode == 200) {
+                val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    val trimmed = line!!.trim()
+                    if (trimmed.isEmpty() || trimmed.startsWith("#")) continue
+                    list.add(trimmed)
+                }
+                reader.close()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return@withContext list
+    }
+}

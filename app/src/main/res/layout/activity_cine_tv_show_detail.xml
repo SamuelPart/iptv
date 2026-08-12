@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <!-- Large Cinematic Backdrop Header with smooth bottom fade and integrated inline player -->
+    <FrameLayout
+        android:id="@+id/layoutBackdropHeaderContainer"
+        android:layout_width="match_parent"
+        android:layout_height="380dp">
+
+        <ImageView
+            android:id="@+id/imgTvBackdrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="Backdrop" />
+
+        <!-- Smooth vertical gradient fading to solid dark background at the bottom -->
+        <View
+            android:id="@+id/viewBackdropFade"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_backdrop_fade" />
+
+        <!-- Inline VLC Video Player Layout (Hidden by default) -->
+        <FrameLayout
+            android:id="@+id/layoutInlinePlayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#000000"
+            android:visibility="gone">
+
+            <!-- LibVLC Video Surface View -->
+            <org.videolan.libvlc.util.VLCVideoLayout
+                android:id="@+id/inlineVlcVideoLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <!-- Left Double Tap Indicator Overlay -->
+            <ImageView
+                android:id="@+id/imgDoubleTapLeft"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_ten_seconds_skip"
+                android:rotation="180"
+                android:padding="10dp"
+                android:visibility="gone"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="30dp"
+                app:tint="#FFFFFF" />
+
+            <!-- Right Double Tap Indicator Overlay -->
+            <ImageView
+                android:id="@+id/imgDoubleTapRight"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_ten_seconds_skip"
+                android:padding="10dp"
+                android:visibility="gone"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="30dp"
+                app:tint="#FFFFFF" />
+
+            <!-- Custom Overlay Controls for Inline Player (All at the bottom!) -->
+            <RelativeLayout
+                android:id="@+id/layoutInlineControls"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#44000000">
+
+                <!-- Center loading progress indicator -->
+                <ProgressBar
+                    android:id="@+id/inlineProgress"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerInParent="true"
+                    android:indeterminateTint="#FF9800"
+                    android:visibility="gone" />
+
+                <!-- Bottom Glassmorphic Controls Bar -->
+                <LinearLayout
+                    android:id="@+id/layoutInlineBottomBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="vertical"
+                    android:background="#DD0F121F"
+                    android:paddingVertical="8dp"
+                    android:paddingHorizontal="12dp">
+
+                    <!-- Modern Seekbar Timeline with current and remaining time labels -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:id="@+id/txtInlineCurrentTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="00:00"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="10sp" />
+
+                        <!-- SeekBar timeline -->
+                        <SeekBar
+                            android:id="@+id/inlineSeekBar"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:progressTint="#FF9800"
+                            android:thumbTint="#FF9800"
+                            android:paddingHorizontal="4dp" />
+
+                        <TextView
+                            android:id="@+id/txtInlineTotalTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="00:00"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="10sp" />
+
+                    </LinearLayout>
+
+                    <!-- Buttons Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- Play/Pause -->
+                        <ImageButton
+                            android:id="@+id/btnInlinePlayPause"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:padding="4dp"
+                            android:scaleType="fitCenter"
+                            android:background="?android:attr/selectableItemBackgroundBorderless"
+                            android:src="@android:drawable/ic_media_pause"
+                            app:tint="#FF9800"
+                            android:contentDescription="Reproducir/Pausar" />
+
+                        <!-- Servers button -->
+                        <Button
+                            android:id="@+id/btnInlineServers"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="26dp"
+                            android:layout_marginStart="8dp"
+                            android:backgroundTint="#2E2E2E"
+                            android:text="Servidores"
+                            android:textColor="#FFFFFF"
+                            android:textSize="8sp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp"
+                            android:textStyle="bold" />
+
+                        <!-- Spacer in the middle -->
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1" />
+
+                        <!-- Fullscreen Maximizer Button -->
+                        <ImageButton
+                            android:id="@+id/btnInlineFullscreen"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:padding="4dp"
+                            android:scaleType="fitCenter"
+                            android:layout_marginEnd="8dp"
+                            android:background="?android:attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_maximize_video"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Maximizar" />
+
+                        <!-- Close Button (Using ic_close_video) -->
+                        <ImageButton
+                            android:id="@+id/btnInlineClose"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:padding="4dp"
+                            android:scaleType="fitCenter"
+                            android:background="?android:attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_close_video"
+                            android:contentDescription="Cerrar Video" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+        </FrameLayout>
+
+    </FrameLayout>
+
+    <!-- Top Header Back Button -->
+    <ImageButton
+        android:id="@+id/btnTvBack"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_margin="16dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_back_chevron"
+        app:tint="#FFFFFF"
+        android:elevation="10dp" />
+
+    <!-- Main scrollable layout -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Spacer view to let the top portrait image be visible -->
+            <View
+                android:id="@+id/viewSpaceHeader"
+                android:layout_width="match_parent"
+                android:layout_height="280dp"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- The Large Curved Details Card (Top-only rounded corners) -->
+            <LinearLayout
+                android:id="@+id/layoutTvDetailCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="32dp"
+                android:paddingHorizontal="20dp"
+                android:paddingBottom="40dp"
+                android:elevation="6dp"
+                app:layout_constraintTop_toBottomOf="@id/viewSpaceHeader"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <!-- Title (White, bold, centered, uppercase) -->
+                <TextView
+                    android:id="@+id/txtTvTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="TITLE"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="true" />
+
+                <!-- Subtitle Meta (Rating, Type) -->
+                <TextView
+                    android:id="@+id/txtTvMeta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="★ 8.2  |  Serie de TV"
+                    android:textColor="#888888"
+                    android:textSize="12sp" />
+
+                <!-- Yellow glowing stars row -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@android:drawable/btn_star_big_on"
+                        app:tint="#FF9800" />
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@android:drawable/btn_star_big_on"
+                        app:tint="#FF9800" />
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@android:drawable/btn_star_big_on"
+                        app:tint="#FF9800" />
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@android:drawable/btn_star_big_on"
+                        app:tint="#FF9800" />
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@android:drawable/btn_star_big_off"
+                        app:tint="#444444" />
+
+                </LinearLayout>
+
+                <!-- Genre & Tech Badges (Rounded pill chips) -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#2E2E2E"
+                        android:text="Drama"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#2E2E2E"
+                        android:text="Sci-Fi"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#2E2E2E"
+                        android:text="VLC Engine"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp" />
+
+                </LinearLayout>
+
+                <!-- Action buttons (Play, Trailer & Share) -->
+                <LinearLayout
+                    android:id="@+id/layoutActionButtons"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnTvPlay"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1.2"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:text="▶  REPRODUCIR"
+                        android:textColor="#000000"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnTvTrailer"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginHorizontal="4dp"
+                        android:background="@drawable/bg_button_secondary"
+                        android:text="🎬  TRÁILER"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnTvShare"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/bg_button_secondary"
+                        android:text="🔗  COMPARTIR"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- Synopsis Header & Text -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="Sinopsis Oficial"
+                    android:textColor="#FF9800"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/txtTvOverview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingMultiplier="1.3"
+                    android:text="Cargando sinopsis de la serie..."
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+
+                <!-- Cast and Crew Section -->
+                <LinearLayout
+                    android:id="@+id/layoutCastSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reparto / Cast &amp; Crew"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvCast"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+
+                </LinearLayout>
+
+                <!-- Episodes List Section -->
+                <LinearLayout
+                    android:id="@+id/layoutEpisodesSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="vertical">
+
+                    <!-- Seasons Spinner Selection panel -->
+                    <LinearLayout
+                        android:id="@+id/layoutEpisodesHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Lista de Capítulos"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <!-- Custom styled Season Spinner -->
+                        <Spinner
+                            android:id="@+id/spinnerSeason"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:background="@android:drawable/btn_dropdown"
+                            android:backgroundTint="#FF9800"
+                            android:textColor="#FFFFFF" />
+
+                    </LinearLayout>
+
+                    <!-- Episodes List RecyclerView -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvEpisodes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@layout/item_cine_episode" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
