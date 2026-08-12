@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Internet Permission is essential to load playlists and play streams -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <application
+        android:name=".IPTVApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/app_logo"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/app_logo"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.IPTVPlayer"
+        android:usesCleartextTraffic="true">
+
+        <!-- Main Activity: Shows grid of channels and IPTV link loader -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Player Activity: Built-in ExoPlayer stream viewer -->
+        <activity
+            android:name=".PlayerActivity"
+            android:exported="false"
+            android:supportsPictureInPicture="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:screenOrientation="landscape" />
+
+        <!-- Movie Details Activity -->
+        <activity
+            android:name=".CineMovieDetailActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- TV Show Details Activity -->
+        <activity
+            android:name=".CineTvShowDetailActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Google Cast Options Provider for Native Chromecast Support -->
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_FACTORY_CLASS"
+            android:value="com.samuelpart.iptvplayer.CastOptionsProvider" />
+
+        <!-- Google AdMob Application ID (Production ID) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-8124327134735952~1842510333" />
+
+        <!-- FileProvider for secure movie/series card sharing -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.samuelpart.iptvplayer.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+
+</manifest>
