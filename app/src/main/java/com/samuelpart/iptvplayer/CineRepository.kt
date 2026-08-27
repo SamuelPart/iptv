@@ -32,7 +32,20 @@ object CineRepository {
 
     private var cachedCatalog: List<CineMedia>? = null
 
+    /** Direct video files must NEVER be treated as playlists/series. */
+    private val DIRECT_VIDEO_EXTENSIONS = listOf(
+        ".mp4", ".mkv", ".webm", ".m3u8", ".mpd", ".mov",
+        ".avi", ".ts", ".flv", ".wmv", ".mpg", ".mpeg", ".m4v"
+    )
+
+    fun looksLikeDirectVideo(url: String): Boolean {
+        val lower = url.lowercase().substringBefore('?').substringBefore('#')
+        return DIRECT_VIDEO_EXTENSIONS.any { lower.endsWith(it) }
+    }
+
     fun isRemotePlaylist(url: String): Boolean {
+        // A direct .mp4/.mkv on archive.org or GitHub is a MOVIE, not a playlist
+        if (looksLikeDirectVideo(url)) return false
         val lower = url.lowercase()
         return lower.endsWith(".m3u") || lower.contains(".m3u?") || lower.contains("raw.githubusercontent.com") || lower.contains("archive.org/download") || lower.contains("github.com") || lower.endsWith(".txt") || lower.contains(".txt?")
     }
