@@ -319,15 +319,14 @@ object CineRepository {
 
     private fun launchBackgroundPrefetch(catalog: List<CineMedia>) {
         CoroutineScope(Dispatchers.IO).launch {
-            for (media in catalog) {
+            // Only warm the first screens worth of posters: TMDB allows ~40 req/10s,
+            // detail screens fetch their own data on demand, and hammering 9k titles
+            // gets the API key rate-limited (which used to blank out everything).
+            for (media in catalog.take(150)) {
                 try {
                     if (media.tmdbId == null) {
                         fetchTmdMetadata(media)
-                        if (media.tmdbId != null) {
-                            fetchTmdTrailer(media)
-                        }
-                        // Sleep for 50ms between requests to avoid rate limits
-                        kotlinx.coroutines.delay(50)
+                        kotlinx.coroutines.delay(100)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -401,43 +400,103 @@ object CineRepository {
             .trim()
     }
 
-    fun fetchTmdMetadata(media: CineMedia) {
+    private val YEAR_IN_TITLE = Regex("""\b(19\d{2}|20\d{2})\b""")
+
+    /** One TMDB search round. Returns the results array, or null if empty/failed. */
+    private fun tmdbSearch(typePath: String, query: String, language: String): org.json.JSONArray? {
+        var conn: HttpURLConnection? = null
         try {
-            val searchType = if (media.type == "movie") "movie" else "tv"
-            val query = URLEncoder.encode(media.searchTitle, "UTF-8")
-            val urlString = "https://api.themoviedb.org/3/search/$searchType?api_key=$TMDB_API_KEY&query=$query&language=es"
-            
-            val url = URL(urlString)
-            val conn = url.openConnection() as HttpURLConnection
-            conn.connectTimeout = 4000
-            conn.readTimeout = 4000
+            val encQ = URLEncoder.encode(query, "UTF-8")
+            val urlString = "https://api.themoviedb.org/3/search/$typePath?api_key=$TMDB_API_KEY&query=$encQ&language=$language"
+            conn = URL(urlString).openConnection() as HttpURLConnection
+            conn.connectTimeout = 6000
+            conn.readTimeout = 6000
             if (conn.responseCode == 200) {
                 val jsonStr = conn.inputStream.bufferedReader().use { it.readText() }
-                val response = JSONObject(jsonStr)
-                val results = response.optJSONArray("results")
-                if (results != null && results.length() > 0) {
-                    val firstResult = results.getJSONObject(0)
-                    media.tmdbId = firstResult.optInt("id")
-                    media.overview = firstResult.optString("overview")
-                    
-                    val posterPath = firstResult.optString("poster_path")
-                    if (!posterPath.isNullOrEmpty() && posterPath != "null") {
-                        media.posterUrl = "https://image.tmdb.org/t/p/w500$posterPath"
-                    } else {
-                        media.posterUrl = media.rawLogo
+                val arr = JSONObject(jsonStr).optJSONArray("results")
+                if (arr != null && arr.length() > 0) return arr
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            try { conn?.disconnect() } catch (_: Exception) {}
+        }
+        return null
+    }
+
+    /** Among the top results, prefer the one whose release year matches the title's year
+     *  (protects against remakes: "Paprika (1991)" must not load the 2006 anime). */
+    private fun pickBestResult(results: org.json.JSONArray, year: String?): JSONObject {
+        if (year != null) {
+            val limit = minOf(results.length(), 6)
+            for (i in 0 until limit) {
+                val r = results.getJSONObject(i)
+                val date = r.optString("release_date", "").ifEmpty { r.optString("first_air_date", "") }
+                if (date.startsWith(year)) return r
+            }
+        }
+        return results.getJSONObject(0)
+    }
+
+    fun fetchTmdMetadata(media: CineMedia) {
+        try {
+            val typePath = if (media.type == "movie") "movie" else "tv"
+            val year = YEAR_IN_TITLE.find(media.title)?.groupValues?.getOrNull(1)
+            val base = media.searchTitle.trim()
+            // Simplified variant: before ":", without "(...)" groups
+            val simplified = base.substringBefore(':')
+                .replace(Regex("""\([^()]*\)"""), "")
+                .trim()
+                .ifEmpty { base }
+
+            // Fallback chain verified against the real API:
+            // es title -> en title -> simplified es -> simplified en
+            var usedLanguage = "es"
+            var results = tmdbSearch(typePath, base, "es")
+            if (results == null) {
+                usedLanguage = "en-US"
+                results = tmdbSearch(typePath, base, usedLanguage)
+            }
+            if (results == null && simplified != base) {
+                usedLanguage = "es"
+                results = tmdbSearch(typePath, simplified, usedLanguage)
+            }
+            if (results == null && simplified != base) {
+                usedLanguage = "en-US"
+                results = tmdbSearch(typePath, simplified, usedLanguage)
+            }
+
+            if (results != null) {
+                val firstResult = pickBestResult(results, year)
+                media.tmdbId = firstResult.optInt("id")
+                media.overview = firstResult.optString("overview")
+
+                // Spanish overview missing -> backfill from English (best effort)
+                if (media.overview.isNullOrEmpty() && usedLanguage == "es") {
+                    val enResults = tmdbSearch(typePath, base, "en-US")
+                    if (enResults != null) {
+                        val enPick = pickBestResult(enResults, year)
+                        media.overview = enPick.optString("overview")
                     }
-                    
-                    val backdropPath = firstResult.optString("backdrop_path")
-                    if (!backdropPath.isNullOrEmpty() && backdropPath != "null") {
-                        media.backdropUrl = "https://image.tmdb.org/t/p/w780$backdropPath"
-                    } else {
-                        media.backdropUrl = media.rawLogo
-                    }
-                    
-                    media.rating = firstResult.optDouble("vote_average", 0.0)
-                    media.releaseDate = firstResult.optString("release_date", "") 
-                        if (media.releaseDate.isNullOrEmpty()) media.releaseDate = firstResult.optString("first_air_date", "")
                 }
+
+                val posterPath = firstResult.optString("poster_path")
+                if (!posterPath.isNullOrEmpty() && posterPath != "null") {
+                    media.posterUrl = "https://image.tmdb.org/t/p/w500$posterPath"
+                } else {
+                    media.posterUrl = media.rawLogo
+                }
+
+                val backdropPath = firstResult.optString("backdrop_path")
+                if (!backdropPath.isNullOrEmpty() && backdropPath != "null") {
+                    media.backdropUrl = "https://image.tmdb.org/t/p/w780$backdropPath"
+                } else {
+                    media.backdropUrl = media.rawLogo
+                }
+
+                media.rating = firstResult.optDouble("vote_average", 0.0)
+                media.releaseDate = firstResult.optString("release_date", "")
+                if (media.releaseDate.isNullOrEmpty()) media.releaseDate = firstResult.optString("first_air_date", "")
             } else {
                 media.posterUrl = media.rawLogo
                 media.backdropUrl = media.rawLogo
