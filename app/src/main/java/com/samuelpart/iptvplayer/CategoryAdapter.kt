@@ -16,15 +16,16 @@ class CategoryAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(category: String, position: Int) {
+            binding.root.springPress() // iPhone-style bounce on tap
             binding.txtCategoryName.text = category
 
             if (position == selectedPosition) {
-                // Selected: Orange background, Black text
-                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#FF9800"))
-                binding.txtCategoryName.textColor = android.graphics.Color.parseColor("#000000")
+                // Selected: iOS blue gradient-ish background, white text
+                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#0A84FF"))
+                binding.txtCategoryName.textColor = android.graphics.Color.parseColor("#FFFFFF")
             } else {
-                // Unselected: Dark gray background, White text
-                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#2B2B2B"))
+                // Unselected: iOS dark surface, white text
+                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#1A1A20"))
                 binding.txtCategoryName.textColor = android.graphics.Color.parseColor("#FFFFFF")
             }
 

@@ -25,8 +25,8 @@ class CineEpisodeAdapter(
                 .load(imgToLoad)
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .placeholder(R.drawable.bg_placeholder)
-                .error(R.drawable.ic_movie)
-                .fallback(R.drawable.ic_movie)
+                .error(R.drawable.ic_ios_movie)
+                .fallback(R.drawable.ic_ios_movie)
                 .into(binding.imgEpisodeThumb)
 
             binding.root.setOnClickListener {

@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Temporada S - Episodio E"
-                android:textColor="#FF9800"
+                android:textColor="@color/ios_blue"
                 android:textSize="11sp" />
 
         </LinearLayout>

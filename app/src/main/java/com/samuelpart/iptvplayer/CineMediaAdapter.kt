@@ -17,6 +17,7 @@ class CineMediaAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(media: CineMedia) {
+            binding.root.springPress() // iPhone-style bounce on tap
             binding.txtCineTitle.text = media.title
             
             val isMovie = (media.type == "movie")
@@ -32,7 +33,7 @@ class CineMediaAdapter(
             }
 
             // Load poster with Glide
-            val fallbackIcon = if (isMovie) R.drawable.ic_movie else R.drawable.ic_tv
+            val fallbackIcon = if (isMovie) R.drawable.ic_ios_movie else R.drawable.ic_ios_tv
             
             // Check if the item is a Spider-Man Multiverse movie/series to display the gorgeous GIF!
             val lowerTitle = media.title.lowercase()

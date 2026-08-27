@@ -116,10 +116,17 @@ class MainActivity : AppCompatActivity() {
 
         // Load the TMDb integrated Cine & Series Catalog!
         loadCineCatalog()
+
+        // PlayStation-style ambient glow drifting behind the UI
+        UiMotion.startGlowDrift(binding.imgGlowBlue, dx = 46f, dy = 64f, baseAlpha = 0.85f, duration = 7000)
+        UiMotion.startGlowDrift(binding.imgGlowViolet, dx = -56f, dy = -48f, baseAlpha = 0.7f, duration = 9000)
     }
 
     private fun setupBottomNavigation() {
-        binding.bottomNavigation.itemIconTintList = null // Disable default single-color tint to show beautiful original 3D colors!
+        // iOS look: system blue when selected, iOS gray otherwise
+        val navTint = androidx.core.content.ContextCompat.getColorStateList(this, R.color.nav_item_tint)
+        binding.bottomNavigation.itemIconTintList = navTint
+        binding.bottomNavigation.itemTextColor = navTint
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
@@ -1389,7 +1396,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCineFilterButtons() {
-        val orangeColor = android.graphics.Color.parseColor("#FF9800")
+        val orangeColor = android.graphics.Color.parseColor("#0A84FF")
         val grayColor = android.graphics.Color.parseColor("#1E1E1E")
         
         binding.btnCineFilterAll.setBackgroundColor(if (selectedCineType == "all") orangeColor else grayColor)

@@ -77,7 +77,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_pip"
                 android:contentDescription="Miniatura / Pantalla Flotante"
-                app:tint="#FF9800" />
+                app:tint="@color/ios_blue" />
 
             <!-- Cast / Share to TV Button -->
             <ImageButton
@@ -87,7 +87,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_cast"
                 android:contentDescription="Transmitir a TV"
-                app:tint="#FF9800" />
+                app:tint="@color/ios_blue" />
         </LinearLayout>
 
         <!-- Center Controls: Play, Rewind, Fast Forward -->
@@ -125,7 +125,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_media_pause"
                 android:contentDescription="Reproducir/Pausar"
-                app:tint="#FF9800" />
+                app:tint="@color/ios_blue" />
 
             <!-- Fast Forward 10s Button -->
             <ImageButton
@@ -171,8 +171,8 @@
                 android:layout_marginHorizontal="12dp"
                 android:max="100"
                 android:progress="0"
-                android:progressTint="#FF9800"
-                android:thumbTint="#FF9800" />
+                android:progressTint="@color/ios_blue"
+                android:thumbTint="@color/ios_blue" />
 
             <!-- Total Remaining Duration -->
             <TextView
@@ -193,7 +193,7 @@
         android:id="@+id/playerProgress"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:indeterminateTint="#FF9800"
+        android:indeterminateTint="@color/ios_blue"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -210,7 +210,7 @@
         android:src="@android:drawable/ic_menu_slideshow"
         android:contentDescription="Seleccionar Calidad/Servidor"
         android:visibility="gone"
-        app:tint="#FF9800"
+        app:tint="@color/ios_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -219,7 +219,7 @@
         android:id="@+id/layoutCastController"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#121212"
+        android:background="@color/ios_bg"
         android:visibility="gone">
 
         <LinearLayout
@@ -236,7 +236,7 @@
                 android:layout_width="120dp"
                 android:layout_height="120dp"
                 android:src="@drawable/ic_cast"
-                app:tint="#FF9800" />
+                app:tint="@color/ios_blue" />
 
             <TextView
                 android:id="@+id/txtConnectedTv"
@@ -272,7 +272,7 @@
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:src="@android:drawable/ic_media_pause"
                     android:contentDescription="Reproducir/Pausar en TV"
-                    app:tint="#FF9800" />
+                    app:tint="@color/ios_blue" />
 
                 <Button
                     android:id="@+id/btnCastDisconnect"

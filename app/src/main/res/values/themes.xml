@@ -1,12 +1,23 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Modern iPhone-look base theme with PlayStation-style window transitions -->
     <style name="Theme.IPTVPlayer" parent="Theme.AppCompat.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/orange</item>
-        <item name="colorPrimaryDark">@color/black</item>
-        <item name="colorAccent">@color/orange</item>
-        
-        <!-- Customize your theme here. -->
-        <item name="android:windowBackground">@color/dark_gray</item>
+        <item name="colorPrimary">@color/ios_blue</item>
+        <item name="colorPrimaryDark">@color/ios_bg</item>
+        <item name="colorAccent">@color/ios_violet</item>
+
+        <item name="android:windowBackground">@color/ios_bg</item>
+        <item name="android:statusBarColor">@color/ios_bg</item>
+        <item name="android:navigationBarColor">@color/ios_bg</item>
+
+        <!-- PlayStation-style transitions for EVERY activity, theme-wide -->
+        <item name="android:windowAnimationStyle">@style/PSAnimations</item>
+    </style>
+
+    <!-- Activity transitions: fast fade + subtle zoom settle (PS5 feel) -->
+    <style name="PSAnimations" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/ps_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/ps_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/ps_pop_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/ps_pop_exit</item>
     </style>
 </resources>

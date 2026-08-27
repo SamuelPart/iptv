@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Legacy names kept for compatibility -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="orange">#FF9800</color>
-    <color name="dark_gray">#121212</color>
-    <color name="card_bg">#1E1E1E</color>
+    <color name="orange">#FF0A84FF</color>
+    <color name="dark_gray">#FF050507</color>
+    <color name="card_bg">#FF101016</color>
     <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#6200EE</color>
-    <color name="purple_700">#3700B3</color>
-    <color name="teal_200">#03DAC5</color>
-    <color name="teal_700">#018786</color>
+    <color name="purple_500">#FF5856D6</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF64D2FF</color>
+    <color name="teal_700">#FF0A84FF</color>
+
+    <!-- Modern iOS + PlayStation design system -->
+    <color name="ios_bg">#FF050507</color>
+    <color name="ios_surface">#FF101016</color>
+    <color name="ios_surface_2">#FF1A1A20</color>
+    <color name="ios_blue">#FF0A84FF</color>
+    <color name="ios_indigo">#FF5856D6</color>
+    <color name="ios_violet">#FFBF5AF2</color>
+    <color name="ios_cyan">#FF64D2FF</color>
+    <color name="ios_gray">#FF8E8E93</color>
+    <color name="ios_stroke">#21FFFFFF</color>
 </resources>

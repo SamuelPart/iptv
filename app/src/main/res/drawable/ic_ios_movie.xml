@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS-style thin-line film frame -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5,4.8 L19,4.8 C19.66,4.8 20.2,5.34 20.2,6 L20.2,18 C20.2,18.66 19.66,19.2 19,19.2 L5,19.2 C4.34,19.2 3.8,18.66 3.8,18 L3.8,6 C3.8,5.34 4.34,4.8 5,4.8 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M8.4,4.8 L8.4,19.2 M15.6,4.8 L15.6,19.2"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M3.9,9.6 L8.3,9.6 M3.9,14.4 L8.3,14.4 M15.7,9.6 L20.1,9.6 M15.7,14.4 L20.1,14.4"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+</vector>

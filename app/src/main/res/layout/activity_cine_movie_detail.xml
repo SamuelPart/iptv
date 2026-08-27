@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+    android:background="@drawable/bg_ios_gradient">
 
     <!-- Large Cinematic Backdrop Header with smooth bottom fade and integrated inline player -->
     <FrameLayout
@@ -79,7 +79,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_centerInParent="true"
-                    android:indeterminateTint="#FF9800"
+                    android:indeterminateTint="@color/ios_blue"
                     android:visibility="gone" />
 
                 <!-- Bottom Glassmorphic Controls Bar -->
@@ -115,8 +115,8 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:progressTint="#FF9800"
-                            android:thumbTint="#FF9800"
+                            android:progressTint="@color/ios_blue"
+                            android:thumbTint="@color/ios_blue"
                             android:paddingHorizontal="4dp" />
 
                         <TextView
@@ -145,7 +145,7 @@
                             android:scaleType="fitCenter"
                             android:background="?android:attr/selectableItemBackgroundBorderless"
                             android:src="@android:drawable/ic_media_pause"
-                            app:tint="#FF9800"
+                            app:tint="@color/ios_blue"
                             android:contentDescription="Reproducir/Pausar" />
 
                         <!-- Servers button -->
@@ -279,22 +279,22 @@
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@android:drawable/btn_star_big_on"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@android:drawable/btn_star_big_on"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@android:drawable/btn_star_big_on"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@android:drawable/btn_star_big_on"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
                     <ImageView
                         android:layout_width="16dp"
                         android:layout_height="16dp"
@@ -429,7 +429,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
                     android:text="Sinopsis Oficial"
-                    android:textColor="#FF9800"
+                    android:textColor="@color/ios_blue"
                     android:textSize="15sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />

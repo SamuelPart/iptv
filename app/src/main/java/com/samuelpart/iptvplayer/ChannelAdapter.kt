@@ -16,6 +16,7 @@ class ChannelAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(channel: Channel) {
+            binding.root.springPress() // iPhone-style bounce on tap
             binding.txtChannelName.text = channel.name
 
             // Load logo using Glide with placeholder and error fallbacks

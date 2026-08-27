@@ -4,17 +4,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
+    android:background="@drawable/bg_ios_gradient"
     tools:context=".MainActivity">
 
-    <!-- Bottom Navigation Bar -->
+    <!-- PlayStation-style ambient glow orbs (drifting behind the UI) -->
+    <ImageView
+        android:id="@+id/imgGlowBlue"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_marginStart="-90dp"
+        android:layout_marginTop="-70dp"
+        android:alpha="0.85"
+        android:src="@drawable/bg_glow_blue"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imgGlowViolet"
+        android:layout_width="340dp"
+        android:layout_height="340dp"
+        android:layout_marginEnd="-110dp"
+        android:layout_marginBottom="-130dp"
+        android:alpha="0.7"
+        android:src="@drawable/bg_glow_violet"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Floating glass bottom navigation (iPhone style) -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:background="#1E1E1E"
-        app:backgroundTint="#1E1E1E"
-        app:itemTextColor="#FFFFFF"
+        android:layout_height="66dp"
+        android:layout_marginHorizontal="14dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_bottom_nav_ios"
+        app:elevation="16dp"
+        app:itemTextColor="@color/nav_item_tint"
         app:menu="@menu/bottom_nav_menu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -46,7 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
             app:cardCornerRadius="8dp"
-            app:cardBackgroundColor="#1E1E1E"
+            app:cardBackgroundColor="@color/ios_surface"
             app:cardElevation="4dp"
             android:visibility="gone">
 
@@ -84,7 +109,7 @@
                         android:id="@+id/global_ad_attribution"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="#FF9800"
+                        android:background="@color/ios_blue"
                         android:paddingHorizontal="4dp"
                         android:paddingVertical="1dp"
                         android:text="Anuncio"
@@ -111,7 +136,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:layout_marginTop="8dp"
-                        android:backgroundTint="#FF9800"
+                        android:backgroundTint="@color/ios_blue"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="0dp"
                         android:text="Instalar"
@@ -169,7 +194,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="IPTV Player PRO"
-                            android:textColor="#FF9800"
+                            android:textColor="@color/ios_blue"
                             android:textSize="26sp"
                             android:textStyle="bold" />
 
@@ -191,7 +216,7 @@
                         android:background="?android:attr/selectableItemBackgroundBorderless"
                         android:src="@android:drawable/ic_menu_preferences"
                         android:contentDescription="Ajustes de la App"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
 
                 </LinearLayout>
 
@@ -200,7 +225,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardCornerRadius="14dp"
                     app:cardElevation="6dp">
 
@@ -255,7 +280,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="50dp"
                             android:layout_marginTop="16dp"
-                            android:backgroundTint="#FF9800"
+                            android:backgroundTint="@color/ios_blue"
                             android:text="Cargar Lista IPTV"
                             android:textColor="#000000"
                             android:textStyle="bold" />
@@ -321,7 +346,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardCornerRadius="12dp">
 
                     <LinearLayout
@@ -403,7 +428,7 @@
                     android:layout_marginTop="16dp"
                     android:gravity="center"
                     android:text="INTRODUCIR UNA URL CON SU LISTA DE CANALES EN INICIO"
-                    android:textColor="#FF9800"
+                    android:textColor="@color/ios_blue"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -446,7 +471,7 @@
                         android:src="@android:drawable/ic_menu_manage"
                         android:contentDescription="Filtrar Canales"
                         android:layout_marginEnd="8dp"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
 
                     <!-- Layout Toggle Icon Button (Grid/List) -->
                     <ImageButton
@@ -456,7 +481,7 @@
                         android:background="?android:attr/selectableItemBackgroundBorderless"
                         android:src="@android:drawable/ic_dialog_dialer"
                         android:contentDescription="Cambiar Vista"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
 
                 </LinearLayout>
 
@@ -493,7 +518,7 @@
                 <ImageView
                     android:layout_width="80dp"
                     android:layout_height="80dp"
-                    android:src="@drawable/ic_search"
+                    android:src="@drawable/ic_ios_search"
                     app:tint="#888888" />
 
                 <TextView
@@ -502,7 +527,7 @@
                     android:layout_marginTop="16dp"
                     android:gravity="center"
                     android:text="INTRODUCIR UNA URL CON SU LISTA DE CANALES EN INICIO"
-                    android:textColor="#FF9800"
+                    android:textColor="@color/ios_blue"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -535,14 +560,14 @@
                         android:src="@android:drawable/ic_menu_recent_history"
                         android:contentDescription="Historial"
                         android:layout_marginEnd="4dp"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
 
                     <EditText
                         android:id="@+id/edtSearchTab"
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:background="#1E1E1E"
+                        android:background="@color/ios_surface"
                         android:hint="Escribe para buscar canales..."
                         android:textColorHint="#666666"
                         android:textColor="#FFFFFF"
@@ -560,7 +585,7 @@
                         android:src="@android:drawable/ic_menu_manage"
                         android:contentDescription="Filtrar Búsqueda"
                         android:layout_marginStart="8dp"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
 
                 </LinearLayout>
 
@@ -619,7 +644,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:text="Escribe algo para filtrar..."
-                    android:textColor="#FF9800"
+                    android:textColor="@color/ios_blue"
                     android:textSize="13sp"
                     android:textStyle="italic" />
 
@@ -643,7 +668,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone"
-            android:background="#121212">
+            android:background="@color/ios_bg">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -663,7 +688,7 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@android:drawable/ic_menu_preferences"
-                        app:tint="#FF9800" />
+                        app:tint="@color/ios_blue" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -683,7 +708,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="10dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardElevation="4dp"
                     android:foreground="?android:attr/selectableItemBackground">
 
@@ -698,7 +723,7 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:src="@android:drawable/ic_secure"
-                            app:tint="#FF9800" />
+                            app:tint="@color/ios_blue" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -742,7 +767,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="10dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardElevation="4dp"
                     android:foreground="?android:attr/selectableItemBackground">
 
@@ -758,7 +783,7 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:src="@drawable/ic_theme"
-                            app:tint="#FF9800" />
+                            app:tint="@color/ios_blue" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -803,7 +828,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="10dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardElevation="4dp"
                     android:foreground="?android:attr/selectableItemBackground">
 
@@ -861,7 +886,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     app:cardCornerRadius="10dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardElevation="4dp">
 
                     <LinearLayout
@@ -875,7 +900,7 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:src="@android:drawable/ic_dialog_info"
-                            app:tint="#FF9800" />
+                            app:tint="@color/ios_blue" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -910,7 +935,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="10dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardElevation="4dp">
 
                     <LinearLayout
@@ -963,7 +988,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone"
-            android:background="#121212">
+            android:background="@color/ios_bg">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -993,7 +1018,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Total: 0"
-                        android:textColor="#FF9800"
+                        android:textColor="@color/ios_blue"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -1004,7 +1029,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    app:cardBackgroundColor="#1E1E1E"
+                    app:cardBackgroundColor="@color/ios_surface"
                     app:cardCornerRadius="8dp">
 
                     <LinearLayout
@@ -1021,7 +1046,7 @@
                             android:background="?android:attr/selectableItemBackgroundBorderless"
                             android:src="@android:drawable/ic_menu_recent_history"
                             android:contentDescription="Historial"
-                            app:tint="#FF9800" />
+                            app:tint="@color/ios_blue" />
 
                         <EditText
                             android:id="@+id/edtCineSearch"
@@ -1103,7 +1128,7 @@
                         android:layout_height="38dp"
                         android:layout_weight="1"
                         android:layout_marginEnd="4dp"
-                        android:background="#FF9800"
+                        android:background="@color/ios_blue"
                         android:text="Todos"
                         android:textColor="#FFFFFF"
                         android:textSize="11sp"
@@ -1115,7 +1140,7 @@
                         android:layout_height="38dp"
                         android:layout_weight="1"
                         android:layout_marginHorizontal="4dp"
-                        android:background="#1E1E1E"
+                        android:background="@color/ios_surface"
                         android:text="Películas"
                         android:textColor="#CCCCCC"
                         android:textSize="11sp"
@@ -1127,7 +1152,7 @@
                         android:layout_height="38dp"
                         android:layout_weight="1"
                         android:layout_marginStart="4dp"
-                        android:background="#1E1E1E"
+                        android:background="@color/ios_surface"
                         android:text="Series"
                         android:textColor="#CCCCCC"
                         android:textSize="11sp"
@@ -1147,7 +1172,7 @@
                     <ProgressBar
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:indeterminateTint="#FF9800" />
+                        android:indeterminateTint="@color/ios_blue" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -1163,7 +1188,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Cargando carátulas y detalles oficiales"
-                        android:textColor="#FF9800"
+                        android:textColor="@color/ios_blue"
                         android:textSize="12sp" />
 
                 </LinearLayout>

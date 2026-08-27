@@ -2,22 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_home"
-        android:icon="@drawable/ic_home"
+        android:icon="@drawable/ic_ios_home"
         android:title="Inicio" />
     <item
         android:id="@+id/navigation_channels"
-        android:icon="@drawable/ic_channels"
+        android:icon="@drawable/ic_ios_tv"
         android:title="Canales" />
     <item
         android:id="@+id/navigation_search"
-        android:icon="@drawable/ic_search"
+        android:icon="@drawable/ic_ios_search"
         android:title="Buscador" />
     <item
         android:id="@+id/navigation_cine"
-        android:icon="@drawable/ic_movie"
+        android:icon="@drawable/ic_ios_movie"
         android:title="Cine" />
     <item
         android:id="@+id/navigation_settings"
-        android:icon="@drawable/ic_settings"
+        android:icon="@drawable/ic_ios_gear"
         android:title="Configuración" />
 </menu>
