@@ -1,12 +1,11 @@
 {
-  "version": 4,
+  "version": 5,
   "portals": [
     { "name": "TioPlus",          "baseUrl": "https://tioplus.app",           "searchPath": "/?s={query}", "enabled": true },
     { "name": "RePelis24",        "baseUrl": "https://repelis24.life",        "searchPath": "/?s={query}", "enabled": true },
     { "name": "RePelis24 Oficial", "baseUrl": "https://repelis24-oficial.site", "searchPath": "/?s={query}", "enabled": true }
   ],
   "extraWebPageDomains": [
-    "tokyvideo.com",
     "repelis24.ing"
   ],
   "adDomains": [
