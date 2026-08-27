@@ -13,6 +13,9 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.appopen.AppOpenAd
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Date
 
 class IPTVApplication : Application(), Application.ActivityLifecycleCallbacks, LifecycleEventObserver {
@@ -29,6 +32,14 @@ class IPTVApplication : Application(), Application.ActivityLifecycleCallbacks, L
         
         appOpenAdManager = AppOpenAdManager()
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+
+        // Real-time scraper config: instantly load the last saved portal list,
+        // then hot-update it from GitHub. If a source site changes its domain,
+        // editing scraper_config.json in the repo fixes every app — no update needed.
+        ScraperConfig.loadCached(this)
+        CoroutineScope(Dispatchers.IO).launch {
+            ScraperConfig.refresh(this@IPTVApplication)
+        }
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {

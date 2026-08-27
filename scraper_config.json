@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "portals": [
+    { "name": "TioPlus",          "baseUrl": "https://tioplus.app",           "searchPath": "/?s={query}", "enabled": true },
+    { "name": "RePelis24",        "baseUrl": "https://repelis24.life",        "searchPath": "/?s={query}", "enabled": true },
+    { "name": "RePelis24 Oficial", "baseUrl": "https://repelis24-oficial.site", "searchPath": "/?s={query}", "enabled": true }
+  ],
+  "extraWebPageDomains": [
+    "tokyvideo.com"
+  ],
+  "adDomains": [
+    "doubleclick.net", "googlesyndication.com", "google-analytics.com",
+    "adservice.google.com", "adnxs.com", "popads.net", "popcash.net",
+    "exoclick.com", "juicyads.com", "trafficjunky.com", "tsyndicate.com",
+    "chaturbate.com", "adskeeper.com", "onclicka.com"
+  ]
+}

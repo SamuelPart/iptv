@@ -331,20 +331,16 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         // Hide system status bar (clocks, battery, etc.)
         hideStatusBarInline()
 
-        // Check if the URL is a website page (e.g. TokyVideo) rather than a direct video stream
-        val isWebPage = streamUrl.startsWith("http") && (
-            streamUrl.contains("tokyvideo.com") || 
-            streamUrl.contains("repelis24.ing") || 
-            streamUrl.contains("tioplus.app")
-        )
-
-        if (isWebPage) {
+        // Check if the URL is a streaming page or embedded player rather than a direct
+        // video stream. Domains come from ScraperConfig (hot-updated from GitHub), so
+        // dead portal domains are fixed remotely. The page is visited RIGHT NOW to
+        // extract the fresh temporary video URL — nothing is stored.
+        if (CineScraper.shouldResolvePage(streamUrl)) {
+            Toast.makeText(this@CineTvShowDetailActivity, "Extrayendo video en tiempo real...", Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {
-                val resolvedUrl = withContext(Dispatchers.IO) {
-                    CineScraper.resolveWebVideoUrl(streamUrl)
-                }
-                if (!resolvedUrl.isNullOrEmpty()) {
-                    playStreamDirectly(resolvedUrl, startMs, displayTitle)
+                val resolved = CineScraper.resolveBestVideoUrl(this@CineTvShowDetailActivity, streamUrl)
+                if (resolved != null) {
+                    playStreamDirectly(resolved.url, startMs, displayTitle, resolved.referer, resolved.userAgent)
                 } else {
                     Toast.makeText(this@CineTvShowDetailActivity, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
                     stopInlinePlayback()
@@ -356,9 +352,13 @@ class CineTvShowDetailActivity : AppCompatActivity() {
     }
 
     private var activeStreamUrl: String = ""
+    private var activeReferer: String? = null
+    private var activeUserAgent: String? = null
 
-    private fun playStreamDirectly(streamUrl: String, startMs: Long, displayTitle: String) {
+    private fun playStreamDirectly(streamUrl: String, startMs: Long, displayTitle: String, referer: String? = null, userAgent: String? = null) {
         activeStreamUrl = streamUrl
+        activeReferer = referer
+        activeUserAgent = userAgent
         val savedPos = getSharedPreferences("iptv_pref", android.content.Context.MODE_PRIVATE)
             .getLong("pos_$displayTitle", 0L)
         pendingSeekPosition = if (startMs > 0L) startMs else savedPos
@@ -412,6 +412,9 @@ class CineTvShowDetailActivity : AppCompatActivity() {
 
             val m = org.videolan.libvlc.Media(libVlc, Uri.parse(streamUrl)).apply {
                 setHWDecoderEnabled(true, false)
+                // Streams extracted in real time often require these headers or they refuse to load
+                if (!referer.isNullOrEmpty()) addOption(":http-referrer=$referer")
+                if (!userAgent.isNullOrEmpty()) addOption(":http-user-agent=$userAgent")
             }
             mediaPlayer?.media = m
             m.release()
@@ -601,6 +604,8 @@ class CineTvShowDetailActivity : AppCompatActivity() {
             putExtra("channelName", title)
             putExtra("channelUrl", streamUrl)
             putExtra("startPosition", currentPosition)
+            putExtra("streamReferer", activeReferer)
+            putExtra("streamUserAgent", activeUserAgent)
         }
         fullscreenLauncher.launch(intent)
     }

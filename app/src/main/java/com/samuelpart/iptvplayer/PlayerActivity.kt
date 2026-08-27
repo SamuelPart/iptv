@@ -51,6 +51,10 @@ class PlayerActivity : AppCompatActivity() {
     
     private var channelName: String = "Canal"
     private var channelUrl: String? = null
+    // Headers captured during real-time web extraction (required by most video hosters)
+    private var streamReferer: String? = null
+    private var streamUserAgent: String? = null
+    private var pageResolveAttempted = false
     private var isControllerVisible = true
     private var startPosition: Long = 0L
     private var pendingSeekPosition: Long = 0L
@@ -134,6 +138,9 @@ class PlayerActivity : AppCompatActivity() {
         allSources = intent.getStringArrayListExtra("allSources")
         startPosition = intent.getLongExtra("startPosition", 0L)
         isLiveTv = intent.getBooleanExtra("isLiveTv", false)
+        // Headers captured by the real-time extractor in the detail screen (if any)
+        streamReferer = intent.getStringExtra("streamReferer")
+        streamUserAgent = intent.getStringExtra("streamUserAgent")
 
         if (channelUrl.isNullOrEmpty()) {
             Toast.makeText(this, "Error: Enlace de reproducción no disponible", Toast.LENGTH_SHORT).show()
@@ -295,6 +302,32 @@ class PlayerActivity : AppCompatActivity() {
 
         val streamUrl = channelUrl ?: return
 
+        // If this is a streaming page / embedded player instead of a direct stream,
+        // visit the source page RIGHT NOW, extract the fresh temporary video URL
+        // (they expire every few hours, so nothing is stored) and then play it.
+        if (CineScraper.shouldResolvePage(streamUrl)) {
+            if (pageResolveAttempted) {
+                binding.playerProgress.visibility = View.GONE
+                Toast.makeText(this, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
+                return
+            }
+            pageResolveAttempted = true
+            binding.playerProgress.visibility = View.VISIBLE
+            lifecycleScope.launch {
+                val resolved = CineScraper.resolveBestVideoUrl(this@PlayerActivity, streamUrl)
+                if (resolved != null) {
+                    channelUrl = resolved.url
+                    streamReferer = resolved.referer
+                    streamUserAgent = resolved.userAgent
+                    initializePlayer()
+                } else {
+                    binding.playerProgress.visibility = View.GONE
+                    Toast.makeText(this@PlayerActivity, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
+                }
+            }
+            return
+        }
+
         binding.playerProgress.visibility = View.VISIBLE
 
         val savedPos = getSharedPreferences("iptv_pref", android.content.Context.MODE_PRIVATE)
@@ -364,6 +397,9 @@ class PlayerActivity : AppCompatActivity() {
             val media = Media(libVlc, Uri.parse(streamUrl)).apply {
                 // Enable hardware decoding for flawless 4K stream performance
                 setHWDecoderEnabled(true, false)
+                // Streams extracted in real time often require these headers or they refuse to load
+                if (!streamReferer.isNullOrEmpty()) addOption(":http-referrer=$streamReferer")
+                if (!streamUserAgent.isNullOrEmpty()) addOption(":http-user-agent=$streamUserAgent")
             }
             mediaPlayer?.media = media
             media.release()
@@ -479,6 +515,10 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun switchSource(newUrl: String) {
         channelUrl = newUrl
+        // Reset extraction state so the new server gets its own fresh real-time resolution
+        streamReferer = null
+        streamUserAgent = null
+        pageResolveAttempted = false
         channelName = "Video Web: " + getDomainName(newUrl)
         binding.txtPlayingName.text = channelName
         
