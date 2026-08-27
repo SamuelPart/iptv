@@ -29,7 +29,7 @@
         android:id="@+id/layoutPlayerControls"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#66000000"
+        android:background="@android:color/transparent"
         android:visibility="visible"
         tools:visibility="visible">
 
@@ -38,7 +38,7 @@
             android:id="@+id/layoutPlayerHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#CC000000"
+            android:background="@drawable/bg_player_topbar"
             android:orientation="horizontal"
             android:padding="12dp"
             android:gravity="center_vertical"
@@ -146,7 +146,7 @@
             android:id="@+id/layoutBottomTimeline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#CC000000"
+            android:background="@drawable/bg_player_controls"
             android:orientation="horizontal"
             android:padding="16dp"
             android:gravity="center_vertical"
@@ -219,7 +219,7 @@
         android:id="@+id/layoutCastController"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/ios_bg"
+        android:background="@color/ios_surface"
         android:visibility="gone">
 
         <LinearLayout

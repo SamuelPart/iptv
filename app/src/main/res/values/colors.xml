@@ -3,23 +3,23 @@
     <!-- Legacy names kept for compatibility -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="orange">#FF0A84FF</color>
-    <color name="dark_gray">#FF050507</color>
-    <color name="card_bg">#FF101016</color>
+    <color name="orange">#FF5E5CE6</color>
+    <color name="dark_gray">#FF000000</color>
+    <color name="card_bg">#FF0D0D14</color>
     <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF5856D6</color>
+    <color name="purple_500">#FF5E5CE6</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF64D2FF</color>
-    <color name="teal_700">#FF0A84FF</color>
+    <color name="teal_700">#FF5E5CE6</color>
 
-    <!-- Modern iOS + PlayStation design system -->
-    <color name="ios_bg">#FF050507</color>
-    <color name="ios_surface">#FF101016</color>
-    <color name="ios_surface_2">#FF1A1A20</color>
-    <color name="ios_blue">#FF0A84FF</color>
-    <color name="ios_indigo">#FF5856D6</color>
+    <!-- v3 design system: midnight-indigo glass (iPhone cards + PS5 glow) -->
+    <color name="ios_bg">#FF000000</color>
+    <color name="ios_surface">#FF0C0C14</color>
+    <color name="ios_surface_2">#FF14141E</color>
+    <color name="ios_blue">#FF5E5CE6</color>
+    <color name="ios_indigo">#FF7048FF</color>
     <color name="ios_violet">#FFBF5AF2</color>
     <color name="ios_cyan">#FF64D2FF</color>
-    <color name="ios_gray">#FF8E8E93</color>
-    <color name="ios_stroke">#21FFFFFF</color>
+    <color name="ios_gray">#FF98989F</color>
+    <color name="ios_stroke">#2EFFFFFF</color>
 </resources>

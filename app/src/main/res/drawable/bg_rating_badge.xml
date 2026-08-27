@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Rating badge: translucent blue-violet pill -->
+<!-- Rating badge: indigo-violet aurora pill -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <gradient
         android:angle="135"
-        android:startColor="#F20A84FF"
+        android:startColor="#F25E5CE6"
         android:endColor="#F2BF5AF2"
         android:type="linear" />
-    <corners android:radius="10dp" />
+    <corners android:radius="12dp" />
 </shape>

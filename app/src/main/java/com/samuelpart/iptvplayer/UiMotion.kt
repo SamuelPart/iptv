@@ -23,9 +23,9 @@ fun View.springPress() {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 v.animate()
-                    .scaleX(0.93f)
-                    .scaleY(0.93f)
-                    .setDuration(110)
+                    .scaleX(0.90f)
+                    .scaleY(0.90f)
+                    .setDuration(120)
                     .setInterpolator(AccelerateDecelerateInterpolator())
                     .start()
             }
@@ -33,8 +33,8 @@ fun View.springPress() {
                 v.animate()
                     .scaleX(1f)
                     .scaleY(1f)
-                    .setDuration(320)
-                    .setInterpolator(OvershootInterpolator(3.2f))
+                    .setDuration(360)
+                    .setInterpolator(OvershootInterpolator(3.6f))
                     .start()
             }
         }
@@ -58,7 +58,7 @@ object UiMotion {
             repeatMode = ValueAnimator.REVERSE
             interpolator = AccelerateDecelerateInterpolator()
         }
-        val breathe = ObjectAnimator.ofFloat(view, View.ALPHA, baseAlpha * 0.55f, baseAlpha).apply {
+        val breathe = ObjectAnimator.ofFloat(view, View.ALPHA, baseAlpha * 0.4f, baseAlpha).apply {
             this.duration = (duration * 0.75f).toLong()
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.REVERSE

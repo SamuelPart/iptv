@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Soft ambient glow orb (PlayStation-style), violet -->
+<!-- PS5 ambient orb: violet with a cyan tail -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
     <gradient
         android:type="radial"
-        android:gradientRadius="170dp"
-        android:startColor="#4DBF5AF2"
-        android:centerColor="#20BF5AF2"
-        android:endColor="#00BF5AF2" />
+        android:gradientRadius="190dp"
+        android:startColor="#59BF5AF2"
+        android:centerColor="#267048FF"
+        android:endColor="#007048FF" />
 </shape>
