@@ -96,6 +96,7 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNavigation()
         setupRecyclerViews()
+        setupHomeHubTiles()
         setupSearchHistories()
         setupListeners()
         updateEmptyStates() // Initial state shows instructions everywhere
@@ -172,6 +173,14 @@ class MainActivity : AppCompatActivity() {
             binding.cardGlobalNativeAd.visibility = View.GONE
             binding.adView.visibility = View.VISIBLE
         }
+    }
+
+    /** Home hub: big tiles jump straight to each tab. */
+    private fun setupHomeHubTiles() {
+        binding.tileChannels.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_channels }
+        binding.tileCine.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_cine }
+        binding.tileSearch.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_search }
+        binding.tileSettings.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_settings }
     }
 
     /** PS5-style tab entry: the panel rises and springs into place. */

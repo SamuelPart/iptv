@@ -164,7 +164,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- ================= TAB 1: INICIO (HOME) ================= -->
+        <!-- ================= TAB 1: INICIO (HOME HUB - v3.1) ================= -->
         <ScrollView
             android:id="@+id/containerHome"
             android:layout_width="match_parent"
@@ -178,121 +178,237 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="18dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="20dp"
                 android:paddingBottom="28dp">
 
-                <!-- HERO brand header -->
+                <!-- Mini top bar -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="54dp"
-                        android:layout_height="54dp"
-                        app:cardCornerRadius="15dp"
-                        app:cardElevation="0dp"
-                        app:cardBackgroundColor="@color/ios_surface">
-
-                        <ImageView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:src="@drawable/app_logo"
-                            android:scaleType="centerCrop"
-                            android:contentDescription="IPLAY PRO" />
-
-                    </androidx.cardview.widget.CardView>
-
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginStart="14dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="IPLAY PRO"
-                            android:textColor="#FFFFFF"
-                            android:textSize="30sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.02" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Canales, películas y series, todo en un lugar"
-                            android:textColor="@color/ios_gray"
-                            android:textSize="13sp" />
-
-                    </LinearLayout>
+                        android:text="❚ IPLAY"
+                        android:textColor="@color/ios_cyan"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.35" />
 
                     <ImageButton
                         android:id="@+id/btnOpenSettings"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
                         android:src="@drawable/ic_ios_gear"
                         android:contentDescription="Ajustes de la App"
-                        app:tint="#FFFFFF" />
+                        app:tint="#E6FFFFFF" />
 
                 </LinearLayout>
 
-                <!-- Aurora hero banner -->
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="128dp"
-                    android:layout_marginTop="22dp"
-                    android:background="@drawable/bg_hero_banner"
-                    android:padding="20dp">
+                <!-- Greeting -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="Hola de nuevo"
+                    android:textColor="#FFFFFF"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start|bottom"
-                        android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Que vemos hoy?"
+                    android:textColor="@color/ios_gray"
+                    android:textSize="15sp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="BIENVENIDO"
-                            android:textColor="@color/ios_cyan"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.22" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Pega tu lista M3U\ny explora más de 9.000 títulos"
-                            android:textColor="#FFFFFF"
-                            android:textSize="17sp"
-                            android:textStyle="bold"
-                            android:lineSpacingMultiplier="1.15" />
-
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="86dp"
-                        android:layout_height="86dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:src="@drawable/ic_ios_tv"
-                        android:alpha="0.22"
-                        android:contentDescription="@null" />
-
-                </FrameLayout>
-
-                <!-- Glass card: cargar lista M3U -->
+                <!-- Quick access tiles 2x2 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="22dp">
+
+                    <FrameLayout
+                        android:id="@+id/tileChannels"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="112dp"
+                        android:layout_marginEnd="7dp"
+                        android:background="@drawable/bg_tile_indigo">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start|bottom"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:src="@drawable/ic_ios_tv"
+                                app:tint="#FFFFFF" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="Canales"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="TV en vivo"
+                                android:textColor="#D9FFFFFF"
+                                android:textSize="11sp" />
+
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/tileCine"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="112dp"
+                        android:layout_marginStart="7dp"
+                        android:background="@drawable/bg_tile_violet">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start|bottom"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:src="@drawable/ic_ios_movie"
+                                app:tint="#FFFFFF" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="Cine"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="9.000+ titulos"
+                                android:textColor="#EBD9FF"
+                                android:textSize="11sp" />
+
+                        </LinearLayout>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="14dp">
+
+                    <FrameLayout
+                        android:id="@+id/tileSearch"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="112dp"
+                        android:layout_marginEnd="7dp"
+                        android:background="@drawable/bg_tile_cyan">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start|bottom"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:src="@drawable/ic_ios_search"
+                                app:tint="#FFFFFF" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="Buscador"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Encuentra todo"
+                                android:textColor="#D9F2FF"
+                                android:textSize="11sp" />
+
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <FrameLayout
+                        android:id="@+id/tileSettings"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="112dp"
+                        android:layout_marginStart="7dp"
+                        android:background="@drawable/bg_tile_glass">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start|bottom"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <ImageView
+                                android:layout_width="34dp"
+                                android:layout_height="34dp"
+                                android:src="@drawable/ic_ios_gear"
+                                app:tint="#E6FFFFFF" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="Ajustes"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Tu app, tu forma"
+                                android:textColor="#B3FFFFFF"
+                                android:textSize="11sp" />
+
+                        </LinearLayout>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- M3U connect block -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card_ios"
                     android:padding="18dp">
@@ -300,7 +416,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ENLACE DE TU LISTA IPTV (M3U)"
+                        android:text="TU LISTA IPTV (M3U)"
                         android:textColor="@color/ios_cyan"
                         android:textSize="11sp"
                         android:textStyle="bold"
@@ -344,7 +460,7 @@
                         android:layout_height="54dp"
                         android:layout_marginTop="14dp"
                         android:background="@drawable/bg_button_primary"
-                        android:text="Cargar mi lista"
+                        android:text="Conectar a mi lista"
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"
                         android:textSize="15sp" />
@@ -353,7 +469,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="18dp"
-                        android:text="O prueba una lista pública gratis:"
+                        android:text="Listas publicas gratis:"
                         android:textColor="@color/ios_gray"
                         android:textSize="12sp" />
 
@@ -371,7 +487,7 @@
                             android:layout_weight="1"
                             android:layout_marginEnd="6dp"
                             android:backgroundTint="#295E5CE6"
-                            android:text="España 🇪🇸"
+                            android:text="Espana"
                             android:textColor="#FFFFFF"
                             android:textSize="11sp" />
 
@@ -383,7 +499,7 @@
                             android:layout_weight="1"
                             android:layout_marginEnd="6dp"
                             android:backgroundTint="#295E5CE6"
-                            android:text="Global 🌐"
+                            android:text="Global"
                             android:textColor="#FFFFFF"
                             android:textSize="11sp" />
 
@@ -394,7 +510,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:backgroundTint="#295E5CE6"
-                            android:text="Noticias 📰"
+                            android:text="Noticias"
                             android:textColor="#FFFFFF"
                             android:textSize="11sp" />
 
@@ -402,12 +518,12 @@
 
                 </LinearLayout>
 
-                <!-- Historial de listas -->
+                <!-- Historial -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardHomeStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="16dp"
                     app:cardBackgroundColor="@color/ios_surface"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="0dp">
