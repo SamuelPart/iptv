@@ -40,6 +40,12 @@ class IPTVApplication : Application(), Application.ActivityLifecycleCallbacks, L
         CoroutineScope(Dispatchers.IO).launch {
             ScraperConfig.refresh(this@IPTVApplication)
         }
+
+        // Warm the REMOTE movie/series catalog: editing cine_catalog.m3u in the
+        // GitHub repo is enough to add content — users never reinstall the app.
+        CoroutineScope(Dispatchers.IO).launch {
+            CineRepository.prefetchCatalog(this@IPTVApplication)
+        }
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {

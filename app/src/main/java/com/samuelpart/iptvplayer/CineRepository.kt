@@ -7,13 +7,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
+import java.io.StringReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 
 object CineRepository {
     const val TMDB_API_KEY = "9decd750b7484d309d1ad88b5239ef93"
+
+    /**
+     * MASTER CATALOG, hot-updated from GitHub: editing
+     * app/src/main/res/raw/cine_catalog.m3u in the repo (even from the browser)
+     * is enough to add/remove movies & series in every installed app the next
+     * time it opens. No reinstall, no APK update. The last downloaded copy is
+     * cached on disk and the bundled copy in the APK remains as final fallback.
+     */
+    private const val CATALOG_CACHE_FILE = "cine_catalog_remote.m3u"
+    private val CATALOG_URLS = listOf(
+        "https://raw.githubusercontent.com/SamuelPart/iptv/main/app/src/main/res/raw/cine_catalog.m3u",
+        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a04133-iptv/app/src/main/res/raw/cine_catalog.m3u"
+    )
 
     private var cachedCatalog: List<CineMedia>? = null
 
@@ -29,14 +44,29 @@ object CineRepository {
         val episodes = mutableListOf<ParsedEpisode>()
         val tvShows = mutableListOf<CineMedia>()
 
-        // 1. Read from res/raw/cine_catalog.m3u local resource first!
+        // 1. Master catalog: freshest copy wins. Try downloading the updated
+        // catalog from GitHub right now (a few seconds); if offline or it fails,
+        // use the last downloaded copy on disk; final fallback: the bundled one.
         try {
-            val inputStream = context.resources.openRawResource(R.raw.cine_catalog)
-            val reader = BufferedReader(InputStreamReader(inputStream))
+            val freshText = downloadRemoteCatalog(context)
+            val diskText = if (freshText == null) readCachedCatalog(context) else null
+            val reader = when {
+                freshText != null -> BufferedReader(StringReader(freshText))
+                diskText != null -> BufferedReader(StringReader(diskText))
+                else -> BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.cine_catalog)))
+            }
             parseM3uStream(reader, movies, episodes, tvShows)
             reader.close()
         } catch (e: Exception) {
             e.printStackTrace()
+            // Absolute fallback: bundled catalog inside the APK
+            try {
+                val reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.cine_catalog)))
+                parseM3uStream(reader, movies, episodes, tvShows)
+                reader.close()
+            } catch (e2: Exception) {
+                e2.printStackTrace()
+            }
         }
 
         // 2. Asynchronously fetch and parse the remote Bflix list from GitHub in real-time,
@@ -122,6 +152,68 @@ object CineRepository {
         launchBackgroundPrefetch(fullCatalog)
 
         return@withContext fullCatalog
+    }
+
+    /** Warms the catalog as soon as the app starts so the Cine tab opens instantly. */
+    suspend fun prefetchCatalog(context: Context) {
+        getCineCatalog(context)
+    }
+
+    /** Downloads the master catalog from GitHub and persist it on disk. Returns null if it fails. */
+    private fun downloadRemoteCatalog(context: Context): String? {
+        for (catalogUrl in CATALOG_URLS) {
+            var conn: HttpURLConnection? = null
+            try {
+                conn = URL(catalogUrl).openConnection() as HttpURLConnection
+                conn.connectTimeout = 8000
+                conn.readTimeout = 20000
+                conn.setRequestProperty("User-Agent", "IPTV-Catalog/1.0")
+                conn.setRequestProperty("Cache-Control", "no-cache")
+                if (conn.responseCode == 200) {
+                    val text = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    if (isValidCatalog(text)) {
+                        try {
+                            File(context.filesDir, CATALOG_CACHE_FILE).writeText(text)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        return text
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                try { conn?.disconnect() } catch (_: Exception) {}
+            }
+        }
+        return null
+    }
+
+    /** Last successfully downloaded catalog, for offline/cold starts. */
+    private fun readCachedCatalog(context: Context): String? {
+        return try {
+            val f = File(context.filesDir, CATALOG_CACHE_FILE)
+            if (!f.exists()) return null
+            val text = f.readText()
+            if (isValidCatalog(text)) text else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /** Basic sanity check so a 404 page or truncated download never wipes the catalog. */
+    private fun isValidCatalog(text: String): Boolean {
+        if (!text.contains("#EXTM3U")) return false
+        var count = 0
+        var idx = 0
+        while (count < 10) {
+            idx = text.indexOf("#EXTINF", idx)
+            if (idx == -1) break
+            count++
+            idx += 7
+        }
+        return count >= 10
     }
 
     private fun parseM3uStream(
