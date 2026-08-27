@@ -278,7 +278,7 @@
                     android:id="@+id/btnCastDisconnect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="#D32F2F"
+                    android:backgroundTint="#FF6E6E"
                     android:text="Detener Transmisión"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"

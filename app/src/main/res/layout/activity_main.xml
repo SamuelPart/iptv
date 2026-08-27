@@ -70,9 +70,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            app:cardCornerRadius="8dp"
+            app:cardCornerRadius="20dp"
             app:cardBackgroundColor="@color/ios_surface"
-            app:cardElevation="4dp"
+            app:cardElevation="0dp"
             android:visibility="gone">
 
             <com.google.android.gms.ads.nativead.NativeAdView
@@ -480,9 +480,11 @@
                 android:visibility="visible">
 
                 <ImageView
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
-                    android:src="@drawable/app_logo" />
+                    android:layout_width="92dp"
+                    android:layout_height="92dp"
+                    android:src="@drawable/ic_ios_tv"
+                    android:alpha="0.9"
+                    app:tint="@color/ios_blue" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -491,7 +493,7 @@
                     android:gravity="center"
                     android:text="INTRODUCIR UNA URL CON SU LISTA DE CANALES EN INICIO"
                     android:textColor="@color/ios_blue"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -581,7 +583,7 @@
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:src="@drawable/ic_ios_search"
-                    app:tint="#888888" />
+                    app:tint="@color/ios_gray" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -590,7 +592,7 @@
                     android:gravity="center"
                     android:text="INTRODUCIR UNA URL CON SU LISTA DE CANALES EN INICIO"
                     android:textColor="@color/ios_blue"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -629,9 +631,9 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:background="@color/ios_surface"
+                        android:background="@drawable/bg_chip_ios"
                         android:hint="Escribe para buscar canales..."
-                        android:textColorHint="#666666"
+                        android:textColorHint="#66FFFFFF"
                         android:textColor="#FFFFFF"
                         android:textSize="15sp"
                         android:padding="12dp"
@@ -673,7 +675,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Búsquedas Recientes"
-                            android:textColor="#888888"
+                            android:textColor="@color/ios_gray"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -682,7 +684,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="ELIMINAR TODO"
-                            android:textColor="#D32F2F"
+                            android:textColor="#FF6E6E"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:paddingHorizontal="8dp"
@@ -769,9 +771,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="10dp"
+                    app:cardCornerRadius="20dp"
                     app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="4dp"
+                    app:cardElevation="0dp"
                     android:foreground="?android:attr/selectableItemBackground">
 
                     <LinearLayout
@@ -807,7 +809,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="Configurar PIN de bloqueo para ocultar canales"
-                                android:textColor="#888888"
+                                android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
 
                         </LinearLayout>
@@ -828,9 +830,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="10dp"
+                    app:cardCornerRadius="20dp"
                     app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="4dp"
+                    app:cardElevation="0dp"
                     android:foreground="?android:attr/selectableItemBackground">
 
                     <LinearLayout
@@ -868,7 +870,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="Cambiar entre modo Claro u Oscuro"
-                                android:textColor="#888888"
+                                android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
 
                         </LinearLayout>
@@ -889,9 +891,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="10dp"
+                    app:cardCornerRadius="20dp"
                     app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="4dp"
+                    app:cardElevation="0dp"
                     android:foreground="?android:attr/selectableItemBackground">
 
                     <LinearLayout
@@ -905,7 +907,7 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:src="@android:drawable/ic_menu_delete"
-                            app:tint="#D32F2F" />
+                            app:tint="#FF6E6E" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -927,7 +929,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="Restablecer la app y vaciar la playlist actual"
-                                android:textColor="#888888"
+                                android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
 
                         </LinearLayout>
@@ -947,9 +949,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="10dp"
+                    app:cardCornerRadius="20dp"
                     app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="4dp">
+                    app:cardElevation="0dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -983,7 +985,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="Unidades AdMob activas: Banner, Intersticial, Nativo"
-                                android:textColor="#888888"
+                                android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
 
                         </LinearLayout>
@@ -996,9 +998,9 @@
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="10dp"
+                    app:cardCornerRadius="20dp"
                     app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="4dp">
+                    app:cardElevation="0dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -1031,7 +1033,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="Versión 1.6 - Soporte LibVLC y PiP"
-                                android:textColor="#888888"
+                                android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
 
                         </LinearLayout>
@@ -1092,7 +1094,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     app:cardBackgroundColor="@color/ios_surface"
-                    app:cardCornerRadius="8dp">
+                    app:cardCornerRadius="24dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -1117,7 +1119,7 @@
                             android:layout_height="44dp"
                             android:background="@android:color/transparent"
                             android:hint="Buscar película o serie..."
-                            android:textColorHint="#666666"
+                            android:textColorHint="#66FFFFFF"
                             android:textColor="#FFFFFF"
                             android:textSize="14sp"
                             android:paddingStart="8dp"
@@ -1151,7 +1153,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Búsquedas Recientes"
-                            android:textColor="#888888"
+                            android:textColor="@color/ios_gray"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -1160,7 +1162,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="ELIMINAR TODO"
-                            android:textColor="#D32F2F"
+                            android:textColor="#FF6E6E"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:paddingHorizontal="8dp"
@@ -1271,6 +1273,7 @@
     <!-- Global Progress Bar -->
     <ProgressBar
         android:id="@+id/globalProgressBar"
+        android:indeterminateTint="@color/ios_cyan"
         android:layout_width="56dp"
         android:layout_height="56dp"
         android:visibility="gone"

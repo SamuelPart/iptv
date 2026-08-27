@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/ios_bg"
+    android:background="@drawable/bg_card_ios"
     android:orientation="vertical"
     android:padding="20dp">
 
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="Selecciona tu dispositivo para reproducir de forma nativa"
-        android:textColor="#888888"
+        android:textColor="@color/ios_gray"
         android:textSize="12sp" />
 
     <!-- Scanning status container -->
@@ -63,7 +63,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:backgroundTint="#333333"
+        android:background="@drawable/bg_button_secondary"
         android:text="Cerrar"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
