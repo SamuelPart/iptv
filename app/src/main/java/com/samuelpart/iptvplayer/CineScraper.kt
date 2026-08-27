@@ -131,17 +131,19 @@ object CineScraper {
     /**
      * Decides whether a URL is a web page / embedded player that must be
      * resolved in real time, as opposed to a direct stream VLC can play.
-     * Known portal domains always resolve; any extension-less URL that looks
-     * like an embed player (/e/, /v/, player, embed...) resolves too.
-     * Direct IPTV endpoints (with or without extension) are never touched.
+     * Known portals and known video hosters always resolve; any extension-less
+     * URL that looks like an embed page (/e/, /v/, embed, player, watch...)
+     * resolves too. Direct IPTV endpoints (with or without extension) are
+     * never touched.
      */
     fun shouldResolvePage(url: String): Boolean {
         if (!url.startsWith("http://") && !url.startsWith("https://")) return false
         if (WebViewResolver.looksLikeVideoUrl(url)) return false // already a direct stream
         if (ScraperConfig.isWebPageUrl(url)) return true
+        if (ScraperConfig.isKnownHosterUrl(url)) return true
         val path = (Uri.parse(url).path ?: "").lowercase()
-        return path.contains("/e/") || path.contains("/v/") ||
-                path.contains("embed") || path.contains("player")
+        return path.contains("/e/") || path.contains("/v/") || path.contains("embed") ||
+                path.contains("player") || path.contains("watch") || path.contains("/video")
     }
 
     /**

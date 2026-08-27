@@ -339,6 +339,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
             Toast.makeText(this@CineTvShowDetailActivity, "Extrayendo video en tiempo real...", Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {
                 val resolved = CineScraper.resolveBestVideoUrl(this@CineTvShowDetailActivity, streamUrl)
+                if (isFinishing || isDestroyed) return@launch
                 if (resolved != null) {
                     playStreamDirectly(resolved.url, startMs, displayTitle, resolved.referer, resolved.userAgent)
                 } else {

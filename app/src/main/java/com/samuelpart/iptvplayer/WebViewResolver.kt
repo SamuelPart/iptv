@@ -15,10 +15,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
 /**
- * Real-time video URL extractor for JavaScript-heavy streaming pages.
+ * Real-time video URL extractor for JavaScript-heavy streaming pages
+ * (works with embeds from any hoster: dr0pstream, doodstream, streamtape,
+ * filemoon, voe, mixdrop, etc.).
  *
  * Loads the source page in a hidden WebView that behaves exactly like a
  * browser (executes JS, stores cookies, auto-plays the player) and intercepts
@@ -41,7 +44,7 @@ object WebViewResolver {
 
     private val VIDEO_MARKERS = listOf(
         ".m3u8", ".mpd", ".mp4", ".mkv", ".webm",
-        "videoplayback", "mime=video", "/manifest"
+        "videoplayback", "mime=video", "/manifest", "/pass_md5/"
     )
 
     fun looksLikeVideoUrl(url: String): Boolean {
@@ -57,7 +60,7 @@ object WebViewResolver {
                 if(!u || typeof u !== 'string') return false;
                 if(!/^https?:/i.test(u)) return false;
                 return /\.(m3u8|mpd|mp4|mkv|webm)(\?|&|#|$)/i.test(u)
-                    || /videoplayback|mime=video|\/manifest/i.test(u);
+                    || /videoplayback|mime=video|\/manifest|\/pass_md5\//i.test(u);
             }
             var vs = document.querySelectorAll('video');
             for (var i = 0; i < vs.length; i++) {
@@ -91,24 +94,33 @@ object WebViewResolver {
     /**
      * Resolves [pageUrl] to the real video stream. Returns null on timeout/failure.
      * Serialized with a mutex so two resolutions never fight over the WebView.
+     *
+     * NOTE: WebView callbacks like shouldInterceptRequest run on a BACKGROUND
+     * thread, but stopLoading()/destroy() must run on the MAIN thread — that's
+     * why cleanup is always posted to the handler (an off-thread destroy used
+     * to crash and restart the app).
      */
     suspend fun resolve(context: Context, pageUrl: String, timeoutMs: Long = 22000L): Resolved? {
         resolveMutex.withLock {
             return withContext(Dispatchers.Main) {
                 suspendCancellableCoroutine<Resolved?> { cont ->
                     val handler = Handler(Looper.getMainLooper())
+                    val finished = AtomicBoolean(false)
                     var webView: WebView? = null
-                    var finished = false
 
                     fun finish(result: Resolved?) {
-                        if (finished) return
-                        finished = true
+                        if (!finished.compareAndSet(false, true)) return
                         handler.removeCallbacksAndMessages(null)
-                        val wv = webView
-                        webView = null
-                        if (wv != null) {
-                            try { wv.stopLoading() } catch (_: Exception) {}
-                            try { wv.destroy() } catch (_: Exception) {}
+                        if (webView != null) {
+                            val wv = webView
+                            webView = null
+                            if (wv != null) {
+                                // WebView lifecycle MUST run on the main thread
+                                handler.post {
+                                    try { wv.stopLoading() } catch (_: Exception) {}
+                                    try { wv.destroy() } catch (_: Exception) {}
+                                }
+                            }
                         }
                         if (cont.isActive) cont.resume(result)
                     }
@@ -120,10 +132,16 @@ object WebViewResolver {
                             val u = Uri.parse(pageUrl)
                             "${u.scheme}://${u.host}/"
                         }
+                        // Capture once on the main thread (WebView reads from the
+                        // background network thread are unsafe)
+                        val webViewUA = wv.settings.userAgentString ?: CineScraper.CHROME_UA
 
                         wv.settings.javaScriptEnabled = true
                         wv.settings.domStorageEnabled = true
                         wv.settings.mediaPlaybackRequiresUserGesture = false
+                        // Embedded players open tons of ad popup windows: forbid them
+                        wv.settings.setSupportMultipleWindows(false)
+                        wv.settings.javaScriptCanOpenWindowsAutomatically = false
 
                         // Poll the DOM periodically: catches video URLs that the
                         // media stack fetches internally (invisible to request interception)
@@ -135,13 +153,11 @@ object WebViewResolver {
                                 v.evaluateJavascript(VIDEO_PICK_JS) { value ->
                                     val found = decodeJsString(value)
                                     if (!found.isNullOrEmpty() && looksLikeVideoUrl(found)) {
-                                        val referer = webView?.url ?: pageUrl
-                                        val ua = webView?.settings?.userAgentString ?: ""
-                                        finish(Resolved(found, referer, ua))
+                                        finish(Resolved(found, pageUrl, webViewUA))
                                     }
                                 }
                                 if (ticks % 2 == 0) v.evaluateJavascript(AUTO_PLAY_JS, null)
-                                if (!finished) handler.postDelayed(this, 1500)
+                                if (!finished.get()) handler.postDelayed(this, 1500)
                             }
                         }
 
@@ -150,9 +166,7 @@ object WebViewResolver {
                                 val reqUrl = request.url?.toString() ?: return null
                                 if (isBlockedDomain(reqUrl)) return emptyResponse()
                                 if (!request.isForMainFrame && looksLikeVideoUrl(reqUrl)) {
-                                    val referer = view.url ?: pageUrl
-                                    val ua = view.settings.userAgentString ?: ""
-                                    finish(Resolved(reqUrl, referer, ua))
+                                    finish(Resolved(reqUrl, pageUrl, webViewUA))
                                     return emptyResponse()
                                 }
                                 return super.shouldInterceptRequest(view, request)

@@ -51,6 +51,16 @@ object ScraperConfig {
         "chaturbate.com", "adskeeper.com", "onclicka.com"
     )
 
+    // Popular video hoster/embed servers whose pages must be resolved in real
+    // time. Substring match, so "doodstream" also covers dood.watch, dood.re...
+    private val DEFAULT_HOSTER_DOMAINS = listOf(
+        "dr0pstream.com", "doodstream", "dood.", "streamtape", "voe.sx",
+        "filemoon", "mixdrop", "upstream", "vidmoly", "uqload", "fembed",
+        "luluvdo", "wolfstream", "streamwish", "filelions", "earnvids",
+        "streamlare", "hydrax", "yourupload", "supervideo", "dropload",
+        "embedsito", "ok.ru", "rumble.com", "sendvid.com"
+    )
+
     private val SOCIAL_DOMAINS = listOf(
         "facebook.com", "twitter.com", "x.com", "instagram.com",
         "tiktok.com", "youtube.com", "youtu.be", "disqus.com"
@@ -66,6 +76,10 @@ object ScraperConfig {
 
     @Volatile
     var adDomains: List<String> = DEFAULT_AD_DOMAINS
+        private set
+
+    @Volatile
+    var hosterDomains: List<String> = DEFAULT_HOSTER_DOMAINS
         private set
 
     /** Domains whose URLs are HTML pages that must be resolved in real time, never played directly. */
@@ -85,6 +99,13 @@ object ScraperConfig {
     fun isSocialOrAdUrl(url: String): Boolean {
         val lower = url.lowercase()
         return SOCIAL_DOMAINS.any { lower.contains(it) } || adDomains.any { lower.contains(it) }
+    }
+
+    /** True if the URL belongs to a known video embed hoster (dr0pstream, doodstream...). */
+    fun isKnownHosterUrl(url: String): Boolean {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return false
+        val host = Uri.parse(url).host?.lowercase() ?: return false
+        return hosterDomains.any { host.contains(it) }
     }
 
     /** Builds "domain -> search URL" pairs for every enabled portal. */
@@ -166,6 +187,14 @@ object ScraperConfig {
                     if (v.isNotEmpty()) l.add(v)
                 }
                 if (l.isNotEmpty()) adDomains = l
+            }
+            obj.optJSONArray("hosterDomains")?.let { a ->
+                val l = mutableListOf<String>()
+                for (i in 0 until a.length()) {
+                    val v = a.optString(i)
+                    if (v.isNotEmpty()) l.add(v)
+                }
+                if (l.isNotEmpty()) hosterDomains = l
             }
             true
         } catch (e: Exception) {
