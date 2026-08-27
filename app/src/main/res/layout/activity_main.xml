@@ -169,191 +169,254 @@
             android:id="@+id/containerHome"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:fadingEdgeLength="24dp"
+            android:requiresFadingEdge="vertical"
             android:visibility="visible">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="28dp">
 
-                <!-- Header Title & Settings Row -->
+                <!-- HERO brand header -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="54dp"
+                        android:layout_height="54dp"
+                        app:cardCornerRadius="15dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="@color/ios_surface">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/app_logo"
+                            android:scaleType="centerCrop"
+                            android:contentDescription="IPLAY PRO" />
+
+                    </androidx.cardview.widget.CardView>
+
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="IPTV Player PRO"
-                            android:textColor="@color/ios_blue"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
+                            android:text="IPLAY PRO"
+                            android:textColor="#FFFFFF"
+                            android:textSize="30sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.02" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Centro de carga de listas de canales"
-                            android:textColor="#888888"
+                            android:layout_marginTop="2dp"
+                            android:text="Canales, películas y series, todo en un lugar"
+                            android:textColor="@color/ios_gray"
                             android:textSize="13sp" />
 
                     </LinearLayout>
 
-                    <!-- Settings Gear Icon Button -->
                     <ImageButton
                         android:id="@+id/btnOpenSettings"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:src="@android:drawable/ic_menu_preferences"
+                        android:src="@drawable/ic_ios_gear"
                         android:contentDescription="Ajustes de la App"
-                        app:tint="@color/ios_blue" />
+                        app:tint="#FFFFFF" />
 
                 </LinearLayout>
 
-                <!-- Card for URL Input -->
-                <androidx.cardview.widget.CardView
+                <!-- Aurora hero banner -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="128dp"
+                    android:layout_marginTop="22dp"
+                    android:background="@drawable/bg_hero_banner"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start|bottom"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="BIENVENIDO"
+                            android:textColor="@color/ios_cyan"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.22" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Pega tu lista M3U\ny explora más de 9.000 títulos"
+                            android:textColor="#FFFFFF"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:lineSpacingMultiplier="1.15" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="86dp"
+                        android:layout_height="86dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:src="@drawable/ic_ios_tv"
+                        android:alpha="0.22"
+                        android:contentDescription="@null" />
+
+                </FrameLayout>
+
+                <!-- Glass card: cargar lista M3U -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardCornerRadius="14dp"
-                    app:cardElevation="6dp">
+                    android:layout_marginTop="18dp"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_ios"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ENLACE DE TU LISTA IPTV (M3U)"
+                        android:textColor="@color/ios_cyan"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.14" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <EditText
+                            android:id="@+id/edtUrl"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Enlace de la Lista IPTV (M3U):"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_chip_ios"
+                            android:hint="https://ejemplo.com/lista.m3u"
+                            android:textColorHint="#66FFFFFF"
                             android:textColor="#FFFFFF"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp"
+                            android:padding="14dp"
+                            android:inputType="textUri"
+                            android:maxLines="1" />
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal">
-
-                            <EditText
-                                android:id="@+id/edtUrl"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:background="#2B2B2B"
-                                android:hint="https://ejemplo.com/lista.m3u"
-                                android:textColorHint="#666666"
-                                android:textColor="#FFFFFF"
-                                android:textSize="14sp"
-                                android:padding="12dp"
-                                android:inputType="textUri"
-                                android:maxLines="1" />
-
-                            <ImageButton
-                                android:id="@+id/btnClear"
-                                android:layout_width="48dp"
-                                android:layout_height="match_parent"
-                                android:background="#2B2B2B"
-                                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                                android:contentDescription="Limpiar"
-                                android:layout_marginStart="6dp"
-                                app:tint="#FFFFFF"/>
-
-                        </LinearLayout>
-
-                        <Button
-                            android:id="@+id/btnLoad"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:layout_marginTop="16dp"
-                            android:backgroundTint="@color/ios_blue"
-                            android:text="Cargar Lista IPTV"
-                            android:textColor="#000000"
-                            android:textStyle="bold" />
-
-                        <!-- Quick Load Options -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="O probar listas públicas gratis:"
-                            android:textColor="#888888"
-                            android:textSize="13sp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:orientation="horizontal">
-
-                            <Button
-                                android:id="@+id/btnQuickSpain"
-                                style="?android:attr/buttonStyleSmall"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginEnd="6dp"
-                                android:backgroundTint="#333333"
-                                android:text="España 🇪🇸"
-                                android:textColor="#FFFFFF"
-                                android:textSize="11sp" />
-
-                            <Button
-                                android:id="@+id/btnQuickGlobal"
-                                style="?android:attr/buttonStyleSmall"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginEnd="6dp"
-                                android:backgroundTint="#333333"
-                                android:text="Global 🌐"
-                                android:textColor="#FFFFFF"
-                                android:textSize="11sp" />
-
-                            <Button
-                                android:id="@+id/btnQuickNews"
-                                style="?android:attr/buttonStyleSmall"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:backgroundTint="#333333"
-                                android:text="Noticias 📰"
-                                android:textColor="#FFFFFF"
-                                android:textSize="11sp" />
-
-                        </LinearLayout>
+                        <ImageButton
+                            android:id="@+id/btnClear"
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip_ios"
+                            android:src="@android:drawable/ic_menu_close_clear_cancel"
+                            android:contentDescription="Limpiar"
+                            app:tint="#CCFFFFFF" />
 
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
 
-                <!-- M3U Playlists History Section -->
+                    <Button
+                        android:id="@+id/btnLoad"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:layout_marginTop="14dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:text="Cargar mi lista"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:text="O prueba una lista pública gratis:"
+                        android:textColor="@color/ios_gray"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnQuickSpain"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#295E5CE6"
+                            android:text="España 🇪🇸"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/btnQuickGlobal"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#295E5CE6"
+                            android:text="Global 🌐"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/btnQuickNews"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:backgroundTint="#295E5CE6"
+                            android:text="Noticias 📰"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Historial de listas -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardHomeStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="18dp"
                     app:cardBackgroundColor="@color/ios_surface"
-                    app:cardCornerRadius="12dp">
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:padding="18dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -367,9 +430,9 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Historial de Listas"
-                                android:textColor="#888888"
-                                android:textSize="13sp"
+                                android:text="Historial de listas"
+                                android:textColor="#FFFFFF"
+                                android:textSize="15sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -377,7 +440,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="LIMPIAR"
-                                android:textColor="#D32F2F"
+                                android:textColor="#FF6E6E"
                                 android:textSize="12sp"
                                 android:textStyle="bold"
                                 android:paddingHorizontal="8dp"
@@ -386,7 +449,6 @@
 
                         </LinearLayout>
 
-                        <!-- Recycler view for M3U playlist history items -->
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvHomePlaylistHistory"
                             android:layout_width="match_parent"

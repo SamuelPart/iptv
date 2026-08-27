@@ -155,11 +155,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showTab(homeVis: Int, channelsVis: Int, cineVis: Int, browserVis: Int, searchVis: Int) {
-        binding.containerHome.visibility = homeVis
-        binding.containerChannels.visibility = channelsVis
-        binding.containerCine.visibility = cineVis
-        binding.containerBrowser.visibility = browserVis
-        binding.containerSearch.visibility = searchVis
+        showTabAnimated(binding.containerHome, homeVis)
+        showTabAnimated(binding.containerChannels, channelsVis)
+        showTabAnimated(binding.containerCine, cineVis)
+        showTabAnimated(binding.containerBrowser, browserVis)
+        showTabAnimated(binding.containerSearch, searchVis)
 
         // Randomly choose between displaying Banner Ad or Native Advanced Ad for the current tab (50/50 chance).
         // If Native Ad hasn't loaded yet, default to Banner Ad so we never miss impressions!
@@ -171,6 +171,22 @@ class MainActivity : AppCompatActivity() {
         } else {
             binding.cardGlobalNativeAd.visibility = View.GONE
             binding.adView.visibility = View.VISIBLE
+        }
+    }
+
+    /** PS5-style tab entry: the panel rises and springs into place. */
+    private fun showTabAnimated(view: View, vis: Int) {
+        view.visibility = vis
+        if (vis == View.VISIBLE) {
+            view.animate().cancel()
+            view.alpha = 0f
+            view.translationY = 28f
+            view.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(260)
+                .setInterpolator(android.view.animation.OvershootInterpolator(1.2f))
+                .start()
         }
     }
 
