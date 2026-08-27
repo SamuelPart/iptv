@@ -11,8 +11,8 @@ android {
         applicationId = "com.samuelpart.iptvplayer"
         minSdk = 21
         targetSdk = 35
-        versionCode = 10
-        versionName = "1.6"
+        versionCode = 11
+        versionName = "1.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -63,7 +63,8 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-rtsp:$media3Version")
     
     // LibVLC Native Player Engine (Replaces ExoPlayer completely!)
-    implementation("org.videolan.android:libvlc-all:3.3.5")
+    // 3.6.3+: compiled with NDK r28 -> native libs support 16 KB page size devices
+    implementation("org.videolan.android:libvlc-all:3.6.3")
 
     // Google Cast & MediaRouter for native Chromecast support
     implementation("androidx.mediarouter:mediarouter:1.6.0")

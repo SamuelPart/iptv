@@ -42,7 +42,7 @@ object ScraperConfig {
         Portal("RePelis24 Oficial", "https://repelis24-oficial.site", "/?s={query}")
     )
 
-    private val DEFAULT_EXTRA_WEB_DOMAINS = listOf("tokyvideo.com")
+    private val DEFAULT_EXTRA_WEB_DOMAINS = listOf("tokyvideo.com", "repelis24.ing")
 
     private val DEFAULT_AD_DOMAINS = listOf(
         "doubleclick.net", "googlesyndication.com", "google-analytics.com",
