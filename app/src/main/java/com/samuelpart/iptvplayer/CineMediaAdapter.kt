@@ -7,17 +7,25 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.samuelpart.iptvplayer.databinding.ItemCineMediaBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CineMediaAdapter(
     private var mediaList: List<CineMedia>,
     private val onMediaClick: (CineMedia) -> Unit
 ) : RecyclerView.Adapter<CineMediaAdapter.CineMediaViewHolder>() {
 
+    /** Items already asked to TMDB this session (avoids refetch spam while scrolling). */
+    private val tmdbRequested = mutableSetOf<String>()
+
     inner class CineMediaViewHolder(private val binding: ItemCineMediaBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(media: CineMedia) {
             binding.root.springPress() // iPhone-style bounce on tap
+            binding.root.tag = media.url // holder identity for lazy TMDB callbacks
             binding.txtCineTitle.text = media.title
             
             val isMovie = (media.type == "movie")
@@ -77,6 +85,37 @@ class CineMediaAdapter(
                     .error(fallbackIcon)
                     .fallback(fallbackIcon)
                     .into(binding.imgPoster)
+
+                // Poster a la vista: si este item no tiene imagen y TMDB no lo resolvio
+                // todavia, pedirlo al vuelo (solo items visibles, asi no se satura la API
+                // como antes con el prefetch de las 9.485 fichas).
+                val isMediaItem = media.type == "movie" || media.type == "series"
+                if (imgToLoad.isNullOrEmpty() && media.tmdbId == null && isMediaItem &&
+                    media.url !in tmdbRequested
+                ) {
+                    tmdbRequested.add(media.url)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try { CineRepository.fetchTmdMetadata(media) } catch (_: Exception) { }
+                        withContext(Dispatchers.Main) {
+                            // Only paint if this recycled holder is still showing the same item
+                            if (binding.root.tag == media.url) {
+                                val recovered = if (!media.posterUrl.isNullOrEmpty()) media.posterUrl else media.rawLogo
+                                if (!recovered.isNullOrEmpty()) {
+                                    Glide.with(binding.imgPoster.context)
+                                        .load(recovered)
+                                        .transition(DrawableTransitionOptions.withCrossFade())
+                                        .error(fallbackIcon)
+                                        .into(binding.imgPoster)
+                                }
+                                val refreshedRating = media.rating ?: 0.0
+                                if (refreshedRating > 0.0) {
+                                    binding.txtRatingBadge.visibility = View.VISIBLE
+                                    binding.txtRatingBadge.text = String.format("★ %.1f", refreshedRating)
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             binding.root.setOnClickListener {

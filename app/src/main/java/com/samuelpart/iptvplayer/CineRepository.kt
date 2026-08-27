@@ -26,11 +26,15 @@ object CineRepository {
      */
     private const val CATALOG_CACHE_FILE = "cine_catalog_remote.m3u"
     private val CATALOG_URLS = listOf(
-        "https://raw.githubusercontent.com/SamuelPart/iptv/main/app/src/main/res/raw/cine_catalog.m3u",
-        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a04133-iptv/app/src/main/res/raw/cine_catalog.m3u"
+        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a04133-iptv/app/src/main/res/raw/cine_catalog.m3u",
+        "https://raw.githubusercontent.com/SamuelPart/iptv/main/app/src/main/res/raw/cine_catalog.m3u"
     )
 
     private var cachedCatalog: List<CineMedia>? = null
+
+    /** Real episode labels only appear at the START of the name.
+     *  A movie like "La guerra de las galaxias. Episodio IV..." must stay a movie. */
+    private val EPISODE_NAME = Regex("""^\s*(ep[ií]s?odio|cap[ií]tulo|cap|ep)[:\s.\-]*\d+|^\s*[st]\d{1,2}e\d{1,3}""", RegexOption.IGNORE_CASE)
 
     /** Direct video files must NEVER be treated as playlists/series. */
     private val DIRECT_VIDEO_EXTENSIONS = listOf(
@@ -260,8 +264,8 @@ object CineRepository {
                         val name = inlineParts[0].trim()
                         val url = inlineParts[1].trim()
                         
-                        val isSeries = currentGroup.lowercase().contains("temporada") || 
-                                       name.lowercase().contains("episodio") || 
+                        val isSeries = currentGroup.lowercase().contains("temporada") ||
+                                       EPISODE_NAME.containsMatchIn(name) ||
                                        isRemotePlaylist(url)
                         
                         if (isSeries) {
@@ -290,8 +294,8 @@ object CineRepository {
                 }
             } else if (!trimmed.startsWith("#") && hasMetadata) {
                 val url = trimmed
-                val isSeries = currentGroup.lowercase().contains("temporada") || 
-                               currentName.lowercase().contains("episodio") || 
+                val isSeries = currentGroup.lowercase().contains("temporada") ||
+                               EPISODE_NAME.containsMatchIn(currentName) ||
                                isRemotePlaylist(url)
                                
                 if (isSeries) {
