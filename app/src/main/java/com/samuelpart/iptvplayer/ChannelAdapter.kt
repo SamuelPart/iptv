@@ -2,6 +2,7 @@ package com.samuelpart.iptvplayer
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -44,12 +45,33 @@ class ChannelAdapter(
     }
 
     override fun onBindViewHolder(holder: ChannelViewHolder, position: Int) {
+        animateEntrance(holder.itemView, position)
         holder.bind(channels[position])
     }
 
     override fun getItemCount(): Int = channels.size
 
+
+    /** iPhone/PS stagger: each new card rises + fades in as it gets scrolled into view. */
+    private var lastAnimatedPosition = -1
+
+    private fun animateEntrance(view: View, position: Int) {
+        if (position <= lastAnimatedPosition) return
+        lastAnimatedPosition = position
+        view.animate().cancel()
+        view.alpha = 0f
+        view.translationY = 44f
+        view.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(300)
+            .setInterpolator(android.view.animation.DecelerateInterpolator(1.6f))
+            .withEndAction(null)
+            .start()
+    }
+
     fun updateList(newChannels: List<Channel>) {
+        lastAnimatedPosition = -1
         channels = newChannels
         notifyDataSetChanged()
     }

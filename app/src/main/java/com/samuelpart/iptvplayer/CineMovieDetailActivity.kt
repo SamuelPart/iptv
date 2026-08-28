@@ -354,7 +354,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
                         }
                         org.videolan.libvlc.MediaPlayer.Event.Playing -> {
                             binding.inlineProgress.visibility = View.GONE
-                            binding.btnInlinePlayPause.setImageResource(android.R.drawable.ic_media_pause)
+                            binding.btnInlinePlayPause.setImageResource(R.drawable.ic_ios_pause)
                             
                             if (pendingSeekPosition > 0L) {
                                 mediaPlayer?.time = pendingSeekPosition
@@ -365,7 +365,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
                             startInlineTimelineUpdates()
                         }
                         org.videolan.libvlc.MediaPlayer.Event.Paused -> {
-                            binding.btnInlinePlayPause.setImageResource(android.R.drawable.ic_media_play)
+                            binding.btnInlinePlayPause.setImageResource(R.drawable.ic_ios_play)
                         }
                         org.videolan.libvlc.MediaPlayer.Event.Stopped -> {
                             binding.inlineProgress.visibility = View.GONE

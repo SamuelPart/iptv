@@ -14,7 +14,7 @@
         android:id="@+id/imgHistoryLeft"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        android:src="@android:drawable/ic_menu_recent_history"
+        android:src="@drawable/ic_ios_clock"
         app:tint="@color/ios_gray" />
 
     <!-- Query Text -->
@@ -33,7 +33,7 @@
         android:id="@+id/btnHistoryDelete"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:src="@drawable/ic_ios_xmark"
         android:padding="4dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         app:tint="#FF6E6E" />

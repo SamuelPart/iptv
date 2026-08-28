@@ -448,7 +448,7 @@
                             android:layout_height="match_parent"
                             android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip_ios"
-                            android:src="@android:drawable/ic_menu_close_clear_cancel"
+                            android:src="@drawable/ic_ios_xmark"
                             android:contentDescription="Limpiar"
                             app:tint="#CCFFFFFF" />
 
@@ -727,7 +727,7 @@
                         android:layout_width="42dp"
                         android:layout_height="42dp"
                         android:background="@drawable/bg_circle_glass"
-                        android:src="@android:drawable/ic_menu_manage"
+                        android:src="@drawable/ic_ios_filter"
                         android:contentDescription="Filtrar Canales"
                         android:padding="11dp"
                         android:layout_marginEnd="10dp"
@@ -738,7 +738,7 @@
                         android:layout_width="42dp"
                         android:layout_height="42dp"
                         android:background="@drawable/bg_circle_glass"
-                        android:src="@android:drawable/ic_dialog_dialer"
+                        android:src="@drawable/ic_ios_grid"
                         android:contentDescription="Cambiar Vista"
                         android:padding="11dp"
                         app:tint="#FFFFFF" />
@@ -819,7 +819,7 @@
                         android:layout_width="44dp"
                         android:layout_height="44dp"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:src="@android:drawable/ic_menu_recent_history"
+                        android:src="@drawable/ic_ios_clock"
                         android:contentDescription="Historial"
                         android:layout_marginEnd="4dp"
                         app:tint="@color/ios_blue" />
@@ -844,7 +844,7 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:src="@android:drawable/ic_menu_manage"
+                        android:src="@drawable/ic_ios_filter"
                         android:contentDescription="Filtrar Búsqueda"
                         android:layout_marginStart="8dp"
                         app:tint="@color/ios_blue" />
@@ -949,7 +949,7 @@
                     <ImageView
                         android:layout_width="28dp"
                         android:layout_height="28dp"
-                        android:src="@android:drawable/ic_menu_preferences"
+                        android:src="@drawable/ic_ios_gear"
                         app:tint="@color/ios_blue" />
 
                     <TextView
@@ -984,7 +984,7 @@
                         <ImageView
                             android:layout_width="36dp"
                             android:layout_height="36dp"
-                            android:src="@android:drawable/ic_secure"
+                            android:src="@drawable/ic_ios_shield"
                             app:tint="@color/ios_blue" />
 
                         <LinearLayout
@@ -1015,7 +1015,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_media_next"
+                            android:src="@drawable/ic_ios_arrow_right"
                             app:tint="#666666" />
 
                     </LinearLayout>
@@ -1076,7 +1076,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_media_next"
+                            android:src="@drawable/ic_ios_arrow_right"
                             app:tint="#666666" />
 
                     </LinearLayout>
@@ -1104,7 +1104,7 @@
                         <ImageView
                             android:layout_width="36dp"
                             android:layout_height="36dp"
-                            android:src="@android:drawable/ic_menu_delete"
+                            android:src="@drawable/ic_ios_trash"
                             app:tint="#FF6E6E" />
 
                         <LinearLayout
@@ -1135,7 +1135,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_media_next"
+                            android:src="@drawable/ic_ios_arrow_right"
                             app:tint="#666666" />
 
                     </LinearLayout>
@@ -1306,7 +1306,7 @@
                             android:layout_width="44dp"
                             android:layout_height="44dp"
                             android:background="?android:attr/selectableItemBackgroundBorderless"
-                            android:src="@android:drawable/ic_menu_recent_history"
+                            android:src="@drawable/ic_ios_clock"
                             android:contentDescription="Historial"
                             app:tint="@color/ios_blue" />
 

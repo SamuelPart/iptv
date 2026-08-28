@@ -11,6 +11,18 @@
 
         <!-- PlayStation-style transitions for EVERY activity, theme-wide -->
         <item name="android:windowAnimationStyle">@style/PSAnimations</item>
+
+        <!-- Ventanas emergentes estilo iPhone -->
+        <item name="android:alertDialogTheme">@style/iOSAlertDialog</item>
+    </style>
+
+    <!-- AlertDialogs: panel de vidrio oscuro redondeado -->
+    <style name="iOSAlertDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@drawable/bg_dialog_ios</item>
+        <item name="android:colorAccent">@color/ios_blue</item>
+        <item name="android:textColorPrimary">#F2FFFFFF</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.62</item>
     </style>
 
     <!-- Activity transitions: PS5 zoom out from card / swoop back -->

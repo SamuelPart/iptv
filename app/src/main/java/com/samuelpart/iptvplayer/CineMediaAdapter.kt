@@ -134,12 +134,33 @@ class CineMediaAdapter(
     }
 
     override fun onBindViewHolder(holder: CineMediaViewHolder, position: Int) {
+        animateEntrance(holder.itemView, position)
         holder.bind(mediaList[position])
     }
 
     override fun getItemCount(): Int = mediaList.size
 
+
+    /** iPhone/PS stagger: each new card rises + fades in as it gets scrolled into view. */
+    private var lastAnimatedPosition = -1
+
+    private fun animateEntrance(view: View, position: Int) {
+        if (position <= lastAnimatedPosition) return
+        lastAnimatedPosition = position
+        view.animate().cancel()
+        view.alpha = 0f
+        view.translationY = 44f
+        view.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(300)
+            .setInterpolator(android.view.animation.DecelerateInterpolator(1.6f))
+            .withEndAction(null)
+            .start()
+    }
+
     fun updateList(newList: List<CineMedia>) {
+        lastAnimatedPosition = -1
         mediaList = newList
         notifyDataSetChanged()
     }

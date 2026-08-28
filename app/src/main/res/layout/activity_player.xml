@@ -110,7 +110,7 @@
                 android:padding="6dp"
                 android:scaleType="fitCenter"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_media_rew"
+                android:src="@drawable/ic_ios_rewind"
                 android:contentDescription="Retroceder 10s"
                 app:tint="#FFFFFF" />
 
@@ -123,7 +123,7 @@
                 android:scaleType="fitCenter"
                 android:layout_marginHorizontal="24dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_media_pause"
+                android:src="@drawable/ic_ios_pause"
                 android:contentDescription="Reproducir/Pausar"
                 app:tint="@color/ios_blue" />
 
@@ -135,7 +135,7 @@
                 android:padding="6dp"
                 android:scaleType="fitCenter"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_media_ff"
+                android:src="@drawable/ic_ios_forward"
                 android:contentDescription="Adelantar 10s"
                 app:tint="#FFFFFF" />
 
@@ -270,7 +270,7 @@
                     android:layout_height="64dp"
                     android:layout_marginEnd="16dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_media_pause"
+                    android:src="@drawable/ic_ios_pause"
                     android:contentDescription="Reproducir/Pausar en TV"
                     app:tint="@color/ios_blue" />
 

@@ -487,9 +487,9 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun updatePlayPauseButtonIcon(isPlaying: Boolean) {
         if (isPlaying) {
-            binding.btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
+            binding.btnPlayPause.setImageResource(R.drawable.ic_ios_pause)
         } else {
-            binding.btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
+            binding.btnPlayPause.setImageResource(R.drawable.ic_ios_play)
         }
     }
 
@@ -804,7 +804,7 @@ class PlayerActivity : AppCompatActivity() {
         binding.txtConnectedTv.text = "Transmitiendo en $deviceName 📺"
         binding.txtCastPlayingTitle.text = "Reproduciendo: $channelName"
         isCastPlaying = true
-        binding.btnCastPlayPause.setImageResource(android.R.drawable.ic_media_pause)
+        binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_pause)
         
         startCastPolling()
     }
@@ -814,7 +814,7 @@ class PlayerActivity : AppCompatActivity() {
         isCastPlaying = !isCastPlaying
         
         if (isCastPlaying) {
-            binding.btnCastPlayPause.setImageResource(android.R.drawable.ic_media_pause)
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_pause)
             Toast.makeText(this, "Reanudando en tu TV...", Toast.LENGTH_SHORT).show()
             
             lifecycleScope.launch {
@@ -832,7 +832,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
             }
         } else {
-            binding.btnCastPlayPause.setImageResource(android.R.drawable.ic_media_play)
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_play)
             Toast.makeText(this, "Pausando en tu TV...", Toast.LENGTH_SHORT).show()
             
             lifecycleScope.launch {
@@ -941,9 +941,9 @@ class PlayerActivity : AppCompatActivity() {
     private fun updateRemotePlayPauseButton(isPlaying: Boolean) {
         isCastPlaying = isPlaying
         if (isPlaying) {
-            binding.btnCastPlayPause.setImageResource(android.R.drawable.ic_media_pause)
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_pause)
         } else {
-            binding.btnCastPlayPause.setImageResource(android.R.drawable.ic_media_play)
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_play)
         }
     }
 

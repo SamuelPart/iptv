@@ -492,13 +492,13 @@ class MainActivity : AppCompatActivity() {
                     0 -> {
                         isGridView = true
                         layoutManager.spanCount = 3
-                        binding.btnToggleLayout.setImageResource(android.R.drawable.ic_dialog_dialer)
+                        binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_grid)
                         Toast.makeText(this, "Vista Cuadrícula activa", Toast.LENGTH_SHORT).show()
                     }
                     1 -> {
                         isGridView = false
                         layoutManager.spanCount = 1
-                        binding.btnToggleLayout.setImageResource(android.R.drawable.ic_menu_sort_by_size)
+                        binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_list)
                         Toast.makeText(this, "Vista Lista activa", Toast.LENGTH_SHORT).show()
                     }
                 }
