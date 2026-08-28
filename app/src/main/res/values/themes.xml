@@ -14,6 +14,14 @@
 
         <!-- Ventanas emergentes estilo iPhone -->
         <item name="android:alertDialogTheme">@style/iOSAlertDialog</item>
+        <item name="alertDialogTheme">@style/iOSAlertDialogCompat</item>
+    </style>
+
+    <style name="iOSAlertDialogCompat" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/bg_dialog_ios</item>
+        <item name="android:colorAccent">@color/ios_blue</item>
+        <item name="android:textColorPrimary">#F2FFFFFF</item>
+        <item name="android:windowAnimationStyle">@style/iOSPopupAnimation</item>
     </style>
 
     <!-- Animacion de popups iPhone -->

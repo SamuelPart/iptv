@@ -5,6 +5,14 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import kotlin.math.roundToInt
+import android.widget.TextView
+import android.widget.LinearLayout
+import android.widget.ImageView
+import android.widget.FrameLayout
+import android.view.Gravity
+import android.graphics.Typeface
+import android.graphics.Color
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
@@ -325,7 +333,7 @@ class MainActivity : AppCompatActivity() {
                 else -> 0
             }
 
-            AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+            AlertDialog.Builder(this)
                 .setTitle("Seleccionar Tema de la App")
                 .setSingleChoiceItems(options, checkedItem) { dialog, which ->
                     val selectedTheme = when (which) {
@@ -533,7 +541,7 @@ class MainActivity : AppCompatActivity() {
             "Limpiar caché de lista IPTV 🧹"
         )
 
-        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+        AlertDialog.Builder(this)
             .setTitle("⚙️ Ajustes de la App")
             .setItems(options) { _, which ->
                 when (which) {
@@ -572,7 +580,7 @@ class MainActivity : AppCompatActivity() {
                 filters = arrayOf(android.text.InputFilter.LengthFilter(4))
             }
 
-            AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+            AlertDialog.Builder(this)
                 .setTitle("🔒 Desactivar Control Parental")
                 .setMessage("Por favor, ingresa tu PIN de seguridad de 4 dígitos para desactivar el filtro de adultos:")
                 .setView(pinInput)
@@ -612,7 +620,7 @@ class MainActivity : AppCompatActivity() {
                 filters = arrayOf(android.text.InputFilter.LengthFilter(4))
             }
 
-            AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+            AlertDialog.Builder(this)
                 .setTitle("🔑 Configurar PIN de Seguridad")
                 .setMessage("Ingresa un PIN único de 4 dígitos para activar/desactivar el control parental:")
                 .setView(pinInput)
@@ -657,7 +665,7 @@ class MainActivity : AppCompatActivity() {
             container.addView(currentPinInput)
             container.addView(newPinInput)
 
-            AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+            AlertDialog.Builder(this)
                 .setTitle("🔑 Cambiar PIN de Seguridad")
                 .setMessage("Para cambiar el PIN, debes ingresar tu clave actual:")
                 .setView(container)
@@ -681,27 +689,108 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showFilterDialog() {
-        val options = arrayOf(
-            "Filtrar por País 🗺️",
-            "Filtrar por Idioma 🗣️",
-            "Filtrar por Categoría 📺",
-            "Ordenar por Alfabeto 🔤",
-            "Restablecer Filtros 🔄"
-        )
+    /** Modern iPhone-style animated option popup: glass rows with icons + chevrons. */
+    private fun showIosOptionPopup(title: String, subtitle: String, options: List<Pair<Int, String>>, onPick: (Int) -> Unit) {
+        val density = resources.displayMetrics.density
+        fun Int.dp(): Int = (this * density).roundToInt()
 
-        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
-            .setTitle("Opciones de Filtrado")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> showCountryFilterSelector()
-                    1 -> showLanguageFilterSelector()
-                    2 -> showCategoryFilterSelector()
-                    3 -> showAlphabetSortSelector()
-                    4 -> resetAllFilters()
-                }
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.bg_dialog_ios)
+            setPadding(22.dp(), 22.dp(), 22.dp(), 16.dp())
+            minimumWidth = 300.dp()
+            clipToOutline = true
+        }
+
+        root.addView(TextView(this).apply {
+            text = title
+            setTextColor(Color.WHITE)
+            textSize = 18f
+            setTypeface(typeface, Typeface.BOLD)
+        })
+        root.addView(TextView(this).apply {
+            text = subtitle
+            setTextColor(Color.parseColor("#98989F"))
+            textSize = 13f
+            setPadding(0, 6.dp(), 0, 16.dp())
+        })
+
+        var dialog: AlertDialog? = null
+        options.forEachIndexed { index, (iconRes, label) ->
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_tile_glass)
+                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = 10.dp() }
+                springPress()
             }
-            .show()
+            val chip = FrameLayout(this).apply {
+                setBackgroundResource(R.drawable.bg_circle_glass)
+                layoutParams = LinearLayout.LayoutParams(40.dp(), 40.dp())
+            }
+            chip.addView(ImageView(this).apply {
+                setImageResource(iconRes)
+                setColorFilter(Color.WHITE)
+                layoutParams = FrameLayout.LayoutParams(22.dp(), 22.dp(), Gravity.CENTER)
+            })
+            row.addView(chip)
+            row.addView(TextView(this).apply {
+                text = label
+                setTextColor(Color.WHITE)
+                textSize = 15f
+                setTypeface(typeface, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    marginStart = 13.dp()
+                }
+            })
+            row.addView(ImageView(this).apply {
+                setImageResource(R.drawable.ic_ios_arrow_right)
+                setColorFilter(Color.parseColor("#98989F"))
+                layoutParams = LinearLayout.LayoutParams(18.dp(), 18.dp())
+            })
+            row.setOnClickListener {
+                dialog?.dismiss()
+                onPick(index)
+            }
+            root.addView(row)
+        }
+
+        dialog = AlertDialog.Builder(this)
+            .setView(root)
+            .create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.show()
+        dialog.window?.let { w ->
+            val attrs = w.attributes
+            attrs.windowAnimations = R.style.iOSPopupAnimation
+            w.attributes = attrs
+        }
+    }
+
+    private fun showFilterDialog() {
+        showIosOptionPopup(
+            "Filtrar y ordenar",
+            "Toca una opcion para aplicarla",
+            listOf(
+                R.drawable.ic_ios_globe to "Filtrar por pais",
+                R.drawable.ic_ios_message to "Filtrar por idioma",
+                R.drawable.ic_ios_tv to "Filtrar por categoria",
+                R.drawable.ic_ios_sort to "Ordenar alfabeticamente",
+                R.drawable.ic_ios_refresh to "Restablecer filtros"
+            )
+        ) { which ->
+            when (which) {
+                0 -> showCountryFilterSelector()
+                1 -> showLanguageFilterSelector()
+                2 -> showCategoryFilterSelector()
+                3 -> showAlphabetSortSelector()
+                4 -> resetAllFilters()
+            }
+        }
     }
 
     private fun showCountryFilterSelector() {
@@ -722,7 +811,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        dialog = AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+        dialog = AlertDialog.Builder(this)
             .setTitle("Seleccionar País 🗺️")
             .setView(recyclerView)
             .setNeutralButton("Mostrar Todos 🔄") { _, _ ->
@@ -742,7 +831,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val items = languages.toTypedArray()
-        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+        AlertDialog.Builder(this)
             .setTitle("Seleccionar Idioma")
             .setItems(items) { _, which ->
                 selectedLanguage = items[which]
@@ -758,7 +847,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val items = categories.toTypedArray()
-        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+        AlertDialog.Builder(this)
             .setTitle("Seleccionar Categoría")
             .setItems(items) { _, which ->
                 selectedCategory = items[which]
@@ -769,7 +858,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showAlphabetSortSelector() {
         val options = arrayOf("Sin Ordenar 🔄", "A-Z (Ascendente) 🔼", "Z-A (Descendente) 🔽")
-        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+        AlertDialog.Builder(this)
             .setTitle("Ordenar por Alfabeto")
             .setItems(options) { _, which ->
                 selectedAlphabet = when (which) {
@@ -829,24 +918,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSearchFilterDialog() {
-        val options = arrayOf(
-            "Filtrar por País 🗺️",
-            "Restablecer Filtro de País 🔄"
-        )
-
-        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
-            .setTitle("Opciones de Búsqueda")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> showSearchCountryFilterSelector()
-                    1 -> {
-                        selectedSearchCountry = "Todos"
-                        filterSearchTabUnified()
-                        Toast.makeText(this, "Filtro de búsqueda restablecido", Toast.LENGTH_SHORT).show()
-                    }
+        showIosOptionPopup(
+            "Opciones de busqueda",
+            "Filtra los resultados por pais",
+            listOf(
+                R.drawable.ic_ios_globe to "Filtrar por pais",
+                R.drawable.ic_ios_refresh to "Restablecer filtro de pais"
+            )
+        ) { which ->
+            when (which) {
+                0 -> showSearchCountryFilterSelector()
+                1 -> {
+                    selectedSearchCountry = "Todos"
+                    filterSearchTabUnified()
+                    Toast.makeText(this, "Filtro de búsqueda restablecido", Toast.LENGTH_SHORT).show()
                 }
             }
-            .show()
+        }
     }
 
     private fun showSearchCountryFilterSelector() {
@@ -867,7 +955,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        dialog = AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+        dialog = AlertDialog.Builder(this)
             .setTitle("Filtrar Búsqueda por País 🗺️")
             .setView(recyclerView)
             .setNeutralButton("Mostrar Todos 🔄") { _, _ ->
@@ -987,7 +1075,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showTutorialStep(step: Int) {
-        val builder = AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+        val builder = AlertDialog.Builder(this)
         
         when (step) {
             1 -> {
