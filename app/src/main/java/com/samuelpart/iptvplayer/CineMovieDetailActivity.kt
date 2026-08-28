@@ -42,6 +42,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCineMovieDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.post { UiMotion.reveal(binding.layoutMovieDetailCard) }
 
         @Suppress("DEPRECATION")
         val extraMedia = intent.getSerializableExtra("media") as? CineMedia
@@ -134,6 +135,16 @@ class CineMovieDetailActivity : AppCompatActivity() {
 
                 override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {}
             })
+
+        // iOS floating poster + real TMDB rating pill
+        Glide.with(this)
+            .load(if (!media.posterUrl.isNullOrEmpty()) media.posterUrl else media.rawLogo)
+            .placeholder(R.drawable.bg_placeholder)
+            .into(binding.imgMoviePoster)
+
+        val ratingValue = media.rating ?: 0.0
+        binding.txtMovieRatingBadge.visibility = if (ratingValue > 0.0) View.VISIBLE else View.GONE
+        if (ratingValue > 0.0) binding.txtMovieRatingBadge.text = String.format("★ %.1f", ratingValue)
 
         // Show option buttons count of servers dynamically
         if (media.urls.size > 1) {

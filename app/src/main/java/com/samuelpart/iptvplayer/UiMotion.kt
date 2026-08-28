@@ -44,6 +44,19 @@ fun View.springPress() {
 
 object UiMotion {
 
+    /** iPhone-style detail entrance: the sheet springs up into place. */
+    fun reveal(view: View) {
+        view.alpha = 0f
+        view.translationY = 56f
+        view.animate().cancel()
+        view.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(340)
+            .setInterpolator(OvershootInterpolator(1.1f))
+            .start()
+    }
+
     /** Endless slow drift + breathing for the ambient glow orbs. */
     fun startGlowDrift(view: View, dx: Float, dy: Float, baseAlpha: Float, duration: Long) {
         val driftX = ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, dx).apply {

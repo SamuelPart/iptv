@@ -47,6 +47,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCineTvShowDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.post { UiMotion.reveal(binding.layoutTvDetailCard) }
 
         @Suppress("DEPRECATION")
         val extraMedia = intent.getSerializableExtra("media") as? CineMedia
@@ -136,6 +137,16 @@ class CineTvShowDetailActivity : AppCompatActivity() {
 
                 override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {}
             })
+
+        // iOS floating poster + real TMDB rating pill
+        Glide.with(this)
+            .load(if (!media.posterUrl.isNullOrEmpty()) media.posterUrl else media.rawLogo)
+            .placeholder(R.drawable.bg_placeholder)
+            .into(binding.imgTvPoster)
+
+        val ratingValue = media.rating ?: 0.0
+        binding.txtTvRatingBadge.visibility = if (ratingValue > 0.0) View.VISIBLE else View.GONE
+        if (ratingValue > 0.0) binding.txtTvRatingBadge.text = String.format("★ %.1f", ratingValue)
 
         binding.btnTvBack.setOnClickListener {
             finish()

@@ -10,7 +10,7 @@
     <FrameLayout
         android:id="@+id/layoutBackdropHeaderContainer"
         android:layout_width="match_parent"
-        android:layout_height="380dp">
+        android:layout_height="400dp">
 
         <ImageView
             android:id="@+id/imgMovieBackdrop"
@@ -23,7 +23,7 @@
         <View
             android:id="@+id/viewBackdropFade"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="210dp"
             android:layout_gravity="bottom"
             android:background="@drawable/bg_backdrop_fade" />
 
@@ -45,7 +45,7 @@
             <ImageView
                 android:id="@+id/imgDoubleTapLeft"
                 android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_height="52dp"
                 android:src="@drawable/ic_ten_seconds_skip"
                 android:rotation="180"
                 android:padding="10dp"
@@ -58,7 +58,7 @@
             <ImageView
                 android:id="@+id/imgDoubleTapRight"
                 android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_height="52dp"
                 android:src="@drawable/ic_ten_seconds_skip"
                 android:padding="10dp"
                 android:visibility="gone"
@@ -77,7 +77,7 @@
                 <ProgressBar
                     android:id="@+id/inlineProgress"
                     android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_height="52dp"
                     android:layout_centerInParent="true"
                     android:indeterminateTint="@color/ios_blue"
                     android:visibility="gone" />
@@ -209,7 +209,8 @@
         android:layout_width="44dp"
         android:layout_height="44dp"
         android:layout_margin="16dp"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:background="@drawable/bg_circle_glass"
+        android:padding="11dp"
         android:src="@drawable/ic_back_chevron"
         app:tint="#FFFFFF"
         android:elevation="10dp" />
@@ -228,7 +229,7 @@
             <View
                 android:id="@+id/viewSpaceHeader"
                 android:layout_width="match_parent"
-                android:layout_height="280dp"
+                android:layout_height="255dp"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <!-- The Large Curved Details Card (Top-only rounded corners) -->
@@ -237,7 +238,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingTop="32dp"
+                android:background="@drawable/bg_detail_card"
+                android:paddingTop="104dp"
                 android:paddingHorizontal="20dp"
                 android:paddingBottom="40dp"
                 android:elevation="6dp"
@@ -252,9 +254,9 @@
                     android:gravity="center"
                     android:text="TITLE"
                     android:textColor="#FFFFFF"
-                    android:textSize="22sp"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:textAllCaps="true" />
+                    android:textAllCaps="false" />
 
                 <!-- Subtitle Meta (Year, Director, Type) -->
                 <TextView
@@ -266,87 +268,25 @@
                     android:text="May 2014 - Marc Webb"
                     android:textColor="@color/ios_gray"
                     android:textSize="12sp" />
-
-                <!-- Yellow glowing stars row -->
-                <LinearLayout
+                <!-- Rating real TMDB en pildora aurora -->
+                <TextView
+                    android:id="@+id/txtMovieRatingBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="10dp"
+                                        android:layout_gravity="center"
+                    android:background="@drawable/bg_rating_badge"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="★ 8.5"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@android:drawable/btn_star_big_on"
-                        app:tint="@color/ios_blue" />
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@android:drawable/btn_star_big_on"
-                        app:tint="@color/ios_blue" />
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@android:drawable/btn_star_big_on"
-                        app:tint="@color/ios_blue" />
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@android:drawable/btn_star_big_on"
-                        app:tint="@color/ios_blue" />
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@android:drawable/btn_star_big_off"
-                        app:tint="#444444" />
-
-                </LinearLayout>
-
-                <!-- Genre & Tech Badges (Rounded pill chips) -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_chip_ios"
-                        android:text="Action"
-                        android:textColor="#FFFFFF"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:layout_marginEnd="6dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_chip_ios"
-                        android:text="Adventure"
-                        android:textColor="#FFFFFF"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:layout_marginEnd="6dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_chip_ios"
-                        android:text="Sci-Fi"
-                        android:textColor="#FFFFFF"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp" />
-
-                </LinearLayout>
 
                 <!-- Sleek Play, Trailer & Share buttons row -->
                 <LinearLayout
@@ -359,7 +299,7 @@
                     <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btnMoviePlay"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="52dp"
                         android:layout_weight="1.2"
                         android:layout_marginEnd="4dp"
                         android:background="@drawable/bg_button_primary"
@@ -371,7 +311,7 @@
                     <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btnMovieTrailer"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="52dp"
                         android:layout_weight="1"
                         android:layout_marginHorizontal="4dp"
                         android:background="@drawable/bg_button_secondary"
@@ -385,7 +325,7 @@
                     <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btnMovieShare"
                         android:layout_width="0dp"
-                        android:layout_height="48dp"
+                        android:layout_height="52dp"
                         android:layout_weight="1"
                         android:layout_marginStart="4dp"
                         android:background="@drawable/bg_button_secondary"
@@ -428,9 +368,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:text="Sinopsis Oficial"
-                    android:textColor="@color/ios_blue"
-                    android:textSize="15sp"
+                    android:text="SINOPSIS"
+                    android:textColor="@color/ios_cyan"
+                    android:letterSpacing="0.14"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
@@ -474,5 +415,28 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+<!-- Poster flotante estilo iOS sobre la hoja -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="120dp"
+        android:layout_height="172dp"
+        android:layout_marginTop="-84dp"
+        android:elevation="14dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/ios_surface_2"
+        app:layout_constraintTop_toBottomOf="@id/viewSpaceHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/imgMoviePoster"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="Poster" />
+
+    </androidx.cardview.widget.CardView>
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
