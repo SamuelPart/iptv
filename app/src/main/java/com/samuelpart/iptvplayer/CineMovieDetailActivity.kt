@@ -42,7 +42,11 @@ class CineMovieDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCineMovieDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.root.post { UiMotion.reveal(binding.layoutMovieDetailCard) }
+        binding.root.post {
+            UiMotion.reveal(binding.layoutMovieDetailCard)
+            UiMotion.reveal(binding.layoutActionButtons, 90L)
+            UiMotion.pop(binding.imgMoviePoster, 150L)
+        }
 
         @Suppress("DEPRECATION")
         val extraMedia = intent.getSerializableExtra("media") as? CineMedia

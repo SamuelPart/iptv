@@ -44,16 +44,34 @@ fun View.springPress() {
 
 object UiMotion {
 
-    /** iPhone-style detail entrance: the sheet springs up into place. */
-    fun reveal(view: View) {
+    /** iPhone-style detail entrance: the panel springs up into place (with optional delay for staggered builds). */
+    fun reveal(view: View, delayMs: Long = 0L) {
         view.alpha = 0f
         view.translationY = 56f
         view.animate().cancel()
         view.animate()
             .alpha(1f)
             .translationY(0f)
+            .setStartDelay(delayMs)
             .setDuration(340)
             .setInterpolator(OvershootInterpolator(1.1f))
+            .start()
+    }
+
+    /** iPhone-style pop: the view scales in from 80% with an elastic overshoot. */
+    fun pop(view: View, delayMs: Long = 0L) {
+        view.alpha = 0f
+        view.scaleX = 0.8f
+        view.scaleY = 0.8f
+        view.animate().cancel()
+        view.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setStartDelay(delayMs)
+            .setDuration(360)
+            .setInterpolator(OvershootInterpolator(1.6f))
+            .withEndAction { view.animate().setStartDelay(0) }
             .start()
     }
 
