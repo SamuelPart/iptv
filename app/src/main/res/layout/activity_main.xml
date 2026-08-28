@@ -578,42 +578,72 @@
             </LinearLayout>
         </ScrollView>
 
-        <!-- ================= TAB 2: CANALES (CHANNELS) ================= -->
+        <!-- ================= TAB 2: CANALES (iPhone panel - v3.1) ================= -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/containerChannels"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone">
 
-            <!-- Empty state (No list loaded) -->
+            <!-- Estado vacio: hero amigable -->
             <LinearLayout
                 android:id="@+id/layoutChannelsEmpty"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:padding="20dp"
+                android:padding="32dp"
                 android:visibility="visible">
 
-                <ImageView
-                    android:layout_width="92dp"
-                    android:layout_height="92dp"
-                    android:src="@drawable/ic_ios_tv"
-                    android:alpha="0.9"
-                    app:tint="@color/ios_blue" />
+                <FrameLayout
+                    android:layout_width="118dp"
+                    android:layout_height="118dp"
+                    android:background="@drawable/bg_tile_indigo">
+
+                    <ImageView
+                        android:layout_width="58dp"
+                        android:layout_height="58dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_ios_tv"
+                        app:tint="#FFFFFF" />
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center"
-                    android:text="INTRODUCIR UNA URL CON SU LISTA DE CANALES EN INICIO"
-                    android:textColor="@color/ios_blue"
-                    android:textSize="16sp"
+                    android:layout_marginTop="22dp"
+                    android:text="Sin canales todavia"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="Ve a Inicio y conecta tu lista M3U\npara ver aqui todos tus canales en vivo"
+                    android:textColor="@color/ios_gray"
+                    android:textSize="14sp"
+                    android:lineSpacingMultiplier="1.25" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/bg_chip_ios"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="9dp"
+                    android:paddingBottom="9dp"
+                    android:text="1 · Inicio    2 · Pega tu URL    3 · Listo"
+                    android:textColor="@color/ios_cyan"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
             </LinearLayout>
 
-            <!-- Channels Content (Loaded) -->
+            <!-- Contenido cargado -->
             <LinearLayout
                 android:id="@+id/layoutChannelsContent"
                 android:layout_width="match_parent"
@@ -622,56 +652,76 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <!-- Header Options Bar (Filter & Layout Toggle) -->
+                <!-- Header grande estilo iPhone -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="8dp">
+                    android:paddingStart="20dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="18dp">
 
-                    <TextView
-                        android:id="@+id/txtSelectedFilterInfo"
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="Todos los Canales"
-                        android:textColor="#FFFFFF"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:orientation="vertical">
 
-                    <!-- Filter Icon Button -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Canales"
+                            android:textColor="#FFFFFF"
+                            android:textSize="30sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/txtSelectedFilterInfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Todos los Canales"
+                            android:textColor="@color/ios_gray"
+                            android:textSize="12sp"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
+
+                    </LinearLayout>
+
                     <ImageButton
                         android:id="@+id/btnFilterChannels"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_circle_glass"
                         android:src="@android:drawable/ic_menu_manage"
                         android:contentDescription="Filtrar Canales"
-                        android:layout_marginEnd="8dp"
-                        app:tint="@color/ios_blue" />
+                        android:padding="12dp"
+                        android:layout_marginEnd="10dp"
+                        app:tint="#FFFFFF" />
 
-                    <!-- Layout Toggle Icon Button (Grid/List) -->
                     <ImageButton
                         android:id="@+id/btnToggleLayout"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_circle_glass"
                         android:src="@android:drawable/ic_dialog_dialer"
                         android:contentDescription="Cambiar Vista"
-                        app:tint="@color/ios_blue" />
+                        android:padding="12dp"
+                        app:tint="#FFFFFF" />
 
                 </LinearLayout>
 
-                <!-- Grid of Channels -->
+                <!-- Grid de canales -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvChannelsGrid"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginHorizontal="8dp"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="10dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:clipToPadding="false"
+                    android:scrollbars="none"
                     tools:listitem="@layout/item_channel" />
 
             </LinearLayout>
