@@ -478,33 +478,45 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Modern iPhone-style view picker with animated popup + spring cards. */
     private fun showLayoutToggleDialog() {
-        val options = arrayOf(
-            "Vista Cuadrícula 🎛️ (3 Columnas)",
-            "Vista Lista ☰ (1 Columna)"
-        )
+        val dialogView = layoutInflater.inflate(R.layout.dialog_view_options, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.window?.let { w ->
+            val attrs = w.attributes
+            attrs.windowAnimations = R.style.iOSPopupAnimation
+            w.attributes = attrs
+        }
 
-        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
-            .setTitle("Opciones de Vista")
-            .setItems(options) { _, which ->
-                val layoutManager = binding.rvChannelsGrid.layoutManager as GridLayoutManager
-                when (which) {
-                    0 -> {
-                        isGridView = true
-                        layoutManager.spanCount = 3
-                        binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_grid)
-                        Toast.makeText(this, "Vista Cuadrícula activa", Toast.LENGTH_SHORT).show()
-                    }
-                    1 -> {
-                        isGridView = false
-                        layoutManager.spanCount = 1
-                        binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_list)
-                        Toast.makeText(this, "Vista Lista activa", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                layoutManager.requestLayout()
-            }
-            .show()
+        val optionGrid = dialogView.findViewById<View>(R.id.optionViewGrid)
+        val optionList = dialogView.findViewById<View>(R.id.optionViewList)
+        optionGrid.springPress()
+        optionList.springPress()
+
+        optionGrid.setOnClickListener {
+            isGridView = true
+            val layoutManager = binding.rvChannelsGrid.layoutManager as GridLayoutManager
+            layoutManager.spanCount = 3
+            binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_grid)
+            layoutManager.requestLayout()
+            Toast.makeText(this, "Vista Cuadrícula activa", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+        optionList.setOnClickListener {
+            isGridView = false
+            val layoutManager = binding.rvChannelsGrid.layoutManager as GridLayoutManager
+            layoutManager.spanCount = 1
+            binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_list)
+            layoutManager.requestLayout()
+            Toast.makeText(this, "Vista Lista activa", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+        dialogView.findViewById<View>(R.id.btnViewOptionsClose).setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
     }
 
     private fun showParentalSettingsDialog() {

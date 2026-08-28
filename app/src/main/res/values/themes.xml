@@ -16,6 +16,12 @@
         <item name="android:alertDialogTheme">@style/iOSAlertDialog</item>
     </style>
 
+    <!-- Animacion de popups iPhone -->
+    <style name="iOSPopupAnimation" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/ps_dialog_in</item>
+        <item name="android:windowExitAnimation">@anim/ps_dialog_out</item>
+    </style>
+
     <!-- AlertDialogs: panel de vidrio oscuro redondeado -->
     <style name="iOSAlertDialog" parent="@android:style/Theme.Dialog">
         <item name="android:windowBackground">@drawable/bg_dialog_ios</item>
