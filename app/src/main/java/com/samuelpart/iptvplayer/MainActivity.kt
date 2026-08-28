@@ -1521,17 +1521,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCineFilterButtons() {
-        val orangeColor = android.graphics.Color.parseColor("#0A84FF")
-        val grayColor = android.graphics.Color.parseColor("#1E1E1E")
+        val orangeColor = android.graphics.Color.parseColor("#5E5CE6")
+        val grayColor = android.graphics.Color.parseColor("#14141E")
         
         binding.btnCineFilterAll.setBackgroundColor(if (selectedCineType == "all") orangeColor else grayColor)
-        binding.btnCineFilterAll.setTextColor(if (selectedCineType == "all") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#CCCCCC"))
+        binding.btnCineFilterAll.setTextColor(if (selectedCineType == "all") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
         
         binding.btnCineFilterMovies.setBackgroundColor(if (selectedCineType == "movie") orangeColor else grayColor)
-        binding.btnCineFilterMovies.setTextColor(if (selectedCineType == "movie") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#CCCCCC"))
+        binding.btnCineFilterMovies.setTextColor(if (selectedCineType == "movie") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
         
         binding.btnCineFilterSeries.setBackgroundColor(if (selectedCineType == "series") orangeColor else grayColor)
-        binding.btnCineFilterSeries.setTextColor(if (selectedCineType == "series") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#CCCCCC"))
+        binding.btnCineFilterSeries.setTextColor(if (selectedCineType == "series") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
     }
 
     private fun openCineDetail(media: CineMedia) {
