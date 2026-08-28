@@ -643,7 +643,7 @@
 
             </LinearLayout>
 
-            <!-- Contenido cargado -->
+            <!-- Contenido cargado: panel "TV EN VIVO" -->
             <LinearLayout
                 android:id="@+id/layoutChannelsContent"
                 android:layout_width="match_parent"
@@ -652,7 +652,57 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <!-- Header grande estilo iPhone -->
+                <!-- Hero aurora: estado de la lista -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="96dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_tile_indigo"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start|center_vertical"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TV EN VIVO"
+                            android:textColor="@color/ios_cyan"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.22" />
+
+                        <TextView
+                            android:id="@+id/txtSelectedFilterInfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="Todos los Canales"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="76dp"
+                        android:layout_height="76dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:src="@drawable/ic_ios_tv"
+                        android:alpha="0.22"
+                        android:contentDescription="@null" />
+
+                </FrameLayout>
+
+                <!-- Barra de acciones -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -660,54 +710,37 @@
                     android:gravity="center_vertical"
                     android:paddingStart="20dp"
                     android:paddingEnd="16dp"
-                    android:paddingTop="18dp">
+                    android:paddingTop="12dp">
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Canales"
-                            android:textColor="#FFFFFF"
-                            android:textSize="30sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/txtSelectedFilterInfo"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Todos los Canales"
-                            android:textColor="@color/ios_gray"
-                            android:textSize="12sp"
-                            android:maxLines="2"
-                            android:ellipsize="end" />
-
-                    </LinearLayout>
+                        android:text="Tu lista"
+                        android:textColor="@color/ios_gray"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.1" />
 
                     <ImageButton
                         android:id="@+id/btnFilterChannels"
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
                         android:background="@drawable/bg_circle_glass"
                         android:src="@android:drawable/ic_menu_manage"
                         android:contentDescription="Filtrar Canales"
-                        android:padding="12dp"
+                        android:padding="11dp"
                         android:layout_marginEnd="10dp"
                         app:tint="#FFFFFF" />
 
                     <ImageButton
                         android:id="@+id/btnToggleLayout"
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
                         android:background="@drawable/bg_circle_glass"
                         android:src="@android:drawable/ic_dialog_dialer"
                         android:contentDescription="Cambiar Vista"
-                        android:padding="12dp"
+                        android:padding="11dp"
                         app:tint="#FFFFFF" />
 
                 </LinearLayout>
@@ -717,9 +750,8 @@
                     android:id="@+id/rvChannelsGrid"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="10dp"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
                     android:clipToPadding="false"
                     android:scrollbars="none"
                     tools:listitem="@layout/item_channel" />
