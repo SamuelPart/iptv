@@ -624,7 +624,7 @@ class PlayerActivity : AppCompatActivity() {
             }
             subtitleFilePath = dst.absolutePath
             val ok = try {
-                mediaPlayer?.addSlave(org.videolan.libvlc.MediaPlayer.Slave.Type.Subtitle, 0, dst.absolutePath)
+                mediaPlayer?.addSlave(1, dst.absolutePath, true)
             } catch (_: Exception) {
                 false
             }

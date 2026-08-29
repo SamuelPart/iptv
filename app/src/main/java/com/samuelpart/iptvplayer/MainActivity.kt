@@ -396,8 +396,7 @@ class MainActivity : AppCompatActivity() {
         val favs = FavoritesManager.count(this)
         binding.txtStatsBody.text =
             "Esta semana: 📺 $channels canales · 🎬 ${cine.size} películas/series" +
-            "
-⏱ Tiempo en cine: $watchMin min    ⭐ Favoritos: $favs    📲 Aperturas: $opens"
+            "\n⏱ Tiempo en cine: $watchMin min    ⭐ Favoritos: $favs    📲 Aperturas: $opens"
     }
 
     /** Rotates the Home hero backdrop by time of day (4 switches per day). */
