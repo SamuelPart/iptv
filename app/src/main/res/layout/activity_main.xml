@@ -767,14 +767,22 @@
             android:visibility="gone"
             android:background="@color/ios_bg">
 
-            <LinearLayout
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:fadingEdgeLength="24dp"
+                android:overScrollMode="never"
+                android:requiresFadingEdge="vertical"
+                android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
                 android:paddingTop="16dp"
-                android:paddingBottom="20dp">
+                android:paddingBottom="110dp">
 
                 <!-- HERO AURORA -->
                 <FrameLayout
@@ -1735,6 +1743,7 @@
 
             </LinearLayout>
 
+                    </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
