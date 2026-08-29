@@ -21,7 +21,7 @@ class CategoryAdapter(
 
             if (position == selectedPosition) {
                 // Selected: iOS blue gradient-ish background, white text
-                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#5E5CE6"))
+                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#C9A96E"))
                 binding.txtCategoryName.textColor = android.graphics.Color.parseColor("#FFFFFF")
             } else {
                 // Unselected: iOS dark surface, white text

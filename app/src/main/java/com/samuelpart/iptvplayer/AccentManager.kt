@@ -9,11 +9,12 @@ object AccentManager {
 
     data class AccentOption(val key: String, val label: String, val color: Int)
 
-    val OPTIONS = listOf(
-        AccentOption("cyan", "Cyan (por defecto)", 0xFF64D2FF.toInt()),
-        AccentOption("violet", "Violeta", 0xFFBF5AF2.toInt()),
+        val OPTIONS = listOf(
+        AccentOption("mint", "Menta (por defecto)", 0xFF30D158.toInt()),
+        AccentOption("oro", "Champagne", 0xFFC9A96E.toInt()),
         AccentOption("coral", "Coral", 0xFFFF6E6E.toInt()),
-        AccentOption("verde", "Verde", 0xFF30D158.toInt())
+        AccentOption("perla", "Perla", 0xFFE8E6E1.toInt())
+    )
     )
 
     private const val KEY = "accent_key"

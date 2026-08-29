@@ -194,7 +194,7 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="❚ IPLAY"
+                        android:text="✦ LUMEN"
                         android:textColor="@color/ios_cyan"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -1538,7 +1538,7 @@
                                 android:layout_width="26dp"
                                 android:layout_height="26dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/app_logo" />
+                                android:src="@drawable/ic_launcher_foreground" />
                         </FrameLayout>
 
                         <LinearLayout
@@ -1551,7 +1551,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="IPTV Player PRO"
+                                android:text="Lumen"
                                 android:textColor="#FFFFFF"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -1561,7 +1561,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:lineSpacingMultiplier="1.15"
-                                android:text="Versión 1.6 · LibVLC y PiP"
+                                android:text="Versión 1.6 · Una sola luz, todo tu contenido"
                                 android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
                         </LinearLayout>
