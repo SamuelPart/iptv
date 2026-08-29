@@ -924,7 +924,7 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- ================= TAB 5: CONFIGURACIÓN (SETTINGS PANEL) ================= -->
+        <!-- ================= TAB 5: AJUSTES — LISTA AGRUPADA ESTILO iPHONE ================= -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/containerBrowser"
             android:layout_width="match_parent"
@@ -936,62 +936,105 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="20dp">
 
-                <!-- Header block -->
+                <!-- HERO AURORA -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:background="@drawable/bg_tile_violet"
+                    android:clipToOutline="true">
+
+                    <ImageView
+                        android:layout_width="76dp"
+                        android:layout_height="76dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="-14dp"
+                        android:alpha="0.22"
+                        android:src="@drawable/ic_ios_gear"
+                        app:tint="#FFFFFF" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="20dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:letterSpacing="0.24"
+                            android:text="TU IPTV, TU MANERA"
+                            android:textAllCaps="true"
+                            android:textColor="@color/ios_cyan"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Ajustes"
+                            android:textAllCaps="false"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+                </FrameLayout>
+
+                <!-- ======= SEGURIDAD ======= -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="22dp"
+                    android:layout_marginBottom="8dp"
+                    android:letterSpacing="0.14"
+                    android:text="SEGURIDAD"
+                    android:textColor="@color/ios_cyan"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="24dp">
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@drawable/ic_ios_gear"
-                        app:tint="@color/ios_blue" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:text="Configuración y Ajustes"
-                        android:textColor="#FFFFFF"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- SECTION 1: PARENTAL CONTROL CARD -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/btnSettingsParental"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="0dp"
-                    android:foreground="?android:attr/selectableItemBackground">
+                    android:background="@drawable/bg_card_ios"
+                    android:orientation="vertical">
 
                     <LinearLayout
+                        android:id="@+id/btnSettingsParental"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:orientation="horizontal"
+                        android:padding="14dp"
+                        android:foreground="?android:attr/selectableItemBackground">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/ic_ios_shield"
-                            app:tint="@color/ios_blue" />
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_circle_glass">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_ios_shield"
+                                app:tint="@color/ios_blue" />
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -1006,58 +1049,75 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Configurar PIN de bloqueo para ocultar canales"
+                                android:lineSpacingMultiplier="1.15"
+                                android:text="PIN de bloqueo para ocultar canales"
                                 android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
-
                         </LinearLayout>
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_ios_arrow_right"
-                            app:tint="#666666" />
-
+                            app:tint="@color/ios_gray" />
                     </LinearLayout>
+                </LinearLayout>
 
-                </androidx.cardview.widget.CardView>
+                <!-- ======= APARIENCIA ======= -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="8dp"
+                    android:letterSpacing="0.14"
+                    android:text="APARIENCIA"
+                    android:textColor="@color/ios_cyan"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
-                <!-- SECTION 1.5: APP THEME SELECTOR CARD -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/btnSettingsTheme"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="0dp"
-                    android:foreground="?android:attr/selectableItemBackground">
+                    android:background="@drawable/bg_card_ios"
+                    android:orientation="vertical">
 
                     <LinearLayout
+                        android:id="@+id/btnSettingsTheme"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:orientation="horizontal"
+                        android:padding="14dp"
+                        android:foreground="?android:attr/selectableItemBackground">
 
-                        <ImageView
-                            android:id="@+id/imgSettingsThemeIcon"
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/ic_theme"
-                            app:tint="@color/ios_blue" />
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_circle_glass">
+
+                            <ImageView
+                                android:id="@+id/imgSettingsThemeIcon"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_theme"
+                                app:tint="@color/ios_violet" />
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:orientation="vertical">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Tema de la Aplicación"
+                                android:text="Tema de la aplicación"
                                 android:textColor="#FFFFFF"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -1067,57 +1127,74 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Cambiar entre modo Claro u Oscuro"
+                                android:lineSpacingMultiplier="1.15"
+                                android:text="Oscuro, claro o automático del sistema"
                                 android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
-
                         </LinearLayout>
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_ios_arrow_right"
-                            app:tint="#666666" />
-
+                            app:tint="@color/ios_gray" />
                     </LinearLayout>
+                </LinearLayout>
 
-                </androidx.cardview.widget.CardView>
+                <!-- ======= RESTABLECER ======= -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="8dp"
+                    android:letterSpacing="0.14"
+                    android:text="RESTABLECER"
+                    android:textColor="@color/ios_cyan"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
-                <!-- SECTION 2: CLEAR PLAYLIST / CACHE CARD -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/btnSettingsClearCache"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="0dp"
-                    android:foreground="?android:attr/selectableItemBackground">
+                    android:background="@drawable/bg_card_ios"
+                    android:orientation="vertical">
 
                     <LinearLayout
+                        android:id="@+id/btnSettingsClearCache"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:orientation="horizontal"
+                        android:padding="14dp"
+                        android:foreground="?android:attr/selectableItemBackground">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/ic_ios_trash"
-                            app:tint="#FF6E6E" />
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_circle_glass">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_ios_trash"
+                                app:tint="#FF6E6E" />
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:orientation="vertical">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Borrar Caché de Lista"
+                                android:text="Borrar caché de lista"
                                 android:textColor="#FFFFFF"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -1126,54 +1203,70 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Restablecer la app y vaciar la playlist actual"
+                                android:lineSpacingMultiplier="1.15"
+                                android:text="Vaciar la playlist actual y empezar de cero"
                                 android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
-
                         </LinearLayout>
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_ios_arrow_right"
-                            app:tint="#666666" />
-
+                            app:tint="@color/ios_gray" />
                     </LinearLayout>
+                </LinearLayout>
 
-                </androidx.cardview.widget.CardView>
+                <!-- ======= INFORMACIÓN (2 filas con divisor) ======= -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="8dp"
+                    android:letterSpacing="0.14"
+                    android:text="INFORMACIÓN"
+                    android:textColor="@color/ios_cyan"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
-                <!-- SECTION 3: ADMOB STATUS CARD -->
-                <androidx.cardview.widget.CardView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="0dp">
+                    android:background="@drawable/bg_card_ios"
+                    android:orientation="vertical">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:orientation="horizontal"
+                        android:padding="14dp">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@android:drawable/ic_dialog_info"
-                            app:tint="@color/ios_blue" />
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_circle_glass">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_ios_message"
+                                app:tint="@color/ios_cyan" />
+                        </FrameLayout>
 
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="14dp"
                             android:orientation="vertical">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Monetización y Soporte"
+                                android:text="Monetización y soporte"
                                 android:textColor="#FFFFFF"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -1182,40 +1275,43 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Unidades AdMob activas: Banner, Intersticial, Nativo"
+                                android:lineSpacingMultiplier="1.15"
+                                android:text="Unidades AdMob activas: banner, intersticial y nativo"
                                 android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
-
                         </LinearLayout>
-
                     </LinearLayout>
 
-                </androidx.cardview.widget.CardView>
-
-                <!-- SECTION 4: ABOUT APPLICATION -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:cardCornerRadius="20dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardElevation="0dp">
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="68dp"
+                        android:background="#1FFFFFFF" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:orientation="horizontal"
+                        android:padding="14dp">
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:src="@drawable/app_logo" />
+                        <FrameLayout
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_circle_glass">
+
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/app_logo" />
+                        </FrameLayout>
 
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="14dp"
                             android:orientation="vertical">
 
                             <TextView
@@ -1230,15 +1326,13 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Versión 1.6 - Soporte LibVLC y PiP"
+                                android:lineSpacingMultiplier="1.15"
+                                android:text="Versión 1.6 · LibVLC y PiP"
                                 android:textColor="@color/ios_gray"
                                 android:textSize="12sp" />
-
                         </LinearLayout>
-
                     </LinearLayout>
-
-                </androidx.cardview.widget.CardView>
+                </LinearLayout>
 
             </LinearLayout>
 
