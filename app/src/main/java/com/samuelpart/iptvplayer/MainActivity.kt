@@ -32,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.samuelpart.iptvplayer.databinding.ActivityMainBinding
+import androidx.recyclerview.widget.PagerSnapHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,6 +44,12 @@ import java.util.ArrayList
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    private var coverModeCine = true
+    private var coverSnapPos = -1
+    private val coverItems = ArrayList<HomeCoverItem>()
+    private lateinit var coverAdapter: HomeCoverAdapter
+    private val coverSnap = PagerSnapHelper()
     
     private lateinit var channelsAdapter: ChannelAdapter
     private lateinit var searchAdapter: ChannelAdapter
@@ -138,8 +145,8 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupRecyclerViews()
         incrementOpenCounter()
-        updateHomeHero()
-        setupHomeHubTiles()
+        binding.txtHomeGreeting.text = homeGreeting()
+        setupHomeCoverflow()
         setupSearchHistories()
         setupListeners()
         updateEmptyStates() // Initial state shows instructions everywhere
@@ -218,13 +225,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Home hub: big tiles jump straight to each tab. */
-    private fun setupHomeHubTiles() {
-        binding.tileChannels.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_channels }
-        binding.tileCine.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_cine }
-        binding.tileSearch.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_search }
-        binding.tileSettings.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_settings }
-    }
 
     /** PS5-style tab entry: the panel rises and springs into place. */
     private fun showTabAnimated(view: View, vis: Int) {
@@ -399,20 +399,6 @@ class MainActivity : AppCompatActivity() {
             "\n⏱ Tiempo en cine: $watchMin min    ⭐ Favoritos: $favs    📲 Aperturas: $opens"
     }
 
-    /** Rotates the Home hero backdrop by time of day (4 switches per day). */
-    private fun updateHomeHero() {
-        val candidates = allCineMedia.filter { !it.backdropUrl.isNullOrEmpty() }
-        if (candidates.isEmpty()) return
-        val cal = java.util.Calendar.getInstance()
-        val seed = cal.get(java.util.Calendar.DAY_OF_YEAR) * 6 + cal.get(java.util.Calendar.HOUR_OF_DAY) / 4
-        val pick = candidates[seed % candidates.size]
-        Glide.with(this)
-            .load(pick.backdropUrl)
-            .transition(DrawableTransitionOptions.withCrossFade(700))
-            .error(R.drawable.bg_hero_banner)
-            .into(binding.imgHomeHeroBg)
-        binding.txtHomeHeroSubtitle.text = "✨ ${pick.title} y más estrenos de cine"
-    }
 
     private fun refreshFavorites() {
         val favs = FavoritesManager.getAll(this)
@@ -423,6 +409,119 @@ class MainActivity : AppCompatActivity() {
             binding.txtFavoritesCount.text = "${favs.size} guardados"
             if (::favoriteAdapter.isInitialized) favoriteAdapter.updateList(favs)
         }
+    }
+
+    private fun homeGreeting(): String {
+        val h = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        return when {
+            h < 6 -> "Buenas noches"
+            h < 12 -> "Buenos dias"
+            h < 19 -> "Buenas tardes"
+            else -> "Buenas noches"
+        }
+    }
+
+    // ================= HOME V4 - COVERFLOW =================
+
+    private fun setupHomeCoverflow() {
+        coverAdapter = HomeCoverAdapter { onCoverTap(it) }
+        binding.rvCoverflow.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvCoverflow.adapter = coverAdapter
+        coverSnap.attachToRecyclerView(binding.rvCoverflow)
+        binding.rvCoverflow.addOnScrollListener(coverScrollListener)
+        binding.llChipChannels.setOnClickListener { setCoverMode(false); it.springPress() }
+        binding.llChipCine.setOnClickListener { setCoverMode(true); it.springPress() }
+        setCoverMode(true)
+    }
+
+    private val coverScrollListener = object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+            applyCoverTransforms(recyclerView)
+        }
+
+        override fun onScrollStateChanged(recyclerView: androidx.recyclerview.widget.RecyclerView, newState: Int) {
+            if (newState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE) syncCoverInfo(recyclerView)
+            applyCoverTransforms(recyclerView)
+        }
+    }
+
+    private fun setCoverMode(cine: Boolean) {
+        coverModeCine = cine
+        binding.txtChipCine.setTextColor(if (cine) 0xFFFFFFFF.toInt() else 0xFF7A7A7C.toInt())
+        binding.txtChipChannels.setTextColor(if (!cine) 0xFFFFFFFF.toInt() else 0xFF7A7A7C.toInt())
+        binding.viewChipCineU.alpha = if (cine) 1f else 0f
+        binding.viewChipChannelsU.alpha = if (!cine) 1f else 0f
+        refreshCoverData()
+    }
+
+    private fun refreshCoverData() {
+        if (!::coverAdapter.isInitialized) return
+        coverItems.clear()
+        if (coverModeCine) {
+            allCineMedia.filter { !it.posterUrl.isNullOrBlank() }.take(30).forEach {
+                coverItems.add(HomeCoverItem(it.posterUrl, it.title, coverCineMeta(it), null, null, it))
+            }
+            if (coverItems.isEmpty()) {
+                coverItems.add(HomeCoverItem(null, "Cine y series premium", "Explora el catalogo completo en la pestana Cine", null, null, null))
+            }
+        } else {
+            allChannels.take(20).forEach {
+                coverItems.add(HomeCoverItem(it.logo, it.name, "Transmision en vivo · toca para ver", "EN VIVO", it, null))
+            }
+            if (coverItems.isEmpty()) {
+                coverItems.add(HomeCoverItem(null, "Conecta tu lista", "Ve a Ajustes, pega tu lista M3U o escanea un QR", null, null, null))
+            }
+        }
+        coverAdapter.submitAll(coverItems)
+        binding.rvCoverflow.post {
+            applyCoverTransforms(binding.rvCoverflow)
+            syncCoverInfo(binding.rvCoverflow)
+        }
+    }
+
+    private fun coverCineMeta(c: CineMedia): String {
+        val r = c.rating?.let { "★ %.1f".format(it) } ?: "Nuevo esta semana"
+        val srv = "${c.urls.size} servidores"
+        val eps = if (c.episodes.size > 1) " · ${c.episodes.size} episodios" else ""
+        return "$r · $srv$eps"
+    }
+
+    private fun onCoverTap(pos: Int) {
+        val item = coverItems.getOrNull(pos) ?: return
+        if (pos != coverSnapPos && coverItems.size > 1) {
+            binding.rvCoverflow.smoothScrollToPosition(pos)
+            return
+        }
+        item.channel?.let { openPlayer(it); return }
+        item.media?.let { openCineDetail(it); return }
+        binding.bottomNavigation.selectedItemId =
+            if (coverModeCine) R.id.navigation_cine else R.id.navigation_settings
+    }
+
+    private fun applyCoverTransforms(rv: androidx.recyclerview.widget.RecyclerView) {
+        val cx = rv.width / 2f
+        val radius = rv.width * 0.62f
+        for (i in 0 until rv.childCount) {
+            val v = rv.getChildAt(i)
+            val vcx = (v.left + v.right) / 2f
+            val t = (1f - kotlin.math.abs(vcx - cx) / radius).coerceIn(0f, 1f)
+            val e = 1f - (1f - t) * (1f - t)
+            val sc = 0.80f + 0.20f * e
+            v.scaleX = sc
+            v.scaleY = sc
+            v.alpha = 0.45f + 0.55f * e
+            v.translationZ = 12f * e
+        }
+    }
+
+    private fun syncCoverInfo(rv: androidx.recyclerview.widget.RecyclerView) {
+        val lv = coverSnap.findSnapView(rv.layoutManager) ?: return
+        val pos = rv.getChildAdapterPosition(lv)
+        if (pos == androidx.recyclerview.widget.RecyclerView.NO_POSITION) return
+        coverSnapPos = pos
+        val item = coverItems.getOrNull(pos) ?: return
+        binding.txtCoverTitle.text = item.title
+        binding.txtCoverMeta.text = item.meta
     }
 
     private fun setupListeners() {
@@ -1109,6 +1208,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyFiltersAndSorting() {
+        refreshCoverData()
         val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
         val isParentalActive = sharedPref.getBoolean("parental_active", false)
 
@@ -1747,7 +1847,7 @@ class MainActivity : AppCompatActivity() {
             
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
-            updateHomeHero()
+            refreshCoverData()
             
             binding.layoutCineLoading.visibility = View.GONE
             binding.rvCineGrid.visibility = View.VISIBLE

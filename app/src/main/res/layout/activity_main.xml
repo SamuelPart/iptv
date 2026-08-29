@@ -211,227 +211,123 @@
 
                 </LinearLayout>
 
-                <!-- Hero dinamico: rota backdrop de cine segun la hora del dia -->
-                <FrameLayout
+                <!-- v4 coverflow: saludo mini -->
+                <TextView
+                    android:id="@+id/txtHomeGreeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Hola de nuevo"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <!-- v4 chips CANALES / CINE -->
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="185dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:clipToOutline="true"
-                    android:background="@drawable/bg_tile_glass">
-
-                    <ImageView
-                        android:id="@+id/imgHomeHeroBg"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:alpha="0.42"
-                        android:scaleType="centerCrop"
-                        android:contentDescription="Hero cine"
-                        android:background="@drawable/bg_hero_banner" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_backdrop_fade" />
+                    android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:id="@+id/llChipChannels"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="start|bottom"
-                        android:orientation="vertical"
-                        android:padding="18dp">
+                        android:layout_weight="1"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/txtChipChannels"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Hola de nuevo"
-                            android:textColor="#FFFFFF"
-                            android:textSize="30sp"
+                            android:letterSpacing="0.18"
+                            android:paddingVertical="10dp"
+                            android:text="CANALES"
+                            android:textColor="#7A7A7C"
+                            android:textSize="13sp"
                             android:textStyle="bold" />
 
-                        <TextView
-                            android:id="@+id/txtHomeHeroSubtitle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Que vemos hoy?"
-                            android:textColor="#F2FFFFFF"
-                            android:textSize="15sp" />
+                        <View
+                            android:id="@+id/viewChipChannelsU"
+                            android:layout_width="30dp"
+                            android:layout_height="3dp"
+                            android:layout_marginTop="3dp"
+                            android:alpha="0"
+                            android:background="@color/ios_blue" />
                     </LinearLayout>
-                </FrameLayout>
 
-                <!-- Quick access tiles 2x2 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="22dp">
-
-                    <FrameLayout
-                        android:id="@+id/tileChannels"
+                    <LinearLayout
+                        android:id="@+id/llChipCine"
                         android:layout_width="0dp"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_height="112dp"
-                        android:layout_marginEnd="7dp"
-                        android:background="@drawable/bg_tile_indigo">
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:orientation="vertical">
 
-                        <LinearLayout
+                        <TextView
+                            android:id="@+id/txtChipCine"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="start|bottom"
-                            android:orientation="vertical"
-                            android:padding="16dp">
+                            android:letterSpacing="0.18"
+                            android:paddingVertical="10dp"
+                            android:text="CINE"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
 
-                            <ImageView
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:src="@drawable/ic_ios_tv"
-                                app:tint="#FFFFFF" />
+                        <View
+                            android:id="@+id/viewChipCineU"
+                            android:layout_width="30dp"
+                            android:layout_height="3dp"
+                            android:layout_marginTop="3dp"
+                            android:alpha="1"
+                            android:background="@color/ios_blue" />
+                    </LinearLayout>
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Canales"
-                                android:textColor="#FFFFFF"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="TV en vivo"
-                                android:textColor="#D9FFFFFF"
-                                android:textSize="11sp" />
-
-                        </LinearLayout>
-                    </FrameLayout>
-
-                    <FrameLayout
-                        android:id="@+id/tileCine"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="112dp"
-                        android:layout_marginStart="7dp"
-                        android:background="@drawable/bg_tile_violet">
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="start|bottom"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <ImageView
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:src="@drawable/ic_ios_movie"
-                                app:tint="#FFFFFF" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Cine"
-                                android:textColor="#FFFFFF"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="9.000+ titulos"
-                                android:textColor="#EBD9FF"
-                                android:textSize="11sp" />
-
-                        </LinearLayout>
-                    </FrameLayout>
                 </LinearLayout>
 
+                <!-- v4 carrusel coverflow -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvCoverflow"
+                    android:layout_width="match_parent"
+                    android:layout_height="312dp"
+                    android:layout_marginTop="14dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingStart="110dp"
+                    android:paddingEnd="110dp" />
+
+                <!-- v4 info dinamica de la tarjeta centrada -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="14dp">
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical">
 
-                    <FrameLayout
-                        android:id="@+id/tileSearch"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="112dp"
-                        android:layout_marginEnd="7dp"
-                        android:background="@drawable/bg_tile_cyan">
+                    <TextView
+                        android:id="@+id/txtCoverTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:singleLine="true"
+                        android:text=""
+                        android:textColor="#FFFFFF"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
 
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="start|bottom"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <ImageView
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:src="@drawable/ic_ios_search"
-                                app:tint="#FFFFFF" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Buscador"
-                                android:textColor="#FFFFFF"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Encuentra todo"
-                                android:textColor="#D9F2FF"
-                                android:textSize="11sp" />
-
-                        </LinearLayout>
-                    </FrameLayout>
-
-                    <FrameLayout
-                        android:id="@+id/tileSettings"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="112dp"
-                        android:layout_marginStart="7dp"
-                        android:background="@drawable/bg_tile_glass">
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="start|bottom"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <ImageView
-                                android:layout_width="34dp"
-                                android:layout_height="34dp"
-                                android:src="@drawable/ic_ios_gear"
-                                app:tint="#E6FFFFFF" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Ajustes"
-                                android:textColor="#FFFFFF"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Tu app, tu forma"
-                                android:textColor="#B3FFFFFF"
-                                android:textSize="11sp" />
-
-                        </LinearLayout>
-                    </FrameLayout>
+                    <TextView
+                        android:id="@+id/txtCoverMeta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:text=""
+                        android:textColor="#7A7A7C"
+                        android:textSize="13sp" />
                 </LinearLayout>
 
                 <!-- ============ CONTINUAR VIENDO ============ -->
@@ -514,232 +410,7 @@
                         android:textSize="11sp" />
                 </LinearLayout>
 
-                <!-- ============ MIS ESTADISTICAS ============ -->
-                <LinearLayout
-                    android:id="@+id/sectionStats"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
-                        android:text="📊 MIS ESTADÍSTICAS"
-                        android:textColor="@color/ios_cyan"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.14" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_card_ios"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <TextView
-                            android:id="@+id/txtStatsBody"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:lineSpacingMultiplier="1.35"
-                            android:text="Cargando estadisticas..."
-                            android:textColor="#F2FFFFFF"
-                            android:textSize="13sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Conteo local de los últimos 7 dias"
-                            android:textColor="@color/ios_gray"
-                            android:textSize="10sp" />
-                    </LinearLayout>
                 </LinearLayout>
-
-                <!-- M3U connect block -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card_ios"
-                    android:padding="18dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="TU LISTA IPTV (M3U)"
-                        android:textColor="@color/ios_cyan"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.14" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal">
-
-                        <EditText
-                            android:id="@+id/edtUrl"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_chip_ios"
-                            android:hint="https://ejemplo.com/lista.m3u"
-                            android:textColorHint="#66FFFFFF"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:padding="14dp"
-                            android:inputType="textUri"
-                            android:maxLines="1" />
-
-                        <ImageButton
-                            android:id="@+id/btnClear"
-                            android:layout_width="48dp"
-                            android:layout_height="match_parent"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip_ios"
-                            android:src="@drawable/ic_ios_xmark"
-                            android:contentDescription="Limpiar"
-                            app:tint="#CCFFFFFF" />
-
-                        <ImageButton
-                            android:id="@+id/btnScanQr"
-                            android:layout_width="48dp"
-                            android:layout_height="match_parent"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip_ios"
-                            android:src="@drawable/ic_ios_qr"
-                            android:contentDescription="Escanear QR"
-                            app:tint="@color/ios_cyan" />
-
-                    </LinearLayout>
-
-                    <Button
-                        android:id="@+id/btnLoad"
-                        android:layout_width="match_parent"
-                        android:layout_height="54dp"
-                        android:layout_marginTop="14dp"
-                        android:background="@drawable/bg_button_primary"
-                        android:text="Conectar a mi lista"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:text="Listas publicas gratis:"
-                        android:textColor="@color/ios_gray"
-                        android:textSize="12sp" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/btnQuickSpain"
-                            style="?android:attr/buttonStyleSmall"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="6dp"
-                            android:backgroundTint="#295E5CE6"
-                            android:text="Espana"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp" />
-
-                        <Button
-                            android:id="@+id/btnQuickGlobal"
-                            style="?android:attr/buttonStyleSmall"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="6dp"
-                            android:backgroundTint="#295E5CE6"
-                            android:text="Global"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp" />
-
-                        <Button
-                            android:id="@+id/btnQuickNews"
-                            style="?android:attr/buttonStyleSmall"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:backgroundTint="#295E5CE6"
-                            android:text="Noticias"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Historial -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardHomeStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="0dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="18dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="12dp">
-
-                            <TextView
-                                android:id="@+id/txtHomeStatusTitle"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Historial de listas"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/btnHomeClearHistory"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="LIMPIAR"
-                                android:textColor="#FF6E6E"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:paddingHorizontal="8dp"
-                                android:paddingVertical="4dp"
-                                android:background="?android:attr/selectableItemBackground" />
-
-                        </LinearLayout>
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvHomePlaylistHistory"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:visibility="gone"
-                            android:nestedScrollingEnabled="false" />
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-            </LinearLayout>
         </ScrollView>
 
         <!-- ================= TAB 2: CANALES (iPhone panel - v3.1) ================= -->
@@ -1151,6 +822,188 @@
                     </LinearLayout>
                 </FrameLayout>
 
+                <!-- M3U connect block -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_ios"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TU LISTA IPTV (M3U)"
+                        android:textColor="@color/ios_cyan"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.14" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <EditText
+                            android:id="@+id/edtUrl"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_chip_ios"
+                            android:hint="https://ejemplo.com/lista.m3u"
+                            android:textColorHint="#66FFFFFF"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:padding="14dp"
+                            android:inputType="textUri"
+                            android:maxLines="1" />
+
+                        <ImageButton
+                            android:id="@+id/btnClear"
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip_ios"
+                            android:src="@drawable/ic_ios_xmark"
+                            android:contentDescription="Limpiar"
+                            app:tint="#CCFFFFFF" />
+
+                        <ImageButton
+                            android:id="@+id/btnScanQr"
+                            android:layout_width="48dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_chip_ios"
+                            android:src="@drawable/ic_ios_qr"
+                            android:contentDescription="Escanear QR"
+                            app:tint="@color/ios_cyan" />
+
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnLoad"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:layout_marginTop="14dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:text="Conectar a mi lista"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:text="Listas publicas gratis:"
+                        android:textColor="@color/ios_gray"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnQuickSpain"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#295E5CE6"
+                            android:text="Espana"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/btnQuickGlobal"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#295E5CE6"
+                            android:text="Global"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/btnQuickNews"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:backgroundTint="#295E5CE6"
+                            android:text="Noticias"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Historial -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardHomeStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/ios_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+
+                            <TextView
+                                android:id="@+id/txtHomeStatusTitle"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Historial de listas"
+                                android:textColor="#FFFFFF"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btnHomeClearHistory"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="LIMPIAR"
+                                android:textColor="#FF6E6E"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="4dp"
+                                android:background="?android:attr/selectableItemBackground" />
+
+                        </LinearLayout>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvHomePlaylistHistory"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            android:nestedScrollingEnabled="false" />
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+            
                 <!-- ======= SEGURIDAD ======= -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -1451,6 +1304,51 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <!-- ============ MIS ESTADISTICAS ============ -->
+                <LinearLayout
+                    android:id="@+id/sectionStats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:text="📊 TU SEMANA"
+                        android:textColor="@color/ios_cyan"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.14" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_card_ios"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/txtStatsBody"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingMultiplier="1.35"
+                            android:text="Cargando estadisticas..."
+                            android:textColor="#F2FFFFFF"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Conteo local de los últimos 7 dias"
+                            android:textColor="@color/ios_gray"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                
                 <!-- ======= INFORMACIÓN (2 filas con divisor) ======= -->
                 <TextView
                     android:layout_width="wrap_content"
