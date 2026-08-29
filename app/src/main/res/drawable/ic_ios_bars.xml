@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Barras estadisticas iOS -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.8" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M5,10.5 L5,19 M10,6 L10,19 M15,12.5 L15,19 M20,3.5 L20,19 M2.5,19 L21.5,19" />
+</vector>

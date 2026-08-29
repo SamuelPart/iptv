@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- QR stroke iOS: para importar listas / compartir -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"
+        android:pathData="M4,4 h5 v5 h-5 Z M4,9.5 M15,4 h5 v5 h-5 Z M4,15 h5 v5 h-5 Z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M6,6h1v1h-1z M18,6h1v1h-1z M6,18h1v1h-1z M14,15h2v2h-2z M17,17h1v1h-1z M19,18h1v1h-1z M19,15h1v1h-1z M17,19h2v1h-2z" />
+</vector>

@@ -24,6 +24,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.Toast
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -64,6 +66,35 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cineAdapter: CineMediaAdapter
     private lateinit var favoriteAdapter: FavoriteAdapter
     private lateinit var continueWatchingAdapter: ContinueWatchingAdapter
+
+    // QR scan: importar lista M3U escaneando codigo
+    private val cameraPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            qrScanLauncher.launch(qrScanOptions())
+        } else {
+            Toast.makeText(this, "Permiso de cámara requerido para escanear QR", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val qrScanLauncher = registerForActivityResult(
+        com.journeyapps.barcodescanner.ScanContract()
+    ) { result ->
+        val contents = result.contents
+        if (!contents.isNullOrEmpty()) {
+            binding.edtUrl.setText(contents)
+            loadIptvList(contents)
+        }
+    }
+
+    private fun qrScanOptions(): com.journeyapps.barcodescanner.ScanOptions =
+        com.journeyapps.barcodescanner.ScanOptions().apply {
+            setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE)
+            setPrompt("Apunta la camara al QR de tu lista")
+            setBeepEnabled(false)
+            setOrientationLocked(true)
+        }
     private var allCineMedia: List<CineMedia> = emptyList()
     private var selectedCineType: String = "all" // "all", "movie", "series"
 
@@ -106,6 +137,8 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNavigation()
         setupRecyclerViews()
+        incrementOpenCounter()
+        updateHomeHero()
         setupHomeHubTiles()
         setupSearchHistories()
         setupListeners()
@@ -331,9 +364,57 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         refreshContinueWatching()
         refreshFavorites()
+        applyAccentColor()
+        refreshStats()
     }
 
     /** Repaints the Home favorites strip from the local store. */
+    /** Re-tints nav + cine segment + settings preview with the chosen accent. */
+    private fun applyAccentColor() {
+        val navTint = AccentManager.navTintList(this)
+        binding.bottomNavigation.itemIconTintList = navTint
+        binding.bottomNavigation.itemTextColor = navTint
+        binding.txtSettingsAccentDesc.text = AccentManager.getLabel(this)
+        AccentManager.applyPreviewTint(binding.viewAccentPreview, this)
+        updateCineFilterButtons()
+    }
+
+    private fun incrementOpenCounter() {
+        val prefs = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
+        prefs.edit().putInt("app_open_count", prefs.getInt("app_open_count", 0) + 1).apply()
+    }
+
+    /** Local weekly stats rendered in the Home stats card. */
+    private fun refreshStats() {
+        val opens = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE).getInt("app_open_count", 0)
+        val weekMs = 7L * 24 * 60 * 60 * 1000
+        val now = System.currentTimeMillis()
+        val week = ContinueWatchingManager.getAll(this).filter { now - it.savedAt < weekMs }
+        val channels = week.count { it.isChannel }
+        val cine = week.filter { !it.isChannel }
+        val watchMin = cine.sumOf { it.positionMs / 60000 }
+        val favs = FavoritesManager.count(this)
+        binding.txtStatsBody.text =
+            "Esta semana: 📺 $channels canales · 🎬 ${cine.size} películas/series" +
+            "
+⏱ Tiempo en cine: $watchMin min    ⭐ Favoritos: $favs    📲 Aperturas: $opens"
+    }
+
+    /** Rotates the Home hero backdrop by time of day (4 switches per day). */
+    private fun updateHomeHero() {
+        val candidates = allCineMedia.filter { !it.backdropUrl.isNullOrEmpty() }
+        if (candidates.isEmpty()) return
+        val cal = java.util.Calendar.getInstance()
+        val seed = cal.get(java.util.Calendar.DAY_OF_YEAR) * 6 + cal.get(java.util.Calendar.HOUR_OF_DAY) / 4
+        val pick = candidates[seed % candidates.size]
+        Glide.with(this)
+            .load(pick.backdropUrl)
+            .transition(DrawableTransitionOptions.withCrossFade(700))
+            .error(R.drawable.bg_hero_banner)
+            .into(binding.imgHomeHeroBg)
+        binding.txtHomeHeroSubtitle.text = "✨ ${pick.title} y más estrenos de cine"
+    }
+
     private fun refreshFavorites() {
         val favs = FavoritesManager.getAll(this)
         if (favs.isEmpty()) {
@@ -347,6 +428,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         // Load button click
+        binding.btnScanQr.setOnClickListener {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+        }
+        binding.btnScanQr.springPress()
+
         binding.btnLoad.setOnClickListener {
             val url = binding.edtUrl.text.toString().trim()
             if (url.isNotEmpty()) {
@@ -442,6 +528,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Settings: App Theme (Claro / Oscuro / Sistema) Selector click listener
+        binding.btnSettingsAccent.setOnClickListener {
+            showIosOptionPopup(
+                "Color de acento",
+                "Elige el color principal de la app",
+                AccentManager.OPTIONS.map { R.drawable.ic_ios_globe to it.label }
+            ) { which ->
+                val opt = AccentManager.OPTIONS[which]
+                AccentManager.set(this, opt.key)
+                applyAccentColor()
+                Toast.makeText(this, "🎨 Acento: ${opt.label}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        binding.btnSettingsAccent.springPress()
+
         binding.btnSettingsTheme.setOnClickListener {
             val options = arrayOf("Por defecto del sistema ⚙️", "Modo Oscuro 🌙", "Modo Claro ☀️")
             val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
@@ -604,6 +704,11 @@ class MainActivity : AppCompatActivity() {
             updateCineFilterButtons()
             applyCineFilters()
         }
+        binding.btnCineFilterNews.setOnClickListener {
+            selectedCineType = "new"
+            updateCineFilterButtons()
+            applyCineFilters()
+        }
     }
 
     /** Modern iPhone-style view picker with animated popup + spring cards. */
@@ -658,7 +763,8 @@ class MainActivity : AppCompatActivity() {
         val options = arrayOf(
             "Control Parental: $statusText (Toca para cambiar)",
             "Configurar/Cambiar PIN (Estado: $pinStatus) 🔑",
-            "Limpiar caché de lista IPTV 🧹"
+            "Limpiar caché de lista IPTV 🧹",
+            "Ocultar categorías completas 📁"
         )
 
         AlertDialog.Builder(this)
@@ -673,6 +779,9 @@ class MainActivity : AppCompatActivity() {
                     }
                     2 -> {
                         binding.btnClear.performClick()
+                    }
+                    3 -> {
+                        showHideCategoriesDialog()
                     }
                 }
             }
@@ -1013,7 +1122,8 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Filter out adult channels if parental control is active!
         if (isParentalActive) {
-            filtered = filtered.filter { !isAdultChannel(it) }
+            val hiddenCategories = sharedPref.getStringSet("parental_hidden_categories", emptySet()) ?: emptySet()
+            filtered = filtered.filter { !isAdultChannel(it) && (it.group == null || it.group !in hiddenCategories) }
         }
 
         // 3. Sort dynamically alphabetically
@@ -1035,6 +1145,30 @@ class MainActivity : AppCompatActivity() {
         val parentalText = if (isParentalActive) " | 🔒 Parental Activo" else ""
         
         binding.txtSelectedFilterInfo.text = "$countText$categoryText$countryText$languageText$sortText$parentalText"
+    }
+
+    /** Parental control: select whole channel categories to hide when active. */
+    private fun showHideCategoriesDialog() {
+        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
+        if (categories.isEmpty()) {
+            Toast.makeText(this, "Primero carga tu lista de canales", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val selected = sharedPref.getStringSet("parental_hidden_categories", emptySet())?.toMutableSet() ?: mutableSetOf()
+        val names = categories.toTypedArray()
+        val checked = BooleanArray(names.size) { selected.contains(names[it]) }
+        AlertDialog.Builder(this)
+            .setTitle("📁 Categorías ocultas (Parental)")
+            .setMultiChoiceItems(names, checked) { _, which, isChecked ->
+                if (isChecked) selected.add(names[which]) else selected.remove(names[which])
+            }
+            .setPositiveButton("Guardar") { _, _ ->
+                sharedPref.edit().putStringSet("parental_hidden_categories", selected).apply()
+                applyFiltersAndSorting()
+                Toast.makeText(this, "Categorías ocultas actualizadas 🔒", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun showSearchFilterDialog() {
@@ -1614,6 +1748,7 @@ class MainActivity : AppCompatActivity() {
             
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
+            updateHomeHero()
             
             binding.layoutCineLoading.visibility = View.GONE
             binding.rvCineGrid.visibility = View.VISIBLE
@@ -1629,20 +1764,24 @@ class MainActivity : AppCompatActivity() {
             val matchesType = when (selectedCineType) {
                 "movie" -> it.type == "movie"
                 "series" -> it.type == "series"
+                "new" -> !it.releaseDate.isNullOrEmpty()
                 else -> true
             }
             val matchesQuery = query.isEmpty() || it.title.lowercase().contains(query)
             matchesType && matchesQuery
         }
-        cineAdapter.updateList(filtered)
-        binding.txtCineCount.text = "Total: ${filtered.size}"
+        val finalCineList = if (selectedCineType == "new") {
+            filtered.sortedByDescending { it.releaseDate ?: "" }.take(60)
+        } else filtered
+        cineAdapter.updateList(finalCineList)
+        binding.txtCineCount.text = if (selectedCineType == "new") "Novedades: ${finalCineList.size}" else "Total: ${finalCineList.size}"
         
         // Trigger the Spiderman overlay if they search for Spiderman
         checkAndShowSpidermanEasterEgg(query)
     }
 
     private fun updateCineFilterButtons() {
-        val orangeColor = android.graphics.Color.parseColor("#5E5CE6")
+        val orangeColor = AccentManager.color(this)
         val grayColor = android.graphics.Color.parseColor("#14141E")
         
         binding.btnCineFilterAll.setBackgroundColor(if (selectedCineType == "all") orangeColor else grayColor)
@@ -1653,6 +1792,8 @@ class MainActivity : AppCompatActivity() {
         
         binding.btnCineFilterSeries.setBackgroundColor(if (selectedCineType == "series") orangeColor else grayColor)
         binding.btnCineFilterSeries.setTextColor(if (selectedCineType == "series") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
+        binding.btnCineFilterNews.setBackgroundColor(if (selectedCineType == "new") orangeColor else grayColor)
+        binding.btnCineFilterNews.setTextColor(if (selectedCineType == "new") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
     }
 
     private fun openCineDetail(media: CineMedia) {

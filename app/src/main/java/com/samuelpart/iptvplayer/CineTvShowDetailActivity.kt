@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -216,8 +217,23 @@ class CineTvShowDetailActivity : AppCompatActivity() {
 
         // Configure Share button click listener
         binding.btnTvShare.setOnClickListener {
-            shareMovieDetails()
+            showShareOptions()
         }
+    }
+
+    /** Share choices: send as text or show the iPhone QR popup. */
+    private fun showShareOptions() {
+        AlertDialog.Builder(this)
+            .setTitle("Compartir")
+            .setItems(arrayOf("Compartir como texto 📄", "Mostrar código QR 📲")) { _, which ->
+                val link = if (media.urls.isNotEmpty()) media.urls[0] else media.url
+                when (which) {
+                    0 -> shareMovieDetails()
+                    1 -> QrHelper.showQrDialog(this, media.title, link)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun applyDynamicGradient(bitmap: android.graphics.Bitmap) {

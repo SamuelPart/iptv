@@ -61,6 +61,18 @@ class PlayerActivity : AppCompatActivity() {
     private var isLiveTv: Boolean = false
     private var channelLogo: String? = null
     private var cineMedia: CineMedia? = null
+    private var currentSpeed: Float = 1f
+    private var nightModeActive = false
+    private var subtitleFilePath: String? = null
+    private val failedSources = mutableSetOf<String>()
+    private var volumeGestureAccum = 0f
+    private val gestureHideRunnable = Runnable { binding.txtGestureIndicator.visibility = View.GONE }
+    private val audioManager by lazy { getSystemService(AUDIO_SERVICE) as android.media.AudioManager }
+    private val subtitlePicker = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) applyExternalSubtitle(uri)
+    }
 
     // List of alternative stream sources from web browser detection
     private var allSources: ArrayList<String>? = null
@@ -178,6 +190,22 @@ class PlayerActivity : AppCompatActivity() {
         binding.btnPip.springPress()
         binding.btnShareTv.springPress()
 
+        // Speed + subtitles solo para contenido bajo demanda (no live TV)
+        if (isLiveTv) {
+            binding.btnPlaybackSpeed.visibility = View.GONE
+            binding.btnSubtitles.visibility = View.GONE
+        } else {
+            binding.btnPlaybackSpeed.visibility = View.VISIBLE
+            binding.btnSubtitles.visibility = View.VISIBLE
+        }
+        binding.btnPlaybackSpeed.setOnClickListener { cyclePlaybackSpeed() }
+        binding.btnSubtitles.setOnClickListener { subtitlePicker.launch("*/*") }
+        binding.btnNightMode.setOnClickListener { toggleNightMode() }
+        binding.btnNightMode.springPress()
+        binding.btnPlaybackSpeed.springPress()
+        binding.btnSubtitles.springPress()
+        applyAccentColor()
+
         // Clicking back button should close player and return to preceding screen (inline player) with exact time!
         binding.btnBack.setOnClickListener {
             returnToSmallScreen()
@@ -243,6 +271,46 @@ class PlayerActivity : AppCompatActivity() {
                 }
                 return true
             }
+
+            override fun onDown(e: android.view.MotionEvent): Boolean {
+                volumeGestureAccum = 0f
+                return true
+            }
+
+            /** Vertical drag: LEFT half = brightness, RIGHT half = volume. */
+            override fun onScroll(
+                e1: android.view.MotionEvent?,
+                e2: android.view.MotionEvent,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
+                val height = binding.viewTouchTarget.height
+                if (height <= 0 || e1 == null) return true
+                if (e1.x < binding.viewTouchTarget.width / 2f) {
+                    val attrs = window.attributes
+                    val current = if (attrs.screenBrightness < 0f) 0.55f else attrs.screenBrightness
+                    val target = (current + (-distanceY / height) * 1.6f).coerceIn(0.05f, 1f)
+                    attrs.screenBrightness = target
+                    window.attributes = attrs
+                    showGestureIndicator("BRIGHTNESS:${(target * 100).toInt()}%")
+                } else {
+                    volumeGestureAccum += -distanceY
+                    if (Math.abs(volumeGestureAccum) > 24f) {
+                        val max = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+                        val cur = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+                        var target = cur
+                        if (volumeGestureAccum > 0 && cur < max) target = cur + 1
+                        if (volumeGestureAccum < 0 && cur > 0) target = cur - 1
+                        if (target != cur) {
+                            audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, target, 0)
+                            showGestureIndicator("VOLUME:${target * 100 / max}%")
+                        }
+                        volumeGestureAccum = 0f
+                    }
+                }
+                return true
+            }
+
         })
 
         // Feed touch events from touch target to gesture detector
@@ -410,7 +478,18 @@ class PlayerActivity : AppCompatActivity() {
                         }
                         MediaPlayer.Event.EncounteredError -> {
                             binding.playerProgress.visibility = View.GONE
-                            Toast.makeText(this@PlayerActivity, "Error de reproducción con VLC", Toast.LENGTH_SHORT).show()
+                            channelUrl?.let { failedSources.add(it) }
+                            val nextSource = allSources?.firstOrNull { it !in failedSources }
+                            if (nextSource != null) {
+                                Toast.makeText(
+                                    this@PlayerActivity,
+                                    "Servidor caido — probando otra opcion automaticamente...",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                switchSource(nextSource)
+                            } else {
+                                Toast.makeText(this@PlayerActivity, "Error de reproducción con VLC", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 }
@@ -423,6 +502,7 @@ class PlayerActivity : AppCompatActivity() {
                 // Streams extracted in real time often require these headers or they refuse to load
                 if (!streamReferer.isNullOrEmpty()) addOption(":http-referrer=$streamReferer")
                 if (!streamUserAgent.isNullOrEmpty()) addOption(":http-user-agent=$streamUserAgent")
+                if (!subtitleFilePath.isNullOrEmpty()) addOption(":sub-file=$subtitleFilePath")
             }
             mediaPlayer?.media = media
             media.release()
@@ -514,6 +594,73 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
+    private fun cyclePlaybackSpeed() {
+        val speeds = listOf(0.75f, 1f, 1.5f, 2f)
+        val nextIndex = (speeds.indexOf(currentSpeed) + 1) % speeds.size
+        currentSpeed = speeds[nextIndex]
+        try {
+            mediaPlayer?.rate = currentSpeed
+        } catch (_: Exception) { }
+        binding.btnPlaybackSpeed.text = if (currentSpeed == 1f) "1x" else "${currentSpeed}x"
+        Toast.makeText(this, "Velocidad: ${currentSpeed}x", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toggleNightMode() {
+        nightModeActive = !nightModeActive
+        binding.viewNightDimmer.visibility = if (nightModeActive) View.VISIBLE else View.GONE
+        binding.layoutPlayerControls.alpha = if (nightModeActive) 0.35f else 1.0f
+        Toast.makeText(this, if (nightModeActive) "Modo noche activado" else "Modo noche desactivado", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun applyExternalSubtitle(uri: android.net.Uri) {
+        try {
+            val dst = java.io.File(cacheDir, "subtitle_${channelUrl.hashCode()}.srt")
+            contentResolver.openInputStream(uri)?.use { input ->
+                dst.outputStream().use { output -> input.copyTo(output) }
+            }
+            if (!dst.exists() || dst.length() == 0L) {
+                Toast.makeText(this, "Archivo de subtitulos vacio", Toast.LENGTH_SHORT).show()
+                return
+            }
+            subtitleFilePath = dst.absolutePath
+            val ok = try {
+                mediaPlayer?.addSlave(org.videolan.libvlc.MediaPlayer.Slave.Type.Subtitle, 0, dst.absolutePath)
+            } catch (_: Exception) {
+                false
+            }
+            Toast.makeText(
+                this,
+                if (ok == true) "Subtitulos activados" else "Subtitulos listos (se aplican al reproducir)",
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "No se pudo cargar el archivo .srt", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showGestureIndicator(text: String) {
+        binding.txtGestureIndicator.text = text
+        binding.txtGestureIndicator.visibility = View.VISIBLE
+        binding.txtGestureIndicator.removeCallbacks(gestureHideRunnable)
+        binding.txtGestureIndicator.postDelayed(gestureHideRunnable, 900)
+    }
+
+    /** Re-tints the player dock with the user-chosen accent color. */
+    private fun applyAccentColor() {
+        val list = AccentManager.list(this)
+        binding.btnPip.imageTintList = list
+        binding.btnShareTv.imageTintList = list
+        binding.btnSubtitles.imageTintList = list
+        binding.btnNightMode.imageTintList = list
+        binding.btnSelectSource.imageTintList = list
+        binding.btnRewind.imageTintList = list
+        binding.btnForward.imageTintList = list
+        binding.vlcSeekBar.progressTintList = list
+        binding.vlcSeekBar.thumbTintList = list
+        binding.playerProgress.indeterminateTintList = list
+    }
+
     private fun showSourceSelectorDialog() {
         val sources = allSources ?: return
         if (sources.isEmpty()) return
@@ -542,7 +689,7 @@ class PlayerActivity : AppCompatActivity() {
         streamReferer = null
         streamUserAgent = null
         pageResolveAttempted = false
-        channelName = "Video Web: " + getDomainName(newUrl)
+        if (channelName.startsWith("Video Web")) channelName = "Video Web: " + getDomainName(newUrl)
         binding.txtPlayingName.text = channelName
         
         releasePlayer()
