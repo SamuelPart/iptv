@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
 
     // Cine & Series states
     private lateinit var cineAdapter: CineMediaAdapter
+    private lateinit var favoriteAdapter: FavoriteAdapter
     private var allCineMedia: List<CineMedia> = emptyList()
     private var selectedCineType: String = "all" // "all", "movie", "series"
 
@@ -210,24 +211,85 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerViews() {
         // 1. Setup Channels Grid in Canales tab (3 columns by default)
         binding.rvChannelsGrid.layoutManager = GridLayoutManager(this, 3)
-        channelsAdapter = ChannelAdapter(emptyList()) { channel ->
-            openPlayer(channel)
-        }
+        channelsAdapter = ChannelAdapter(
+            emptyList(),
+            onChannelClick = { channel -> openPlayer(channel) },
+            isFavorite = { FavoritesManager.isFavorite(this, it.url) },
+            onFavoriteToggle = { channel ->
+                val added = FavoritesManager.toggleChannel(this, channel)
+                Toast.makeText(this, if (added) "Guardado en Favoritos ⭐" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
+                refreshFavorites()
+            }
+        )
         binding.rvChannelsGrid.adapter = channelsAdapter
 
         // 2. Setup Search Grid in Buscador tab (3 columns)
         binding.rvSearchGrid.layoutManager = GridLayoutManager(this, 3)
-        searchAdapter = ChannelAdapter(emptyList()) { channel ->
-            openPlayer(channel)
-        }
+        searchAdapter = ChannelAdapter(
+            emptyList(),
+            onChannelClick = { channel -> openPlayer(channel) },
+            isFavorite = { FavoritesManager.isFavorite(this, it.url) },
+            onFavoriteToggle = { channel ->
+                val added = FavoritesManager.toggleChannel(this, channel)
+                Toast.makeText(this, if (added) "Guardado en Favoritos ⭐" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
+                refreshFavorites()
+            }
+        )
         binding.rvSearchGrid.adapter = searchAdapter
 
         // 3. Setup Cine Grid in Cine tab (2 columns for high-end poster aspect ratio)
         binding.rvCineGrid.layoutManager = GridLayoutManager(this, 2)
-        cineAdapter = CineMediaAdapter(emptyList()) { media ->
-            openCineDetail(media)
-        }
+        cineAdapter = CineMediaAdapter(
+            emptyList(),
+            onMediaClick = { media -> openCineDetail(media) },
+            isFavorite = { FavoritesManager.isFavorite(this, it.url) },
+            onFavoriteToggle = { media ->
+                val added = FavoritesManager.toggleMedia(this, media)
+                Toast.makeText(this, if (added) "Guardado en Favoritos ⭐" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
+                refreshFavorites()
+            }
+        )
         binding.rvCineGrid.adapter = cineAdapter
+
+        // 4. Favorites horizontal strip in Home
+        binding.rvFavorites.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        favoriteAdapter = FavoriteAdapter(
+            emptyList(),
+            onClick = { item ->
+                if (item.isChannel) {
+                    item.channel?.let { openPlayer(it) }
+                } else {
+                    item.media?.let { openCineDetail(it) }
+                }
+            },
+            onRemove = { item ->
+                val name = if (item.isChannel) item.channel?.name ?: "canal" else item.media?.title ?: "contenido"
+                AlertDialog.Builder(this)
+                    .setTitle("Quitar de Favoritos")
+                    .setMessage("¿Quitar \"$name\" de tus Favoritos?")
+                    .setPositiveButton("Quitar") { _, _ ->
+                        FavoritesManager.remove(this, item.url)
+                        refreshFavorites()
+                        Toast.makeText(this, "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+        )
+        binding.rvFavorites.adapter = favoriteAdapter
+        refreshFavorites()
+    }
+
+    /** Repaints the Home favorites strip from the local store. */
+    private fun refreshFavorites() {
+        val favs = FavoritesManager.getAll(this)
+        if (favs.isEmpty()) {
+            binding.sectionFavorites.visibility = View.GONE
+        } else {
+            binding.sectionFavorites.visibility = View.VISIBLE
+            binding.txtFavoritesCount.text = "${favs.size} guardados"
+            if (::favoriteAdapter.isInitialized) favoriteAdapter.updateList(favs)
+        }
     }
 
     private fun setupListeners() {

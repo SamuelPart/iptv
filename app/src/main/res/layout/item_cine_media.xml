@@ -28,6 +28,21 @@
             android:background="@drawable/bg_poster_scrim"
             app:layout_constraintBottom_toBottomOf="parent" />
 
+        <!-- Estrella de favorito: circulo glass flotante -->
+        <ImageView
+            android:id="@+id/imgCineFav"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_circle_glass"
+            android:padding="8dp"
+            android:contentDescription="Favorito"
+            android:src="@drawable/ic_ios_star"
+            app:tint="#E6FFFFFF"
+            android:visibility="gone"
+            android:layout_margin="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <!-- Rating badge aurora -->
         <TextView
             android:id="@+id/txtRatingBadge"

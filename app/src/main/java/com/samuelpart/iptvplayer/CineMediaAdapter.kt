@@ -14,7 +14,9 @@ import kotlinx.coroutines.withContext
 
 class CineMediaAdapter(
     private var mediaList: List<CineMedia>,
-    private val onMediaClick: (CineMedia) -> Unit
+    private val onMediaClick: (CineMedia) -> Unit,
+    private val isFavorite: ((CineMedia) -> Boolean)? = null,
+    private val onFavoriteToggle: ((CineMedia) -> Unit)? = null
 ) : RecyclerView.Adapter<CineMediaAdapter.CineMediaViewHolder>() {
 
     /** Items already asked to TMDB this session (avoids refetch spam while scrolling). */
@@ -116,6 +118,34 @@ class CineMediaAdapter(
                         }
                     }
                 }
+            }
+
+            // Favorites star overlay
+            if (isFavorite != null) {
+                binding.imgCineFav.visibility = View.VISIBLE
+                val fav = isFavorite(media)
+                if (fav) {
+                    binding.imgCineFav.setImageResource(R.drawable.ic_ios_star_fill)
+                    binding.imgCineFav.imageTintList = android.content.res.ColorStateList.valueOf(0xFFFFD60A.toInt())
+                } else {
+                    binding.imgCineFav.setImageResource(R.drawable.ic_ios_star)
+                    binding.imgCineFav.imageTintList = android.content.res.ColorStateList.valueOf(0xE6FFFFFF.toInt())
+                }
+                binding.imgCineFav.setOnClickListener {
+                    onFavoriteToggle?.invoke(media)
+                    val nowFav = isFavorite(media)
+                    if (nowFav) {
+                        binding.imgCineFav.setImageResource(R.drawable.ic_ios_star_fill)
+                        binding.imgCineFav.imageTintList = android.content.res.ColorStateList.valueOf(0xFFFFD60A.toInt())
+                    } else {
+                        binding.imgCineFav.setImageResource(R.drawable.ic_ios_star)
+                        binding.imgCineFav.imageTintList = android.content.res.ColorStateList.valueOf(0xE6FFFFFF.toInt())
+                    }
+                    android.animation.ObjectAnimator.ofFloat(it, "scaleX", 0.6f, 1f).apply { duration = 280; start() }
+                    android.animation.ObjectAnimator.ofFloat(it, "scaleY", 0.6f, 1f).apply { duration = 280; start() }
+                }
+            } else {
+                binding.imgCineFav.visibility = View.GONE
             }
 
             binding.root.setOnClickListener {

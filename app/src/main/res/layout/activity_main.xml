@@ -404,6 +404,58 @@
                     </FrameLayout>
                 </LinearLayout>
 
+                <!-- ============ MIS FAVORITOS (strip horizontal) ============ -->
+                <LinearLayout
+                    android:id="@+id/sectionFavorites"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="★ MIS FAVORITOS"
+                            android:textColor="#FFD60A"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.14" />
+
+                        <TextView
+                            android:id="@+id/txtFavoritesCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="@color/ios_gray"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvFavorites"
+                        android:layout_width="match_parent"
+                        android:layout_height="152dp"
+                        android:orientation="horizontal"
+                        android:clipToPadding="false" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Mantén presionada una tarjeta para quitarla"
+                        android:textColor="@color/ios_gray"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
                 <!-- M3U connect block -->
                 <LinearLayout
                     android:layout_width="match_parent"

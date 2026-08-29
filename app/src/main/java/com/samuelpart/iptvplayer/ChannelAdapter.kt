@@ -10,7 +10,9 @@ import com.samuelpart.iptvplayer.databinding.ItemChannelBinding
 
 class ChannelAdapter(
     private var channels: List<Channel>,
-    private val onChannelClick: (Channel) -> Unit
+    private val onChannelClick: (Channel) -> Unit,
+    private val isFavorite: ((Channel) -> Boolean)? = null,
+    private val onFavoriteToggle: ((Channel) -> Unit)? = null
 ) : RecyclerView.Adapter<ChannelAdapter.ChannelViewHolder>() {
 
     inner class ChannelViewHolder(private val binding: ItemChannelBinding) :
@@ -29,8 +31,35 @@ class ChannelAdapter(
                 .fallback(R.drawable.ic_tv)
                 .into(binding.imgLogo)
 
+            // Favorites star (visible when callbacks are provided)
+            if (isFavorite != null) {
+                binding.imgChannelFav.visibility = android.view.View.VISIBLE
+                updateFavIcon(isFavorite(channel))
+                binding.imgChannelFav.setOnClickListener {
+                    onFavoriteToggle?.invoke(channel)
+                    val nowFav = isFavorite(channel)
+                    updateFavIcon(nowFav)
+                    android.animation.ObjectAnimator.ofFloat(it, "scaleX", 0.6f, 1f).apply { duration = 280; start() }
+                    android.animation.ObjectAnimator.ofFloat(it, "scaleY", 0.6f, 1f).apply { duration = 280; start() }
+                }
+            } else {
+                binding.imgChannelFav.visibility = android.view.View.GONE
+            }
+
             binding.root.setOnClickListener {
                 onChannelClick(channel)
+            }
+
+            Unit
+        }
+
+        private fun updateFavIcon(fav: Boolean) {
+            if (fav) {
+                binding.imgChannelFav.setImageResource(R.drawable.ic_ios_star_fill)
+                binding.imgChannelFav.imageTintList = android.content.res.ColorStateList.valueOf(0xFFFFD60A.toInt())
+            } else {
+                binding.imgChannelFav.setImageResource(R.drawable.ic_ios_star)
+                binding.imgChannelFav.imageTintList = android.content.res.ColorStateList.valueOf(0xE6FFFFFF.toInt())
             }
         }
     }
