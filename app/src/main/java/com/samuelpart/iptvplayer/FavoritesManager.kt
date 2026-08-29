@@ -21,7 +21,7 @@ object FavoritesManager {
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
 
-    private fun toB64(obj: Serializable): String {
+    private fun toB64(obj: Any): String {
         val baos = ByteArrayOutputStream()
         ObjectOutputStream(baos).use { it.writeObject(obj) }
         return android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)

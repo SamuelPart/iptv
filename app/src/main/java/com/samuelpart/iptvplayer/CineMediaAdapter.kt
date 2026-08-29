@@ -123,7 +123,7 @@ class CineMediaAdapter(
             // Favorites star overlay
             if (isFavorite != null) {
                 binding.imgCineFav.visibility = View.VISIBLE
-                val fav = isFavorite?.invoke(media)
+                val fav = isFavorite?.invoke(media) == true
                 if (fav) {
                     binding.imgCineFav.setImageResource(R.drawable.ic_ios_star_fill)
                     binding.imgCineFav.imageTintList = android.content.res.ColorStateList.valueOf(0xFFFFD60A.toInt())
@@ -133,7 +133,7 @@ class CineMediaAdapter(
                 }
                 binding.imgCineFav.setOnClickListener {
                     onFavoriteToggle?.invoke(media)
-                    val nowFav = isFavorite?.invoke(media)
+                    val nowFav = isFavorite?.invoke(media) == true
                     if (nowFav) {
                         binding.imgCineFav.setImageResource(R.drawable.ic_ios_star_fill)
                         binding.imgCineFav.imageTintList = android.content.res.ColorStateList.valueOf(0xFFFFD60A.toInt())
