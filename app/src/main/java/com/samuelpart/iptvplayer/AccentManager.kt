@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.view.View
 
-/** App-wide accent color (cyan/violet/coral/green) — stored locally, re-tints nav, player and segment pickers. */
+/** App-wide accent color (mint/champagne/coral/pearl) — stored locally, re-tints nav, player and segment pickers. */
 object AccentManager {
 
     data class AccentOption(val key: String, val label: String, val color: Int)
@@ -15,12 +15,11 @@ object AccentManager {
         AccentOption("coral", "Coral", 0xFFFF6E6E.toInt()),
         AccentOption("perla", "Perla", 0xFFE8E6E1.toInt())
     )
-    )
 
     private const val KEY = "accent_key"
 
     fun getKey(ctx: Context): String =
-        ctx.getSharedPreferences("iptv_pref", Context.MODE_PRIVATE).getString(KEY, "cyan") ?: "cyan"
+        ctx.getSharedPreferences("iptv_pref", Context.MODE_PRIVATE).getString(KEY, "mint") ?: "mint"
 
     fun getLabel(ctx: Context): String = OPTIONS.firstOrNull { it.key == getKey(ctx) }?.label ?: OPTIONS[0].label
 
