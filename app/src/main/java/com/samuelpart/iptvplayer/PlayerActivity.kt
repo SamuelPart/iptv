@@ -59,6 +59,8 @@ class PlayerActivity : AppCompatActivity() {
     private var startPosition: Long = 0L
     private var pendingSeekPosition: Long = 0L
     private var isLiveTv: Boolean = false
+    private var channelLogo: String? = null
+    private var cineMedia: CineMedia? = null
 
     // List of alternative stream sources from web browser detection
     private var allSources: ArrayList<String>? = null
@@ -138,6 +140,9 @@ class PlayerActivity : AppCompatActivity() {
         allSources = intent.getStringArrayListExtra("allSources")
         startPosition = intent.getLongExtra("startPosition", 0L)
         isLiveTv = intent.getBooleanExtra("isLiveTv", false)
+        channelLogo = intent.getStringExtra("channelLogo")
+        @Suppress("DEPRECATION")
+        cineMedia = intent.getSerializableExtra("cineMedia") as? CineMedia
         // Headers captured by the real-time extractor in the detail screen (if any)
         streamReferer = intent.getStringExtra("streamReferer")
         streamUserAgent = intent.getStringExtra("streamUserAgent")
@@ -766,6 +771,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        saveContinueWatching() // capture position BEFORE the player releases
         try {
             castContext?.sessionManager?.removeSessionManagerListener(sessionManagerListener, CastSession::class.java)
         } catch (e: Exception) {
@@ -779,8 +785,46 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        saveContinueWatching()
         if (Build.VERSION.SDK_INT > 23) {
             releasePlayer()
+        }
+    }
+
+    /** Records the current playback moment so Home can offer "Continue Watching". */
+    private fun saveContinueWatching() {
+        val url = channelUrl
+        if (url.isNullOrEmpty()) return
+        if (isLiveTv) {
+            ContinueWatchingManager.save(
+                this,
+                ContinueWatchingManager.ResumeEntry(
+                    url = url,
+                    title = channelName,
+                    isChannel = true,
+                    channelLogo = channelLogo,
+                    savedAt = System.currentTimeMillis()
+                )
+            )
+        } else {
+            val time = try { mediaPlayer?.time ?: -1L } catch (_: Exception) { -1L }
+            val len = try { mediaPlayer?.length ?: 0L } catch (_: Exception) { 0L }
+            val effectivePos = if (time > 0) time else startPosition
+            // solo guardar progreso real (>=15s) y que no haya terminado
+            if (effectivePos >= 15000 && (len <= 0 || effectivePos < len - 30000)) {
+                ContinueWatchingManager.save(
+                    this,
+                    ContinueWatchingManager.ResumeEntry(
+                        url = url,
+                        title = channelName,
+                        isChannel = false,
+                        media = cineMedia,
+                        savedAt = System.currentTimeMillis(),
+                        positionMs = effectivePos,
+                        durationMs = len
+                    )
+                )
+            }
         }
     }
 

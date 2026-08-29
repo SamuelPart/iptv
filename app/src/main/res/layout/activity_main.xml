@@ -404,6 +404,34 @@
                     </FrameLayout>
                 </LinearLayout>
 
+                <!-- ============ CONTINUAR VIENDO ============ -->
+                <LinearLayout
+                    android:id="@+id/sectionContinueWatching"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:text="▶ CONTINUAR VIENDO"
+                        android:textColor="@color/ios_cyan"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.14" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvContinueWatching"
+                        android:layout_width="match_parent"
+                        android:layout_height="86dp"
+                        android:orientation="horizontal"
+                        android:clipToPadding="false" />
+                </LinearLayout>
+
                 <!-- ============ MIS FAVORITOS (strip horizontal) ============ -->
                 <LinearLayout
                     android:id="@+id/sectionFavorites"

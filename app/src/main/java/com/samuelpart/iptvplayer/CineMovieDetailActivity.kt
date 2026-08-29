@@ -586,6 +586,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
             putExtra("channelUrl", streamUrl)
             putStringArrayListExtra("allSources", media.urls)
             putExtra("startPosition", currentPosition)
+            putExtra("cineMedia", media)
             putExtra("streamReferer", activeReferer)
             putExtra("streamUserAgent", activeUserAgent)
         }

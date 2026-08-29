@@ -620,6 +620,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
             putExtra("channelName", title)
             putExtra("channelUrl", streamUrl)
             putExtra("startPosition", currentPosition)
+            putExtra("cineMedia", media)
             putExtra("streamReferer", activeReferer)
             putExtra("streamUserAgent", activeUserAgent)
         }

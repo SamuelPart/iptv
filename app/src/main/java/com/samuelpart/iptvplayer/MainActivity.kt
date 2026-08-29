@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
     // Cine & Series states
     private lateinit var cineAdapter: CineMediaAdapter
     private lateinit var favoriteAdapter: FavoriteAdapter
+    private lateinit var continueWatchingAdapter: ContinueWatchingAdapter
     private var allCineMedia: List<CineMedia> = emptyList()
     private var selectedCineType: String = "all" // "all", "movie", "series"
 
@@ -277,6 +278,58 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvFavorites.adapter = favoriteAdapter
+        refreshFavorites()
+
+        // 5. Continue Watching horizontal strip in Home
+        binding.rvContinueWatching.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        continueWatchingAdapter = ContinueWatchingAdapter(
+            emptyList(),
+            onClick = { entry -> resumeContinueWatching(entry) },
+            onRemove = { entry -> confirmRemoveContinueWatching(entry) }
+        )
+        binding.rvContinueWatching.adapter = continueWatchingAdapter
+        refreshContinueWatching()
+    }
+
+    /** Repaints the Home "Continue Watching" strip from the local store. */
+    private fun refreshContinueWatching() {
+        val items = ContinueWatchingManager.getAll(this)
+        if (items.isEmpty()) {
+            binding.sectionContinueWatching.visibility = View.GONE
+        } else {
+            binding.sectionContinueWatching.visibility = View.VISIBLE
+            if (::continueWatchingAdapter.isInitialized) continueWatchingAdapter.updateList(items)
+        }
+    }
+
+    private fun resumeContinueWatching(entry: ContinueWatchingManager.ResumeEntry) {
+        if (entry.isChannel) {
+            openPlayer(Channel(name = entry.title, url = entry.url, logoUrl = entry.channelLogo))
+        } else {
+            startActivity(Intent(this, PlayerActivity::class.java).apply {
+                putExtra("channelName", entry.title)
+                putExtra("channelUrl", entry.url)
+                putExtra("startPosition", entry.positionMs)
+                entry.media?.let { putExtra("cineMedia", it) }
+            })
+        }
+    }
+
+    private fun confirmRemoveContinueWatching(entry: ContinueWatchingManager.ResumeEntry) {
+        AlertDialog.Builder(this)
+            .setTitle("Quitar de Continuar viendo")
+            .setMessage("¿Quitar \"${entry.title}\" de la lista?")
+            .setPositiveButton("Quitar") { _, _ ->
+                ContinueWatchingManager.remove(this, entry.url)
+                refreshContinueWatching()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshContinueWatching()
         refreshFavorites()
     }
 
@@ -1532,6 +1585,7 @@ class MainActivity : AppCompatActivity() {
             putExtra("channelName", channel.name)
             putExtra("channelUrl", channel.url)
             putExtra("isLiveTv", true) // Mark as Live TV channel!
+            putExtra("channelLogo", channel.logoUrl)
         }
         startActivity(intent)
     }
