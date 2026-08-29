@@ -317,9 +317,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Settings rows: iOS spring touch
-        UiMotion.springPress(binding.btnSettingsParental)
-        UiMotion.springPress(binding.btnSettingsTheme)
-        UiMotion.springPress(binding.btnSettingsClearCache)
+        binding.btnSettingsParental.springPress()
+        binding.btnSettingsTheme.springPress()
+        binding.btnSettingsClearCache.springPress()
 
         // Settings: Parental Control click listener
         binding.btnSettingsParental.setOnClickListener {
