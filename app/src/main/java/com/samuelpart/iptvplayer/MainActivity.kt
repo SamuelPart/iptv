@@ -466,7 +466,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             allChannels.take(20).forEach {
-                coverItems.add(HomeCoverItem(it.logo, it.name, "Transmision en vivo · toca para ver", "EN VIVO", it, null))
+                coverItems.add(HomeCoverItem(it.logoUrl, it.name, "Transmision en vivo · toca para ver", "EN VIVO", it, null))
             }
             if (coverItems.isEmpty()) {
                 coverItems.add(HomeCoverItem(null, "Conecta tu lista", "Ve a Ajustes, pega tu lista M3U o escanea un QR", null, null, null))
