@@ -1476,6 +1476,8 @@
 
             </LinearLayout>
 
+            </ScrollView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- ================= TAB 5: CINE & SERIES (PRODUCTION GRADE) ================= -->
@@ -1742,8 +1744,6 @@
                     android:scrollbars="vertical" />
 
             </LinearLayout>
-
-                    </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
