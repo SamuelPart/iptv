@@ -34,10 +34,10 @@ class ChannelAdapter(
             // Favorites star (visible when callbacks are provided)
             if (isFavorite != null) {
                 binding.imgChannelFav.visibility = android.view.View.VISIBLE
-                updateFavIcon(isFavorite(channel))
+                updateFavIcon(isFavorite?.invoke(channel))
                 binding.imgChannelFav.setOnClickListener {
                     onFavoriteToggle?.invoke(channel)
-                    val nowFav = isFavorite(channel)
+                    val nowFav = isFavorite?.invoke(channel)
                     updateFavIcon(nowFav)
                     android.animation.ObjectAnimator.ofFloat(it, "scaleX", 0.6f, 1f).apply { duration = 280; start() }
                     android.animation.ObjectAnimator.ofFloat(it, "scaleY", 0.6f, 1f).apply { duration = 280; start() }
