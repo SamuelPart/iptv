@@ -155,8 +155,24 @@ class PlayerActivity : AppCompatActivity() {
             binding.btnRewind.visibility = View.GONE
             binding.btnForward.visibility = View.GONE
             binding.layoutBottomTimeline.visibility = View.GONE
+            // LIVE look: red pulsing badge in the floating header pill
+            binding.txtLiveBadge.visibility = View.VISIBLE
+            android.animation.ObjectAnimator.ofFloat(binding.txtLiveBadge, "alpha", 0.35f).apply {
+                duration = 850
+                repeatCount = android.animation.ValueAnimator.INFINITE
+                repeatMode = android.animation.ValueAnimator.REVERSE
+                start()
+            }
         }
         
+        // iOS spring touch on the player controls
+        binding.btnPlayPause.springPress()
+        binding.btnRewind.springPress()
+        binding.btnForward.springPress()
+        binding.btnBack.springPress()
+        binding.btnPip.springPress()
+        binding.btnShareTv.springPress()
+
         // Clicking back button should close player and return to preceding screen (inline player) with exact time!
         binding.btnBack.setOnClickListener {
             returnToSmallScreen()
