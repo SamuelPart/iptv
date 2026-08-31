@@ -1666,7 +1666,67 @@
                         app:tint="@color/ios_cyan" />
                 </LinearLayout>
 
-                <TextView
+                <!-- DOCK segmentado del catalogo (solo visible en modo catalogo) -->
+                    <LinearLayout
+                        android:id="@+id/cineCatalogDock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:background="@drawable/bg_dock_pill"
+                        android:padding="4dp"
+                        android:layout_marginTop="18dp">
+
+                        <TextView
+                            android:id="@+id/catSegAll"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_chip_active"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingVertical="9dp"
+                            android:text="Todos"
+                            android:textColor="#16181C"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/catSegMovies"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:background="@android:color/transparent"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingVertical="9dp"
+                            android:text="Películas"
+                            android:textColor="#98989F"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/catSegSeries"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:background="@android:color/transparent"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingVertical="9dp"
+                            android:text="Series"
+                            android:textColor="#98989F"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
                     android:id="@+id/txtCineCatalogToggle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

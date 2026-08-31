@@ -2067,7 +2067,22 @@ class MainActivity : AppCompatActivity() {
             if (added) flyOutAndAdvance(1)
         }
         binding.txtCineCatalogToggle.setOnClickListener { setDeckMode(!deckMode) }
+        binding.catSegAll.setOnClickListener { selectedCineType = "all"; updateCatalogSegments(); applyCineFilters() }
+        binding.catSegMovies.setOnClickListener { selectedCineType = "movie"; updateCatalogSegments(); applyCineFilters() }
+        binding.catSegSeries.setOnClickListener { selectedCineType = "series"; updateCatalogSegments(); applyCineFilters() }
         renderDeck()
+    }
+
+    private fun updateCatalogSegments() {
+        val activeText = android.graphics.Color.parseColor("#16181C")
+        val grayText = android.graphics.Color.parseColor("#98989F")
+        fun seg(v: android.widget.TextView, active: Boolean) {
+            v.setBackgroundResource(if (active) R.drawable.bg_chip_active else android.R.color.transparent)
+            v.setTextColor(if (active) activeText else grayText)
+        }
+        seg(binding.catSegAll, selectedCineType == "all")
+        seg(binding.catSegMovies, selectedCineType == "movie")
+        seg(binding.catSegSeries, selectedCineType == "series")
     }
 
     private fun setDeckMode(on: Boolean) {
@@ -2080,12 +2095,14 @@ class MainActivity : AppCompatActivity() {
         binding.rvCineGrid.visibility = cat
         binding.cineChipsScroll.visibility = cat
         binding.txtCineCount.visibility = cat
+        binding.cineCatalogDock.visibility = if (on) View.GONE else View.VISIBLE
         binding.layoutCineLoading.visibility = if (on) View.GONE else binding.layoutCineLoading.visibility
         if (on) {
             binding.rvCineReco.visibility = View.GONE
             binding.txtCineRecoLabel.visibility = View.GONE
             refreshDeck()
         } else {
+            updateCatalogSegments()
             binding.rvCineReco.visibility = if (binding.rvCineReco.adapter?.itemCount ?: 0 > 0) View.VISIBLE else View.GONE
             binding.txtCineRecoLabel.visibility = if (binding.rvCineReco.adapter?.itemCount ?: 0 > 0) View.VISIBLE else View.GONE
         }
