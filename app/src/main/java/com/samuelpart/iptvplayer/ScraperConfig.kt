@@ -58,7 +58,7 @@ object ScraperConfig {
         "filemoon", "mixdrop", "upstream", "vidmoly", "uqload", "fembed",
         "luluvdo", "wolfstream", "streamwish", "filelions", "earnvids",
         "streamlare", "hydrax", "yourupload", "supervideo", "dropload",
-        "embedsito", "ok.ru", "rumble.com", "sendvid.com"
+        "embedsito", "ok.ru", "rumble.com", "sendvid.com", "nupload"
     )
 
     private val SOCIAL_DOMAINS = listOf(

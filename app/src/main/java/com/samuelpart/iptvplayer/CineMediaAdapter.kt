@@ -42,6 +42,10 @@ class CineMediaAdapter(
                 binding.txtRatingBadge.visibility = View.GONE
             }
 
+            // Badge NUEVO champagne para estrenos (2024+)
+            binding.txtCineNewBadge.visibility =
+                if ((media.releaseDate?.take(4)?.toIntOrNull() ?: 0) >= 2024) View.VISIBLE else View.GONE
+
             // Load poster with Glide
             val fallbackIcon = if (isMovie) R.drawable.ic_ios_movie else R.drawable.ic_ios_tv
             

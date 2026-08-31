@@ -1486,14 +1486,6 @@
                             android:textSize="17sp"
                             android:textStyle="bold" />
 
-                        <TextView
-                            android:id="@+id/txtCineCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Total: 0"
-                            android:textColor="#7A7A7C"
-                            android:textSize="11sp" />
                     </LinearLayout>
 
                     <ImageButton
@@ -1624,7 +1616,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvCineReco"
                     android:layout_width="match_parent"
-                    android:layout_height="182dp"
+                    android:layout_height="262dp"
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="2dp"
                     android:clipToPadding="false"
@@ -1696,6 +1688,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:visibility="gone"
                     android:orientation="horizontal">
 
                     <Button
@@ -1727,7 +1720,130 @@
                 </LinearLayout>
 </LinearLayout>
 
-                <!-- Estado de carga -->
+                <!-- Chips "Para ti" exactos del boceto E: Todos / Accion / Feel good / Serie larga / Corta <2h / Top / Estrenos -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="6dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/chipMoodTodos"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#33404048"
+                            android:minHeight="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="Todos"
+                            android:textColor="#98989F"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/chipMoodAccion"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#33404048"
+                            android:minHeight="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="🚀 Accion"
+                            android:textColor="#98989F"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/chipMoodFeel"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#33404048"
+                            android:minHeight="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="💛 Feel good"
+                            android:textColor="#98989F"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/chipMoodSerie"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#33404048"
+                            android:minHeight="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="🎭 Serie larga"
+                            android:textColor="#98989F"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/chipMoodCorta"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#33404048"
+                            android:minHeight="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="⏱ Corta &#60; 2h"
+                            android:textColor="#98989F"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/chipMoodTop2"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="6dp"
+                            android:backgroundTint="#33404048"
+                            android:minHeight="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="⭐ Top valoradas"
+                            android:textColor="#98989F"
+                            android:textSize="11sp" />
+
+                        <Button
+                            android:id="@+id/chipMoodEstrenos2"
+                            style="?android:attr/buttonStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:backgroundTint="#33404048"
+                            android:minHeight="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="🆕 Estrenos"
+                            android:textColor="#98989F"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <!-- contador chico encima del grid -->
+                <TextView
+                    android:id="@+id/txtCineCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:paddingStart="4dp"
+                    android:text="Total: 0"
+                    android:textColor="#7A7A7C"
+                    android:textSize="10sp" />
+
+                                <!-- Estado de carga -->
                 <LinearLayout
                     android:id="@+id/layoutCineLoading"
                     android:layout_width="match_parent"

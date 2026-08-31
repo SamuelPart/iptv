@@ -841,6 +841,37 @@ class MainActivity : AppCompatActivity() {
             updateCineMoodButtons()
             applyCineFilters()
         }
+
+        // ====== Chips del boceto "Para ti" (orden EXACTO) ======
+        binding.chipMoodTodos.setOnClickListener {
+            selectedCineType = "all"; cineMood = null
+            updateCineFilterButtons(); updateParaTiChips(); applyCineFilters()
+        }
+        binding.chipMoodAccion.setOnClickListener {
+            selectedCineType = "all"; cineMood = "accion"
+            updateCineFilterButtons(); updateParaTiChips(); applyCineFilters()
+        }
+        binding.chipMoodFeel.setOnClickListener {
+            selectedCineType = "all"; cineMood = "feelgood"
+            updateCineFilterButtons(); updateParaTiChips(); applyCineFilters()
+        }
+        binding.chipMoodSerie.setOnClickListener {
+            selectedCineType = "series"; cineMood = null
+            updateCineFilterButtons(); updateParaTiChips(); applyCineFilters()
+        }
+        binding.chipMoodCorta.setOnClickListener {
+            selectedCineType = "movie"; cineMood = null
+            updateCineFilterButtons(); updateParaTiChips(); applyCineFilters()
+        }
+        binding.chipMoodTop2.setOnClickListener {
+            cineMood = if (cineMood == "top") null else "top"
+            updateParaTiChips(); applyCineFilters()
+        }
+        binding.chipMoodEstrenos2.setOnClickListener {
+            cineMood = if (cineMood == "estrenos") null else "estrenos"
+            updateParaTiChips(); applyCineFilters()
+        }
+        updateParaTiChips()
     }
 
     /** Modern iPhone-style view picker with animated popup + spring cards. */
@@ -1907,12 +1938,21 @@ class MainActivity : AppCompatActivity() {
             val matchesMood = when (cineMood) {
                 "estrenos" -> (it.releaseDate?.take(4)?.toIntOrNull() ?: 0) >= 2024
                 "top" -> (it.rating ?: 0.0) >= 7.5
+                "accion" -> listOf("accion", "acción", "action", "aventura", "guerra", "combate", "pelea", "espionaje", "ninja", "superhéroe", "superheroe").any { k ->
+                    (it.title + " " + (it.overview ?: "") + " " + it.group).lowercase().contains(k)
+                }
+                "feelgood" -> listOf("comedia", "romance", "familia", "animaci", "navidad", "musica", "adolescente", "feel").any { k ->
+                    (it.title + " " + (it.overview ?: "") + " " + it.group).lowercase().contains(k)
+                }
                 else -> true
             }
             matchesType && matchesQuery && matchesMood
         }
         val finalCineList = if (selectedCineType == "new") {
             filtered.sortedByDescending { it.releaseDate ?: "" }.take(60)
+        } else if (selectedCineType == "all" && cineMood == null && query.isEmpty()) {
+            // orden casa: lo mejor segun TMDB primero, sin tocar el resto
+            filtered.sortedByDescending { it.rating ?: -1.0 }
         } else filtered
         cineAdapter.updateList(finalCineList)
         binding.txtCineCount.text = if (selectedCineType == "new") "Novedades: ${finalCineList.size}" else "Total: ${finalCineList.size}"
@@ -1946,6 +1986,24 @@ class MainActivity : AppCompatActivity() {
         binding.btnMoodEstrenos.setTextColor(if (cineMood == "estrenos") activeText else grayText)
         binding.btnMoodTop.setBackgroundColor(if (cineMood == "top") activeTint else grayTint)
         binding.btnMoodTop.setTextColor(if (cineMood == "top") activeText else grayText)
+    }
+
+    private fun updateParaTiChips() {
+        val activeTint = android.graphics.Color.parseColor("#3E2E1F")
+        val activeText = android.graphics.Color.parseColor("#C9A96E")
+        val grayTint = android.graphics.Color.parseColor("#33404048")
+        val grayText = android.graphics.Color.parseColor("#98989F")
+        fun paint(b: android.widget.Button, active: Boolean) {
+            b.setBackgroundColor(if (active) activeTint else grayTint)
+            b.setTextColor(if (active) activeText else grayText)
+        }
+        paint(binding.chipMoodTodos, selectedCineType == "all" && cineMood == null)
+        paint(binding.chipMoodAccion, cineMood == "accion")
+        paint(binding.chipMoodFeel, cineMood == "feelgood")
+        paint(binding.chipMoodSerie, selectedCineType == "series")
+        paint(binding.chipMoodCorta, selectedCineType == "movie")
+        paint(binding.chipMoodTop2, cineMood == "top")
+        paint(binding.chipMoodEstrenos2, cineMood == "estrenos")
     }
 
     /** Rail "PORQUE VISTE X": semilla = lo ultimo visto de cine; sin historial -> top valoradas. */
