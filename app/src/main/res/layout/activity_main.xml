@@ -1777,7 +1777,7 @@
                         style="?android:attr/buttonStyleSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="34dp"
-                        android:backgroundTint="#33404048"
+                        android:background="@drawable/bg_chip_idle"
                         android:minHeight="0dp"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
@@ -1791,11 +1791,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="34dp"
                         android:layout_marginStart="6dp"
-                        android:backgroundTint="#33404048"
+                        android:background="@drawable/bg_chip_idle"
                         android:minHeight="0dp"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:text="⭐ Top valoradas"
+                        android:text="Top valoradas"
                         android:textColor="#98989F"
                         android:textSize="11sp" />
                 </LinearLayout>
@@ -1821,7 +1821,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:layout_marginEnd="6dp"
-                            android:backgroundTint="#33404048"
+                            android:background="@drawable/bg_chip_idle"
                             android:minHeight="0dp"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
@@ -1835,11 +1835,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:layout_marginEnd="6dp"
-                            android:backgroundTint="#33404048"
+                            android:background="@drawable/bg_chip_idle"
                             android:minHeight="0dp"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:text="🚀 Accion"
+                            android:text="Acción"
                             android:textColor="#98989F"
                             android:textSize="11sp" />
 
@@ -1849,11 +1849,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:layout_marginEnd="6dp"
-                            android:backgroundTint="#33404048"
+                            android:background="@drawable/bg_chip_idle"
                             android:minHeight="0dp"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:text="💛 Feel good"
+                            android:text="Feel good"
                             android:textColor="#98989F"
                             android:textSize="11sp" />
 
@@ -1863,11 +1863,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:layout_marginEnd="6dp"
-                            android:backgroundTint="#33404048"
+                            android:background="@drawable/bg_chip_idle"
                             android:minHeight="0dp"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:text="🎭 Serie larga"
+                            android:text="Serie larga"
                             android:textColor="#98989F"
                             android:textSize="11sp" />
 
@@ -1877,11 +1877,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:layout_marginEnd="6dp"
-                            android:backgroundTint="#33404048"
+                            android:background="@drawable/bg_chip_idle"
                             android:minHeight="0dp"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:text="⏱ Corta &#60; 2h"
+                            android:text="Corta &#60; 2h"
                             android:textColor="#98989F"
                             android:textSize="11sp" />
 
@@ -1891,11 +1891,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:layout_marginEnd="6dp"
-                            android:backgroundTint="#33404048"
+                            android:background="@drawable/bg_chip_idle"
                             android:minHeight="0dp"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:text="⭐ Top valoradas"
+                            android:text="Top valoradas"
                             android:textColor="#98989F"
                             android:textSize="11sp" />
 
@@ -1904,11 +1904,11 @@
                             style="?android:attr/buttonStyleSmall"
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
-                            android:backgroundTint="#33404048"
+                            android:background="@drawable/bg_chip_idle"
                             android:minHeight="0dp"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp"
-                            android:text="🆕 Estrenos"
+                            android:text="Estrenos"
                             android:textColor="#98989F"
                             android:textSize="11sp" />
                     </LinearLayout>

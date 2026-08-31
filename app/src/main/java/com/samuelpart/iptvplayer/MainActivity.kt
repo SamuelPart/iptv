@@ -158,6 +158,10 @@ class MainActivity : AppCompatActivity() {
         setupHomeCoverflow()
         setupSearchHistories()
         setupListeners()
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            androidx.core.app.ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 77)
+        }
         updateEmptyStates() // Initial state shows instructions everywhere
         
         // Initialize Google AdMob SDK and load ads
@@ -1925,6 +1929,7 @@ class MainActivity : AppCompatActivity() {
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
             refreshCoverData()
+            CineNewNotifier.onCatalogLoaded(this@MainActivity, catalog)
             
             binding.layoutCineLoading.visibility = View.GONE
             binding.rvCineGrid.visibility = View.VISIBLE
@@ -1993,9 +1998,9 @@ class MainActivity : AppCompatActivity() {
         val activeText = android.graphics.Color.parseColor("#C9A96E")
         val grayTint = android.graphics.Color.parseColor("#33404048")
         val grayText = android.graphics.Color.parseColor("#98989F")
-        binding.btnMoodEstrenos.setBackgroundColor(if (cineMood == "estrenos") activeTint else grayTint)
+        binding.btnMoodEstrenos.setBackgroundResource(if (cineMood == "estrenos") R.drawable.bg_chip_active else R.drawable.bg_chip_idle)
         binding.btnMoodEstrenos.setTextColor(if (cineMood == "estrenos") activeText else grayText)
-        binding.btnMoodTop.setBackgroundColor(if (cineMood == "top") activeTint else grayTint)
+        binding.btnMoodTop.setBackgroundResource(if (cineMood == "top") R.drawable.bg_chip_active else R.drawable.bg_chip_idle)
         binding.btnMoodTop.setTextColor(if (cineMood == "top") activeText else grayText)
     }
 
@@ -2005,7 +2010,7 @@ class MainActivity : AppCompatActivity() {
         val grayTint = android.graphics.Color.parseColor("#33404048")
         val grayText = android.graphics.Color.parseColor("#98989F")
         fun paint(b: android.widget.Button, active: Boolean) {
-            b.setBackgroundColor(if (active) activeTint else grayTint)
+            b.setBackgroundResource(if (active) R.drawable.bg_chip_active else R.drawable.bg_chip_idle)
             b.setTextColor(if (active) activeText else grayText)
         }
         paint(binding.chipMoodTodos, selectedCineType == "all" && cineMood == null)
@@ -2140,24 +2145,44 @@ class MainActivity : AppCompatActivity() {
         card.animate().alpha(1f).setDuration(200).start()
     }
 
+    private var deckTracker: android.view.VelocityTracker? = null
+
     private fun onDeckTouch(v: View, ev: android.view.MotionEvent): Boolean {
         when (ev.actionMasked) {
-            android.view.MotionEvent.ACTION_DOWN -> { deckDownX = ev.x; return true }
+            android.view.MotionEvent.ACTION_DOWN -> {
+                deckDownX = ev.x
+                deckTracker = android.view.VelocityTracker.obtain()
+                deckTracker?.addMovement(ev)
+                return true
+            }
             android.view.MotionEvent.ACTION_MOVE -> {
+                deckTracker?.addMovement(ev)
                 val dx = ev.x - deckDownX
                 v.translationX = dx
-                v.rotation = dx / 25f
+                v.rotation = dx / 22f
+                // la carta de atras sube gradualmente mientras arrastras (vivo)
+                val pr = (kotlin.math.abs(dx) / 160f).coerceIn(0f, 1f)
+                binding.deckCardBack.root.rotation = -4f + 4f * pr
+                binding.deckCardBack.root.scaleX = 0.94f + 0.06f * pr
+                binding.deckCardBack.root.scaleY = 0.94f + 0.06f * pr
+                binding.deckCardBack.root.alpha = 0.6f + 0.4f * pr
                 return true
             }
             android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
                 val dx = ev.x - deckDownX
-                if (kotlin.math.abs(dx) > 150f) {
-                    flyOutAndAdvance(if (dx > 0) 1 else -1)
+                deckTracker?.computeCurrentVelocity(1000)
+                val vx = deckTracker?.xVelocity ?: 0f
+                deckTracker?.recycle()
+                deckTracker = null
+                if (kotlin.math.abs(dx) > 150f || kotlin.math.abs(vx) > 1200f) {
+                    flyOutAndAdvance(if ((dx + vx * 0.08f) > 0) 1 else -1)
                 } else {
                     v.animate().translationX(0f).rotation(0f)
-                        .setDuration(260)
-                        .setInterpolator(android.view.animation.DecelerateInterpolator(1.6f))
+                        .setDuration(340)
+                        .setInterpolator(android.view.animation.OvershootInterpolator(1.2f))
                         .start()
+                    binding.deckCardBack.root.animate().rotation(-4f).scaleX(0.94f).scaleY(0.94f).alpha(0.6f)
+                        .setDuration(240).start()
                 }
                 return true
             }
@@ -2173,8 +2198,8 @@ class MainActivity : AppCompatActivity() {
             .translationX(dir * front.width * 1.4f)
             .rotation(dir * 20f)
             .alpha(0f)
-            .setDuration(240)
-            .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+            .setDuration(210)
+            .setInterpolator(android.view.animation.AccelerateInterpolator(1.4f))
             .withEndAction {
                 if (deckQueue.isNotEmpty()) deckQueue.removeFirst()
                 if (deckQueue.size < 4) refreshDeck()
