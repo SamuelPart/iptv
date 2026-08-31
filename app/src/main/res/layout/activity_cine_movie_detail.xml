@@ -216,28 +216,37 @@
             <View
                 android:id="@+id/viewSpaceHeader"
                 android:layout_width="match_parent"
-                android:layout_height="170dp" />
+                android:layout_height="36dp" />
 
-            <!-- ============ COMPOSICION HORIZONTAL ESTILO iOS ============ -->
             <LinearLayout
                 android:id="@+id/layoutMovieDetailCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <!-- Carta flotante con pistas de gesto (estilo mazo) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="start|top">
+                    android:gravity="center"
+                    android:layout_marginTop="-60dp">
 
-                    <!-- Poster grande a la izquierda -->
+                    <TextView
+                        android:id="@+id/txtSwipeHintLeft"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="‹"
+                        android:textColor="#33FFFFFF"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        android:layout_marginEnd="20dp" />
+
                     <androidx.cardview.widget.CardView
-                        android:layout_width="124dp"
-                        android:layout_height="180dp"
-                        android:elevation="12dp"
-                        app:cardCornerRadius="18dp"
-                        app:cardElevation="0dp"
+                        android:layout_width="216dp"
+                        android:layout_height="316dp"
+                        app:cardCornerRadius="26dp"
+                        app:cardElevation="14dp"
                         app:cardBackgroundColor="@color/ios_surface_2">
 
                         <ImageView
@@ -246,75 +255,90 @@
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop"
                             android:contentDescription="Poster" />
-
                     </androidx.cardview.widget.CardView>
 
-                    <!-- Titulo + meta + rating -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <TextView
+                        android:id="@+id/txtSwipeHintRight"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginStart="16dp">
-
-                        <TextView
-                            android:id="@+id/txtMovieTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="TITLE"
-                            android:textColor="#FFFFFF"
-                            android:textSize="23sp"
-                            android:textStyle="bold"
-                            android:textAllCaps="false"
-                            android:maxLines="3"
-                            android:ellipsize="end" />
-
-                        <TextView
-                            android:id="@+id/txtMovieMeta"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Meta"
-                            android:textColor="@color/ios_gray"
-                            android:textSize="12sp"
-                            android:lineSpacingMultiplier="1.2" />
-
-                        <TextView
-                            android:id="@+id/txtMovieRatingBadge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:background="@drawable/bg_rating_badge"
-                            android:paddingStart="12dp"
-                            android:paddingEnd="12dp"
-                            android:paddingTop="6dp"
-                            android:paddingBottom="6dp"
-                            android:text="★ 8.5"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:visibility="gone"
-                            tools:visibility="visible" />
-
-                    </LinearLayout>
+                        android:text="›"
+                        android:textColor="#33FFFFFF"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="20dp" />
                 </LinearLayout>
 
-                <!-- Botones: Play gigante + acciones en vidrio -->
+                <!-- Titulo centrado -->
+                <TextView
+                    android:id="@+id/txtMovieTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:gravity="center"
+                    android:text="TITLE"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    android:maxLines="3"
+                    android:ellipsize="end" />
+
+                <!-- Modulos: rating champagne + meta pildora -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/txtMovieRatingBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_chip_active"
+                        android:paddingStart="13dp"
+                        android:paddingEnd="13dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:text="★ 8.5"
+                        android:textColor="#16181C"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/txtMovieMeta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_chip_idle"
+                        android:paddingStart="13dp"
+                        android:paddingEnd="13dp"
+                        android:paddingTop="7dp"
+                        android:paddingBottom="7dp"
+                        android:text="2024 · Sci-Fi · 2h 46m"
+                        android:textColor="#98989F"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- CTA: Ver ahora champagne -->
                 <LinearLayout
                     android:id="@+id/layoutActionButtons"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
+                    android:layout_marginTop="20dp"
                     android:orientation="vertical">
 
                     <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btnMoviePlay"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:background="@drawable/bg_button_primary"
-                        android:text="▶   Reproducir ahora"
+                        android:background="@drawable/bg_chip_active"
+                        android:text="Ver ahora"
                         android:textAllCaps="false"
-                        android:textColor="#FFFFFF"
+                        android:textColor="#16181C"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -351,12 +375,37 @@
                             android:textColor="#FFFFFF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
-
                     </LinearLayout>
-
                 </LinearLayout>
 
-                <!-- Servidores: card de vidrio -->
+                <!-- Reparto (mini fila circular) -->
+                <LinearLayout
+                    android:id="@+id/layoutCastSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="REPARTO"
+                        android:textColor="@color/ios_cyan"
+                        android:letterSpacing="0.14"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvCast"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </LinearLayout>
+
+                <!-- Servidores -->
                 <LinearLayout
                     android:id="@+id/layoutMovieServers"
                     android:layout_width="match_parent"
@@ -383,10 +432,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal" />
-
                 </LinearLayout>
 
-                <!-- Sinopsis en card de vidrio -->
+                <!-- Sinopsis -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -408,34 +456,6 @@
                     android:text="Cargando sinopsis de la película..."
                     android:textColor="#D9D9DF"
                     android:textSize="14sp" />
-
-                <!-- Reparto -->
-                <LinearLayout
-                    android:id="@+id/layoutCastSection"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    tools:visibility="visible">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="REPARTO"
-                        android:textColor="@color/ios_cyan"
-                        android:letterSpacing="0.14"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvCast"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
-
-                </LinearLayout>
 
             </LinearLayout>
 
