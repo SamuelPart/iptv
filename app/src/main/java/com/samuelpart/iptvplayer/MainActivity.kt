@@ -2048,7 +2048,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupCineDeck() {
         if (cineDeckWired) return
         cineDeckWired = true
-        binding.deckCardFront.setOnTouchListener { v, ev -> onDeckTouch(v, ev) }
+        binding.deckCardFront.root.setOnTouchListener { v, ev -> onDeckTouch(v, ev) }
         binding.btnDeckSkip.setOnClickListener { it.springPress(); flyOutAndAdvance(-1) }
         binding.btnDeckPlay.setOnClickListener {
             it.springPress()
@@ -2107,8 +2107,8 @@ class MainActivity : AppCompatActivity() {
     private fun renderDeck() {
         val front = deckQueue.firstOrNull()
         deckFront = front
-        fillDeckCard(binding.deckCardFront, front)
-        fillDeckCard(binding.deckCardBack, deckQueue.elementAtOrNull(1))
+        fillDeckCard(binding.deckCardFront.root, front)
+        fillDeckCard(binding.deckCardBack.root, deckQueue.elementAtOrNull(1))
         binding.cineDeckActions.visibility = if (front != null && deckMode) View.VISIBLE else View.GONE
         if (front != null) deckShown.add(front.title)
     }
@@ -2168,7 +2168,7 @@ class MainActivity : AppCompatActivity() {
     private fun flyOutAndAdvance(dir: Int) {
         if (deckBusy || deckFront == null) return
         deckBusy = true
-        val front = binding.deckCardFront
+        val front = binding.deckCardFront.root
         front.animate()
             .translationX(dir * front.width * 1.4f)
             .rotation(dir * 20f)
