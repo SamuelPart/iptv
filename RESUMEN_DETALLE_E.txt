@@ -1,0 +1,89 @@
+==========================================
+  LUMEN IPTV — COMPILACION DE TRANSACCIONES
+  Sesión: Detalle de película "Carta del mazo"
+  Fecha: 31 de agosto de 2026
+==========================================
+
+RESUMEN EJECUTIVO
+-----------------
+El usuario firmó la elección del boceto E ("probemos con la última…
+si no me gusta te avisaré para cambiarlo") y la transacción fue
+procesada completa: la pantalla de detalle de película fue
+restructurada de punta a punta manteniendo intactas todas sus
+funciones y todos sus identificadores. Firmada, procesada y enviada.
+
+TRANSACCIONES PROCESADAS EN ESTA OPERACION
+------------------------------------------
+df42a6c  feat: DETALLE v2 boceto E "carta del mazo" — panel completo
+         restructurado (PUSH EXITOSO → rama arena/01a04133-iptv)
+         6 archivos, +111 / -91 líneas
+         Incluye los 5 bocetos del concurso: detalle_A_ticket.jpg,
+         detalle_B_poster.jpg, detalle_C_editorial.jpg,
+         detalle_D_vertical.jpg, detalle_E_carta.jpg
+
+Historial inmediato verificado en cadena:
+b428240  fix: gscdn.cam hoster conocido (Toy Story 5 al extractor)
+340ebee  merge: ediciones directas del usuario desde GitHub preservadas
+555c039  feat: Toy Story 5 (2026) agregada al catálogo
+5320782  Update cine_catalog.m3u (firma directa del usuario en GitHub)
+
+Nada quedó fuera: las ediciones manuales del usuario en GitHub
+quedaron fusionadas y protegidas antes del envío.
+
+LO QUE CAMBIO (ANTES → DESPUES)
+-------------------------------
+ANTES: composición clásica — poster chico a la izquierda (124dp),
+título a la derecha, botón único azul de play, servidores sobre
+sinopsis.
+
+DESPUES (boceto E, "carta del mazo"):
+1. CARTA FLOTANTE: el poster es ahora una carta de 216×316dp con
+   radio 26dp y elevación 14dp que cabalga sobre el fondo oscuro —
+   el mismo lenguaje visual del mazo de Descubre. A los costados,
+   pistas de gesto ‹ › en blanco 20%.
+2. TÍTULO CENTRADO: 22sp, blanco, hasta 3 líneas.
+3. MÓDULOS DE ESTADOS: fila de dos píldoras — rating en champagne
+   con texto grafito oscuro + meta (año · género · duración) en
+   píldora gris grafito.
+4. CTA "Ver ahora": píldora champagne de ancho completo con texto
+   oscuro; Trailer y Compartir en cristal debajo.
+5. ORDEN VERTICAL FINAL: carta → título → stats → acciones →
+   reparto → servidores → sinopsis.
+
+GARANTIA DE CONTINUIDAD (NADA SE PIERDE)
+----------------------------------------
+- Los 31 ids del layout siguen vivos exactamente iguales; la
+  actividad CineMovieDetailActivity conecta sin cambios.
+- El reproductor inline (cabecera de 300dp con su panel de
+  controles, doble tap, seekbar, servidores y pantalla completa)
+  quedó intocable: solo la tarjeta flota por debajo de él.
+- Botón atrás, rating dinámico, favorito, elenco, sinopsis y
+  servidores funcionan como antes, con nueva piel.
+
+NOTA TECNICA (la anotando para la posteridad)
+---------------------------------------------
+Al mostrar/ocultar el trolley de la tarjeta sobre el backdrop se
+usan constraints con el truco .root cuando el include devuelve un
+Binding en lugar de un View — misma lección aprendida en el deck.
+XML validado con parser, ids verificados contra la lista de
+referencias de la actividad: cero faltantes.
+
+ESTADO PENDIENTE DEL PROYECTO
+-----------------------------
+- El usuario tiene derecho de veto: si el boceto E no enamora en
+  pantalla real, se cambia por A, B, C o D (los 4 bocetos quedan
+  guardados en la raíz del repo).
+- Detalle de SERIES (pantalla hermana) aún pendiente de la misma
+  cirugía cuando el usuario confirme el gusto por E.
+- Limpieza de JPGs conceptuales descartados en una futura tanda.
+
+PARA COMPILAR
+-------------
+git pull origin arena/01a04133-iptv
+HEAD esperado: df42a6c
+gradlew assembleDebug
+
+==========================================
+  Firma del procesamiento: Arena Agent
+  Cadena intacta. Transacción cerrada. ✨
+==========================================
