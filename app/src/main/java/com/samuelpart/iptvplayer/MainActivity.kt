@@ -50,6 +50,8 @@ class MainActivity : AppCompatActivity() {
     private val coverItems = ArrayList<HomeCoverItem>()
     private lateinit var coverAdapter: HomeCoverAdapter
     private val coverSnap = PagerSnapHelper()
+    private var cineMood: String? = null
+    private lateinit var cineRecoAdapter: CineRecoAdapter
     
     private lateinit var channelsAdapter: ChannelAdapter
     private lateinit var searchAdapter: ChannelAdapter
@@ -287,6 +289,11 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvCineGrid.adapter = cineAdapter
+
+        // Rail "Porque viste X" (Cine v2)
+        cineRecoAdapter = CineRecoAdapter { media -> openCineDetail(media) }
+        binding.rvCineReco.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvCineReco.adapter = cineRecoAdapter
 
         // 4. Favorites horizontal strip in Home
         binding.rvFavorites.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -808,6 +815,30 @@ class MainActivity : AppCompatActivity() {
         binding.btnCineFilterNews.setOnClickListener {
             selectedCineType = "new"
             updateCineFilterButtons()
+            applyCineFilters()
+        }
+
+        // Lupa: muestra/oculta la pildora de busqueda del cine
+        binding.btnCineSearchToggle.setOnClickListener {
+            val card = binding.cardCineSearch
+            if (card.visibility == View.VISIBLE) {
+                card.visibility = View.GONE
+            } else {
+                card.visibility = View.VISIBLE
+                binding.edtCineSearch.requestFocus()
+            }
+        }
+        binding.btnCineSearchToggle.springPress()
+
+        // Mood chips (mismo tap para desactivar)
+        binding.btnMoodEstrenos.setOnClickListener {
+            cineMood = if (cineMood == "estrenos") null else "estrenos"
+            updateCineMoodButtons()
+            applyCineFilters()
+        }
+        binding.btnMoodTop.setOnClickListener {
+            cineMood = if (cineMood == "top") null else "top"
+            updateCineMoodButtons()
             applyCineFilters()
         }
     }
@@ -1859,6 +1890,7 @@ class MainActivity : AppCompatActivity() {
             
             cineAdapter.updateList(catalog)
             binding.txtCineCount.text = "Total: ${catalog.size}"
+            buildCineReco()
         }
     }
 
@@ -1872,7 +1904,12 @@ class MainActivity : AppCompatActivity() {
                 else -> true
             }
             val matchesQuery = query.isEmpty() || it.title.lowercase().contains(query)
-            matchesType && matchesQuery
+            val matchesMood = when (cineMood) {
+                "estrenos" -> (it.releaseDate?.take(4)?.toIntOrNull() ?: 0) >= 2024
+                "top" -> (it.rating ?: 0.0) >= 7.5
+                else -> true
+            }
+            matchesType && matchesQuery && matchesMood
         }
         val finalCineList = if (selectedCineType == "new") {
             filtered.sortedByDescending { it.releaseDate ?: "" }.take(60)
@@ -1898,6 +1935,43 @@ class MainActivity : AppCompatActivity() {
         binding.btnCineFilterSeries.setTextColor(if (selectedCineType == "series") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
         binding.btnCineFilterNews.setBackgroundColor(if (selectedCineType == "new") orangeColor else grayColor)
         binding.btnCineFilterNews.setTextColor(if (selectedCineType == "new") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
+    }
+
+    private fun updateCineMoodButtons() {
+        val activeTint = android.graphics.Color.parseColor("#3E2E1F")
+        val activeText = android.graphics.Color.parseColor("#C9A96E")
+        val grayTint = android.graphics.Color.parseColor("#33404048")
+        val grayText = android.graphics.Color.parseColor("#98989F")
+        binding.btnMoodEstrenos.setBackgroundColor(if (cineMood == "estrenos") activeTint else grayTint)
+        binding.btnMoodEstrenos.setTextColor(if (cineMood == "estrenos") activeText else grayText)
+        binding.btnMoodTop.setBackgroundColor(if (cineMood == "top") activeTint else grayTint)
+        binding.btnMoodTop.setTextColor(if (cineMood == "top") activeText else grayText)
+    }
+
+    /** Rail "PORQUE VISTE X": semilla = lo ultimo visto de cine; sin historial -> top valoradas. */
+    private fun buildCineReco() {
+        val seed = ContinueWatchingManager.getAll(this)
+            .filter { !it.isChannel && it.media != null }
+            .maxByOrNull { it.savedAt }
+        val reco: List<CineMedia>
+        if (seed?.media != null) {
+            reco = allCineMedia
+                .filter { it.group == seed.media.group && it.title != seed.title }
+                .filter { !it.posterUrl.isNullOrBlank() }
+                .sortedByDescending { it.rating ?: 0.0 }
+                .take(12)
+            binding.txtCineRecoLabel.text = "PORQUE VISTE ${seed.title.uppercase()}"
+        } else {
+            reco = allCineMedia
+                .filter { !it.posterUrl.isNullOrBlank() && (it.rating ?: 0.0) > 0.0 }
+                .sortedByDescending { it.rating ?: 0.0 }
+                .take(12)
+            binding.txtCineRecoLabel.text = "LAS MEJOR VALORADAS"
+        }
+        if (::cineRecoAdapter.isInitialized) cineRecoAdapter.submitAll(reco)
+        val vis = if (reco.isEmpty()) View.GONE else View.VISIBLE
+        binding.txtCineRecoLabel.visibility = vis
+        binding.rvCineReco.visibility = vis
     }
 
     private fun openCineDetail(media: CineMedia) {
