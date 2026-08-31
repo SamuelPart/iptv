@@ -256,6 +256,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvChannelsGrid.adapter = channelsAdapter
+        channelsAdapter.attachTuner(binding.rvChannelsGrid)
 
         // 2. Setup Search Grid in Buscador tab (3 columns)
         binding.rvSearchGrid.layoutManager = GridLayoutManager(this, 3)
@@ -832,6 +833,7 @@ class MainActivity : AppCompatActivity() {
             val layoutManager = binding.rvChannelsGrid.layoutManager as GridLayoutManager
             layoutManager.spanCount = 3
             binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_grid)
+            channelsAdapter.tunerMode = false
             layoutManager.requestLayout()
             Toast.makeText(this, "Vista Cuadrícula activa", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
@@ -841,6 +843,7 @@ class MainActivity : AppCompatActivity() {
             val layoutManager = binding.rvChannelsGrid.layoutManager as GridLayoutManager
             layoutManager.spanCount = 1
             binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_list)
+            channelsAdapter.tunerMode = true
             layoutManager.requestLayout()
             Toast.makeText(this, "Vista Lista activa", Toast.LENGTH_SHORT).show()
             dialog.dismiss()

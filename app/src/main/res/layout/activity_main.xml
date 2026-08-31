@@ -457,7 +457,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="Ve a Inicio y conecta tu lista M3U\npara ver aqui todos tus canales en vivo"
+                    android:text="Ve a Ajustes y conecta tu lista M3U\no escanea un codigo QR para empezar"
                     android:textColor="@color/ios_gray"
                     android:textSize="14sp"
                     android:lineSpacingMultiplier="1.25" />
