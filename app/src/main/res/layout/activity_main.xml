@@ -1767,6 +1767,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:visibility="gone"
                     android:background="@drawable/bg_chip_ios"
                     android:padding="4dp"
                     android:layout_marginBottom="14dp">
