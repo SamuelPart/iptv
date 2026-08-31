@@ -243,8 +243,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerViews() {
-        // 1. Setup Channels Grid in Canales tab (3 columns by default)
-        binding.rvChannelsGrid.layoutManager = GridLayoutManager(this, 3)
+        // 1. Setup Channels — Sintonizador (1 col, fila con foco central) por defecto
+        binding.rvChannelsGrid.layoutManager = GridLayoutManager(this, 1)
         channelsAdapter = ChannelAdapter(
             emptyList(),
             onChannelClick = { channel -> openPlayer(channel) },
@@ -257,6 +257,8 @@ class MainActivity : AppCompatActivity() {
         )
         binding.rvChannelsGrid.adapter = channelsAdapter
         channelsAdapter.attachTuner(binding.rvChannelsGrid)
+        channelsAdapter.tunerMode = true
+        binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_list)
 
         // 2. Setup Search Grid in Buscador tab (3 columns)
         binding.rvSearchGrid.layoutManager = GridLayoutManager(this, 3)
