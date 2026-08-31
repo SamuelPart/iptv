@@ -173,6 +173,11 @@ class CineMovieDetailActivity : AppCompatActivity() {
             finish()
         }
 
+        binding.ivHeaderPlayHint.setOnClickListener {
+            binding.ivHeaderPlayHint.visibility = View.GONE
+            binding.btnMoviePlay.performClick()
+        }
+
         binding.btnMoviePlay.setOnClickListener {
             if (isPlayingInline) {
                 stopInlinePlayback()
@@ -548,7 +553,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
         binding.layoutBackdropHeaderContainer.translationZ = 0f
 
         binding.btnMoviePlay.text = "▶  REPRODUCIR"
-        binding.btnMoviePlay.setBackgroundResource(R.drawable.bg_button_primary)
+        binding.btnMoviePlay.setBackgroundResource(R.drawable.bg_chip_active)
         isPlayingInline = false
 
         // Animate detail card back up to its original overlapping position
