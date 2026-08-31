@@ -2,9 +2,9 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="248dp"
+    android:layout_height="296dp"
     android:layout_margin="8dp"
-    app:cardCornerRadius="22dp"
+    app:cardCornerRadius="26dp"
     app:cardElevation="0dp"
     app:cardPreventCornerOverlap="true">
 
@@ -24,7 +24,7 @@
         <!-- Fade cinematografico -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="110dp"
+            android:layout_height="128dp"
             android:background="@drawable/bg_poster_scrim"
             app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -39,19 +39,19 @@
             android:src="@drawable/ic_ios_star"
             app:tint="#E6FFFFFF"
             android:visibility="gone"
-            android:layout_margin="8dp"
+            android:layout_margin="10dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Rating badge aurora -->
+        <!-- Rating pill champagne -->
         <TextView
             android:id="@+id/txtRatingBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="10dp"
             android:background="@drawable/bg_rating_badge"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
             android:paddingTop="4dp"
             android:paddingBottom="4dp"
             android:text="★ 7.8"
@@ -65,8 +65,8 @@
             android:id="@+id/txtCineNewBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="42dp"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="46dp"
+            android:layout_marginStart="10dp"
             android:background="@drawable/bg_new_badge"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
@@ -81,16 +81,16 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Barra de vidrio inferior -->
+        <!-- Pie de vidrio: titulo + meta en una linea -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#D90A0A12"
+            android:background="#D90B0B13"
             android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="11dp"
+            android:paddingStart="13dp"
+            android:paddingEnd="13dp"
+            android:paddingTop="11dp"
+            android:paddingBottom="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -104,22 +104,22 @@
                 android:maxLines="1"
                 android:text="Movie Title"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txtCineSubtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:gravity="start"
                 android:maxLines="1"
-                android:text="Película"
+                android:text="Película · 2024"
                 android:textColor="@color/ios_cyan"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.08" />
-
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
