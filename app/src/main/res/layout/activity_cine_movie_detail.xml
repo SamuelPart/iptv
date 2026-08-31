@@ -187,19 +187,23 @@
         </FrameLayout>
 
         <!-- Hint de play centrado sobre el backdrop -->
-        <TextView
+        <FrameLayout
             android:id="@+id/ivHeaderPlayHint"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
             android:layout_gravity="center"
-            android:gravity="center"
-            android:background="@drawable/bg_circle_glass"
-            android:text="▶"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:background="@drawable/bg_circle_champagne"
             android:clickable="true"
             android:focusable="true"
-            android:elevation="8dp" />
+            android:elevation="8dp">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_play_modern"
+                app:tint="#16181C" />
+        </FrameLayout>
 
     </FrameLayout>
 
@@ -415,8 +419,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
                     android:orientation="vertical"
-                    android:background="@drawable/bg_card_ios"
-                    android:padding="16dp"
                     android:visibility="gone"
                     tools:visibility="visible">
 
@@ -448,7 +450,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="horizontal"
-        android:background="@drawable/bg_vault_panel"
+        android:background="#F214161B"
         android:padding="14dp">
 
         <androidx.appcompat.widget.AppCompatButton
