@@ -487,56 +487,6 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <!-- Hero aurora: estado de la lista -->
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="96dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_tile_indigo"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start|center_vertical"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📡 SINTONIZANDO"
-                            android:textColor="@color/ios_blue"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.22" />
-
-                        <TextView
-                            android:id="@+id/txtSelectedFilterInfo"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Todos los Canales"
-                            android:textColor="#FFFFFF"
-                            android:textSize="17sp"
-                            android:textStyle="bold"
-                            android:maxLines="1"
-                            android:ellipsize="end" />
-
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="76dp"
-                        android:layout_height="76dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:src="@drawable/ic_ios_tv"
-                        android:alpha="0.22"
-                        android:contentDescription="@null" />
-
-                </FrameLayout>
-
                 <!-- Barra de acciones -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -547,15 +497,32 @@
                     android:paddingEnd="16dp"
                     android:paddingTop="12dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="Tu lista"
-                        android:textColor="@color/ios_gray"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.1" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sintonizando"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/txtSelectedFilterInfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="Todos los Canales"
+                            android:textColor="@color/ios_blue"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <ImageButton
                         android:id="@+id/btnFilterChannels"
