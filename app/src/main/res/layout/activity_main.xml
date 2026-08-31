@@ -1598,6 +1598,87 @@
 
                 </LinearLayout>
 
+                <!-- Cine v3 · Deck "Descubre" (2 cartas: atras rotada + frontal) -->
+                <FrameLayout
+                    android:id="@+id/layoutCineDeck"
+                    android:layout_width="match_parent"
+                    android:layout_height="420dp"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false">
+
+                    <include
+                        android:id="@+id/deckCardBack"
+                        layout="@layout/item_cine_deck"
+                        android:layout_width="260dp"
+                        android:layout_height="380dp"
+                        android:layout_gravity="center"
+                        android:rotation="-4"
+                        android:scaleX="0.94"
+                        android:scaleY="0.94" />
+
+                    <include
+                        android:id="@+id/deckCardFront"
+                        layout="@layout/item_cine_deck"
+                        android:layout_width="260dp"
+                        android:layout_height="380dp"
+                        android:layout_gravity="center" />
+                </FrameLayout>
+
+                <!-- acciones deck -->
+                <LinearLayout
+                    android:id="@+id/cineDeckActions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/btnDeckSkip"
+                        android:layout_width="54dp"
+                        android:layout_height="54dp"
+                        android:background="@drawable/bg_circle_glass"
+                        android:contentDescription="Saltar"
+                        android:padding="16dp"
+                        android:src="@drawable/ic_ios_xmark"
+                        app:tint="#FFFFFF" />
+
+                    <ImageButton
+                        android:id="@+id/btnDeckPlay"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:layout_marginStart="22dp"
+                        android:layout_marginEnd="22dp"
+                        android:background="@drawable/bg_circle_glass"
+                        android:contentDescription="Ver"
+                        android:padding="18dp"
+                        android:src="@drawable/ic_ios_play"
+                        app:tint="@color/ios_blue" />
+
+                    <ImageButton
+                        android:id="@+id/btnDeckFav"
+                        android:layout_width="54dp"
+                        android:layout_height="54dp"
+                        android:background="@drawable/bg_circle_glass"
+                        android:contentDescription="Favorito"
+                        android:padding="16dp"
+                        android:src="@drawable/ic_ios_star"
+                        app:tint="@color/ios_cyan" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtCineCatalogToggle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="14dp"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp"
+                    android:text="▦  Ver catálogo completo  ›"
+                    android:textColor="@color/ios_blue"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
                 <!-- Segmento iOS: Todos / Peliculas / Series -->
                 <!-- Rail "Porque viste X" -->
                 <TextView
@@ -1722,6 +1803,7 @@
 
                 <!-- Chips "Para ti" exactos del boceto E: Todos / Accion / Feel good / Serie larga / Corta <2h / Top / Estrenos -->
                 <HorizontalScrollView
+                    android:id="@+id/cineChipsScroll"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"

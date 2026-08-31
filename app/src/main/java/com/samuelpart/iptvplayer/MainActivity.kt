@@ -52,6 +52,13 @@ class MainActivity : AppCompatActivity() {
     private val coverSnap = PagerSnapHelper()
     private var cineMood: String? = null
     private lateinit var cineRecoAdapter: CineRecoAdapter
+    private var deckMode = true
+    private var deckBusy = false
+    private var deckDownX = 0f
+    private var deckFront: CineMedia? = null
+    private var cineDeckWired = false
+    private val deckQueue = java.util.ArrayDeque<CineMedia>()
+    private val deckShown = HashSet<String>()
     
     private lateinit var channelsAdapter: ChannelAdapter
     private lateinit var searchAdapter: ChannelAdapter
@@ -294,6 +301,8 @@ class MainActivity : AppCompatActivity() {
         cineRecoAdapter = CineRecoAdapter { media -> openCineDetail(media) }
         binding.rvCineReco.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvCineReco.adapter = cineRecoAdapter
+
+        setupCineDeck()
 
         // 4. Favorites horizontal strip in Home
         binding.rvFavorites.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -756,6 +765,7 @@ class MainActivity : AppCompatActivity() {
         binding.edtCineSearch.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (!s.isNullOrBlank()) setDeckMode(false)
                 applyCineFilters()
                 if (s.isNullOrEmpty()) {
                     val current = getSearchHistory(CINE_HISTORY_KEY)
@@ -1922,6 +1932,7 @@ class MainActivity : AppCompatActivity() {
             cineAdapter.updateList(catalog)
             binding.txtCineCount.text = "Total: ${catalog.size}"
             buildCineReco()
+            if (deckMode) refreshDeck() else setDeckMode(deckMode)
         }
     }
 
@@ -2032,7 +2043,153 @@ class MainActivity : AppCompatActivity() {
         binding.rvCineReco.visibility = vis
     }
 
-    private fun openCineDetail(media: CineMedia) {
+    // ================= CINE V3 · DESCUBRE (deck + learning) =================
+
+    private fun setupCineDeck() {
+        if (cineDeckWired) return
+        cineDeckWired = true
+        binding.deckCardFront.setOnTouchListener { v, ev -> onDeckTouch(v, ev) }
+        binding.btnDeckSkip.setOnClickListener { it.springPress(); flyOutAndAdvance(-1) }
+        binding.btnDeckPlay.setOnClickListener {
+            it.springPress()
+            deckFront?.let { m -> openCineDetail(m) }
+        }
+        binding.btnDeckFav.setOnClickListener {
+            it.springPress()
+            val m = deckFront ?: return@setOnClickListener
+            val added = FavoritesManager.toggleMedia(this, m)
+            if (added) TasteProfile.recordFavorite(this, m)
+            Toast.makeText(this, if (added) "Guardado en Favoritos ⭐ tu mazo se afina" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
+            refreshFavorites()
+            if (added) flyOutAndAdvance(1)
+        }
+        binding.txtCineCatalogToggle.setOnClickListener { setDeckMode(!deckMode) }
+        renderDeck()
+    }
+
+    private fun setDeckMode(on: Boolean) {
+        deckMode = on
+        binding.layoutCineDeck.visibility = if (on) View.VISIBLE else View.GONE
+        binding.cineDeckActions.visibility = if (on && deckFront != null) View.VISIBLE else View.GONE
+        binding.txtCineCatalogToggle.visibility = View.VISIBLE
+        binding.txtCineCatalogToggle.text = if (on) "▦  Ver catálogo completo  ›" else "✨  Volver a Descubre  ›"
+        val cat = if (on) View.GONE else View.VISIBLE
+        binding.rvCineGrid.visibility = cat
+        binding.cineChipsScroll.visibility = cat
+        binding.txtCineCount.visibility = cat
+        binding.layoutCineLoading.visibility = if (on) View.GONE else binding.layoutCineLoading.visibility
+        if (on) {
+            binding.rvCineReco.visibility = View.GONE
+            binding.txtCineRecoLabel.visibility = View.GONE
+            refreshDeck()
+        } else {
+            binding.rvCineReco.visibility = if (binding.rvCineReco.adapter?.itemCount ?: 0 > 0) View.VISIBLE else View.GONE
+            binding.txtCineRecoLabel.visibility = if (binding.rvCineReco.adapter?.itemCount ?: 0 > 0) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun refreshDeck() {
+        if (allCineMedia.isEmpty()) { renderDeck(); return }
+        val watched = ContinueWatchingManager.getAll(this)
+            .filter { !it.isChannel }.map { it.title }.toHashSet()
+        val candidates = allCineMedia.filter { !it.posterUrl.isNullOrBlank() && it.title !in watched && it.title !in deckShown }
+        deckQueue.clear()
+        if (candidates.isNotEmpty()) {
+            val scored = candidates.map { it to TasteProfile.score(this, it) }
+            val learned = scored.filter { it.second >= 2.0 }.sortedByDescending { it.second }
+            val queue = if (learned.isNotEmpty()) learned.take(40).map { it.first }
+                        else candidates.sortedByDescending { it.rating ?: 0.0 }.take(40)
+            deckQueue.addAll(queue)
+        }
+        renderDeck()
+    }
+
+    private fun renderDeck() {
+        val front = deckQueue.firstOrNull()
+        deckFront = front
+        fillDeckCard(binding.deckCardFront, front)
+        fillDeckCard(binding.deckCardBack, deckQueue.elementAtOrNull(1))
+        binding.cineDeckActions.visibility = if (front != null && deckMode) View.VISIBLE else View.GONE
+        if (front != null) deckShown.add(front.title)
+    }
+
+    private fun fillDeckCard(card: View, media: CineMedia?) {
+        if (media == null) { card.visibility = View.GONE; return }
+        card.visibility = View.VISIBLE
+        Glide.with(card.context).load(media.posterUrl)
+            .transition(DrawableTransitionOptions.withCrossFade(250))
+            .centerCrop()
+            .into(card.findViewById(R.id.imgDeckPoster))
+        card.findViewById<android.widget.TextView>(R.id.txtDeckTitle).text = media.title
+        val yr = media.releaseDate?.take(4)?.takeIf { it.isNotBlank() }
+        val typeTxt = if (media.type == "movie") "Película" else "Serie"
+        card.findViewById<android.widget.TextView>(R.id.txtDeckMeta).text = listOfNotNull(
+            yr, typeTxt,
+            if (media.urls.size > 0) "${media.urls.size} servidores" else null
+        ).joinToString(" · ")
+        val rb = card.findViewById<android.widget.TextView>(R.id.txtDeckRating)
+        val r = media.rating ?: 0.0
+        rb.visibility = if (r > 0.0) View.VISIBLE else View.GONE
+        if (r > 0.0) rb.text = "★ %.1f".format(r)
+        val eb = card.findViewById<android.widget.TextView>(R.id.txtDeckEyebrow)
+        val reason = TasteProfile.topReason(this, media)
+        if (reason != null) {
+            eb.visibility = View.VISIBLE
+            eb.text = "PORQUE VES · ${reason.uppercase()}"
+        } else eb.visibility = View.GONE
+        card.animate().alpha(1f).setDuration(200).start()
+    }
+
+    private fun onDeckTouch(v: View, ev: android.view.MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            android.view.MotionEvent.ACTION_DOWN -> { deckDownX = ev.x; return true }
+            android.view.MotionEvent.ACTION_MOVE -> {
+                val dx = ev.x - deckDownX
+                v.translationX = dx
+                v.rotation = dx / 25f
+                return true
+            }
+            android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                val dx = ev.x - deckDownX
+                if (kotlin.math.abs(dx) > 150f) {
+                    flyOutAndAdvance(if (dx > 0) 1 else -1)
+                } else {
+                    v.animate().translationX(0f).rotation(0f)
+                        .setDuration(260)
+                        .setInterpolator(android.view.animation.DecelerateInterpolator(1.6f))
+                        .start()
+                }
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun flyOutAndAdvance(dir: Int) {
+        if (deckBusy || deckFront == null) return
+        deckBusy = true
+        val front = binding.deckCardFront
+        front.animate()
+            .translationX(dir * front.width * 1.4f)
+            .rotation(dir * 20f)
+            .alpha(0f)
+            .setDuration(240)
+            .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+            .withEndAction {
+                if (deckQueue.isNotEmpty()) deckQueue.removeFirst()
+                if (deckQueue.size < 4) refreshDeck()
+                // reset instantaneo
+                front.rotation = 0f
+                front.translationX = 0f
+                front.alpha = 0f
+                renderDeck()
+                deckBusy = false
+            }
+            .start()
+    }
+
+        private fun openCineDetail(media: CineMedia) {
+        TasteProfile.recordOpen(this, media)
         val intent = Intent(this, if (media.type == "movie") CineMovieDetailActivity::class.java else CineTvShowDetailActivity::class.java).apply {
             putExtra("media", media)
         }

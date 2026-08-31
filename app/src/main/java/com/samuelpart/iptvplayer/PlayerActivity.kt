@@ -971,6 +971,7 @@ class PlayerActivity : AppCompatActivity() {
                         durationMs = len
                     )
                 )
+                cineMedia?.let { TasteProfile.recordWatch(this, it) }
             }
         }
     }
