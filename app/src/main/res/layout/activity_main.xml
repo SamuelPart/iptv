@@ -507,8 +507,8 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="TV EN VIVO"
-                            android:textColor="@color/ios_cyan"
+                            android:text="📡 SINTONIZANDO"
+                            android:textColor="@color/ios_blue"
                             android:textSize="11sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.22" />
@@ -520,7 +520,7 @@
                             android:layout_marginTop="6dp"
                             android:text="Todos los Canales"
                             android:textColor="#FFFFFF"
-                            android:textSize="14sp"
+                            android:textSize="17sp"
                             android:textStyle="bold"
                             android:maxLines="1"
                             android:ellipsize="end" />
