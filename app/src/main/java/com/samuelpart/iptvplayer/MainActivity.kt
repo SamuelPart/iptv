@@ -2005,11 +2005,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateParaTiChips() {
-        val activeTint = android.graphics.Color.parseColor("#3E2E1F")
-        val activeText = android.graphics.Color.parseColor("#C9A96E")
-        val grayTint = android.graphics.Color.parseColor("#33404048")
+        val activeText = android.graphics.Color.parseColor("#16181C")
         val grayText = android.graphics.Color.parseColor("#98989F")
-        fun paint(b: android.widget.Button, active: Boolean) {
+        fun paint(b: android.widget.TextView, active: Boolean) {
             b.setBackgroundResource(if (active) R.drawable.bg_chip_active else R.drawable.bg_chip_idle)
             b.setTextColor(if (active) activeText else grayText)
         }

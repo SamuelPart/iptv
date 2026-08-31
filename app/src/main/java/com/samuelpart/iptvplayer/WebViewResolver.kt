@@ -139,6 +139,8 @@ object WebViewResolver {
                         wv.settings.javaScriptEnabled = true
                         wv.settings.domStorageEnabled = true
                         wv.settings.mediaPlaybackRequiresUserGesture = false
+                        // Muchos mirrors sirven el player raiz (con m3u8 visible) solo a desktop
+                        wv.settings.userAgentString = CineScraper.CHROME_UA
                         // Embedded players open tons of ad popup windows: forbid them
                         wv.settings.setSupportMultipleWindows(false)
                         wv.settings.javaScriptCanOpenWindowsAutomatically = false

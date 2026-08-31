@@ -157,7 +157,9 @@ object CineScraper {
         if (!fast.isNullOrEmpty()) {
             return WebViewResolver.Resolved(url = fast, referer = pageUrl, userAgent = CHROME_UA)
         }
+        // Un segundo pase si el player de JS tardo demasiado en publicar el stream
         return WebViewResolver.resolve(context, pageUrl)
+            ?: WebViewResolver.resolve(context, pageUrl)
     }
 
     /**
