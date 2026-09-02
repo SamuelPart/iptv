@@ -59,12 +59,12 @@
             android:layout_width="108dp"
             android:layout_height="36dp"
             android:layout_marginTop="10dp"
-            android:background="@drawable/bg_chip_active"
+            android:background="@drawable/bg_pill_blue"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
             android:text="Ver"
-            android:textColor="#16181C"
+            android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold" />
     </LinearLayout>

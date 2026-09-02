@@ -30,13 +30,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:background="@drawable/bg_new_badge"
+            android:background="@drawable/bg_quality_pill"
             android:paddingStart="7dp"
             android:paddingEnd="7dp"
             android:paddingTop="3dp"
             android:paddingBottom="3dp"
             android:text="HD"
-            android:textColor="#1B1E24"
+            android:textColor="#FFFFFF"
             android:textSize="8sp"
             android:textStyle="bold"
             android:letterSpacing="0.08"
@@ -48,7 +48,7 @@
             android:layout_width="34dp"
             android:layout_height="34dp"
             android:layout_margin="8dp"
-            android:background="@drawable/bg_circle_champagne"
+            android:background="@drawable/bg_circle_red"
             android:clickable="true"
             android:focusable="true"
             app:layout_constraintTop_toTopOf="parent"
@@ -59,7 +59,7 @@
                 android:layout_height="15dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_play_modern"
-                app:tint="#16181C" />
+                app:tint="#FFFFFF" />
         </FrameLayout>
 
         <LinearLayout

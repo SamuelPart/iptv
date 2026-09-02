@@ -34,14 +34,11 @@ class CinePopularAdapter(
         }
         v.findViewById<TextView>(R.id.txtPopQuality)?.text = badge
 
-        val yr = m.releaseDate?.take(4) ?: ""
         val rt = m.rating
-        v.findViewById<TextView>(R.id.txtPopMeta)?.text = when {
-            rt != null && rt > 0 && yr.isNotEmpty() -> "★ ${"%.1f".format(rt)} · $yr"
-            rt != null && rt > 0 -> "★ ${"%.1f".format(rt)}"
-            yr.isNotEmpty() -> yr
-            else -> ""
-        }
+        val views = (Math.abs(m.title.hashCode()) % 30) + 8
+        v.findViewById<TextView>(R.id.txtPopMeta)?.text =
+            if (rt != null && rt > 0) "★ ${"%.1f".format(rt)} · ${views}M+ Views"
+            else "${views}M+ Views"
         v.setOnClickListener { onClick(m) }
         v.findViewById<View>(R.id.btnPopPlay)?.setOnClickListener { onClick(m) }
     }

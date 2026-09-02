@@ -317,10 +317,20 @@ class MainActivity : AppCompatActivity() {
 
         setupCineDeck()
 
-        // CANVAS EN BLANCO: se limpia el tab Cine por completo; se reconstruye
-        // bajo direccion del usuario (pantalla Premier).
+        // PANTALLA PREMIER (replica exacta de la referencia): solo las piezas
+        // de la nueva interfaz quedan visibles; el resto sigue apagado.
+        val premierVisible = setOf(
+            R.id.premierTopBar, R.id.premierHeadline, R.id.rvCineCoverflow,
+            R.id.layoutCinePopular, R.id.txtCineRecoLabel, R.id.rvCineReco
+        )
         for (i in 0 until binding.containerCine.childCount) {
-            binding.containerCine.getChildAt(i).visibility = View.GONE
+            val v = binding.containerCine.getChildAt(i)
+            v.visibility = if (premierVisible.contains(v.id)) View.VISIBLE else View.GONE
+        }
+
+        // Hamburguesa: abre Configuracion (funcion real)
+        binding.premierMenu.setOnClickListener {
+            binding.bottomNavigation.selectedItemId = R.id.navigation_settings
         }
 
         // 4. Favorites horizontal strip in Home

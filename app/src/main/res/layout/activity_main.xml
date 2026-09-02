@@ -1454,6 +1454,98 @@
             android:layout_height="match_parent"
             android:visibility="gone"
             android:background="@color/ios_bg">
+                    <!-- ================= PANTALLA PREMIER ================= -->
+                    <LinearLayout
+                        android:id="@+id/premierTopBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:layout_marginTop="4dp">
+
+                        <ImageButton
+                            android:id="@+id/premierMenu"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@android:color/transparent"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_ios_list"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Menu" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="LUMEN"
+                            android:textColor="#C9A96E"
+                            android:letterSpacing="0.32"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="40dp"
+                            android:layout_height="40dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/premierHeadline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginTop="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="MAJOR MOVIE"
+                            android:textColor="#FFFFFF"
+                            android:letterSpacing="0.22"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="OF"
+                            android:textColor="#FFFFFF"
+                            android:letterSpacing="0.22"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="PREMIERES"
+                            android:textColor="#E50914"
+                            android:letterSpacing="0.06"
+                            android:textSize="34sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2026"
+                            android:textColor="#FFFFFF"
+                            android:letterSpacing="0.18"
+                            android:textSize="30sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                                        <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvCineCoverflow"
+                    android:layout_width="match_parent"
+                    android:layout_height="436dp"
+                    android:layout_marginTop="12dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:paddingStart="64dp"
+                    android:paddingEnd="64dp" />
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -1626,15 +1718,7 @@
                             android:orientation="horizontal"
                             android:clipChildren="false" />
 
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvCineCoverflow"
-                            android:layout_width="match_parent"
-                            android:layout_height="436dp"
-                            android:layout_marginTop="12dp"
-                            android:clipChildren="false"
-                            android:clipToPadding="false"
-                            android:paddingStart="64dp"
-                            android:paddingEnd="64dp" />
+                        
                     </LinearLayout>
 
                     <!-- ============ POPULAR: rail con sello de calidad ============ -->
@@ -1657,17 +1741,16 @@
                                 android:layout_width="0dp"
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
-                                android:text="POPULAR"
-                                android:textColor="#EBFFFFFF"
-                                android:letterSpacing="0.14"
-                                android:textSize="12sp"
+                                android:text="Popular Movies"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14.5sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Ver todo ›"
-                                android:textColor="#C9A96E"
+                                android:text="See all ›"
+                                android:textColor="#98989F"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1832,7 +1915,7 @@
                     android:layout_marginTop="6dp"
                     android:letterSpacing="0.16"
                     android:paddingStart="4dp"
-                    android:text="NUEVO EPISODIO"
+                    android:text="New Episode"
                     android:textColor="#7A7A7C"
                     android:textSize="10sp"
                     android:textStyle="bold"
