@@ -42,6 +42,12 @@ object CineRepository {
         ".avi", ".ts", ".flv", ".wmv", ".mpg", ".mpeg", ".m4v"
     )
 
+    private val CATALOG_URL_REWRITES = mapOf(
+        "https://nupload.top/watch/OkUB0DCU7nscXOAjjdrVp9VSnbgzcTFeH4GbWx9Dt7w" to "https://pelisflix1.fans/pelicula/diario-de-una-pasion/"
+    )
+
+    private fun rewriteUrl(u: String): String = CATALOG_URL_REWRITES[u] ?: u
+
     fun looksLikeDirectVideo(url: String): Boolean {
         val lower = url.lowercase().substringBefore('?').substringBefore('#')
         return DIRECT_VIDEO_EXTENSIONS.any { lower.endsWith(it) }
@@ -262,7 +268,7 @@ object CineRepository {
                     val inlineParts = contentPart.split("++").filter { it.trim().isNotEmpty() }
                     if (inlineParts.size >= 2) {
                         val name = inlineParts[0].trim()
-                        val url = inlineParts[1].trim()
+                        val url = rewriteUrl(inlineParts[1].trim())
                         
                         val isSeries = currentGroup.lowercase().contains("temporada") ||
                                        EPISODE_NAME.containsMatchIn(name) ||
@@ -293,7 +299,7 @@ object CineRepository {
                     }
                 }
             } else if (!trimmed.startsWith("#") && hasMetadata) {
-                val url = trimmed
+                val url = rewriteUrl(trimmed)
                 val isSeries = currentGroup.lowercase().contains("temporada") ||
                                EPISODE_NAME.containsMatchIn(currentName) ||
                                isRemotePlaylist(url)
