@@ -329,7 +329,7 @@ class MainActivity : AppCompatActivity() {
         // PANTALLA PREMIER (replica exacta de la referencia): solo las piezas
         // de la nueva interfaz quedan visibles; el resto sigue apagado.
         val premierVisible = setOf(
-            R.id.premierTopBar, R.id.premierHeadline, R.id.rvCineCoverflow,
+            R.id.premierTopBar, R.id.rvCineCoverflow,
             R.id.layoutCinePopular, R.id.txtCineRecoLabel, R.id.rvCineReco
         )
         for (i in 0 until binding.containerCine.childCount) {
