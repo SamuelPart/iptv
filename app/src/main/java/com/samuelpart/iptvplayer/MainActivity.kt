@@ -326,15 +326,10 @@ class MainActivity : AppCompatActivity() {
 
         setupCineDeck()
 
-        // PANTALLA PREMIER (replica exacta de la referencia): solo las piezas
-        // de la nueva interfaz quedan visibles; el resto sigue apagado.
-        val premierVisible = setOf(
-            R.id.premierTopBar, R.id.rvCineCoverflow,
-            R.id.layoutCinePopular, R.id.txtCineRecoLabel, R.id.rvCineReco
-        )
+        // CINE A CERO: todo oculto; se reconstruye bloque a bloque con la
+        // referencia Premier bajo aprobacion del usuario (top -> bottom).
         for (i in 0 until binding.containerCine.childCount) {
-            val v = binding.containerCine.getChildAt(i)
-            v.visibility = if (premierVisible.contains(v.id)) View.VISIBLE else View.GONE
+            binding.containerCine.getChildAt(i).visibility = View.GONE
         }
 
         binding.txtSeeAllPopular.setOnClickListener {
