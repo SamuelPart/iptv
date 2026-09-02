@@ -2153,7 +2153,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupCineFeatured() {
         if (allCineMedia.isEmpty()) return
-        val posters = allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
+        val posters = allCineMedia.toList()
         if (posters.isEmpty()) return
         binding.rvCineCoverflow.adapter = CineCoverAdapter(
             posters.sortedByDescending { it.rating ?: 0.0 }.take(10)
