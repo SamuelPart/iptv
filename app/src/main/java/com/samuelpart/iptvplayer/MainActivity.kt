@@ -2404,7 +2404,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupCineMenu() {
         binding.premierMenu.setOnClickListener { openCineMenu() }
         binding.imgIslandSearch.setOnClickListener {
-            startActivity(Intent(this, CineSearchAllActivity::class.java))
+            binding.bottomNavigation.selectedItemId = R.id.navigation_search
         }
         binding.cineMenuScrim.setOnClickListener { closeCineMenu() }
         binding.btnMenuClose.setOnClickListener { closeCineMenu() }
