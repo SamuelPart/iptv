@@ -6,7 +6,8 @@
         <item name="colorAccent">@color/ios_violet</item>
 
         <item name="android:windowBackground">@drawable/bg_ios_gradient</item>
-        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:statusBarColor">#16181C</item>
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@android:color/black</item>
 
         <!-- PlayStation-style transitions for EVERY activity, theme-wide -->

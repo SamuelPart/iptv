@@ -1457,7 +1457,26 @@
             android:visibility="gone"
             android:background="@color/ios_bg">
                     <!-- ================= PANTALLA PREMIER ================= -->
-                    <LinearLayout
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/premierScroll"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:clipToPadding="false"
+                android:fillViewport="true"
+                android:layout_marginTop="6dp"
+                android:visibility="visible"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="104dp">
+
+<LinearLayout
                         android:id="@+id/premierTopBar"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -1492,9 +1511,9 @@
                         <View
                             android:layout_width="40dp"
                             android:layout_height="40dp" />
-                    </LinearLayout>
+                </LinearLayout>
 
-                                        <androidx.recyclerview.widget.RecyclerView
+<androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvCineCoverflow"
                     android:layout_width="match_parent"
                     android:layout_height="436dp"
@@ -1503,6 +1522,82 @@
                     android:clipToPadding="false"
                     android:paddingStart="64dp"
                     android:paddingEnd="64dp" />
+
+<LinearLayout
+                        android:id="@+id/layoutCinePopular"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="Popular Movies"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/txtSeeAllPopular"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:text="See all ›"
+                                android:textColor="#98989F"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvCinePopular"
+                            android:layout_width="match_parent"
+                            android:layout_height="204dp"
+                            android:layout_marginTop="12dp"
+                            android:clipChildren="false"
+                            android:clipToPadding="false"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp" />
+                </LinearLayout>
+
+<TextView
+                    android:id="@+id/txtCineRecoLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:letterSpacing="0.16"
+                    android:paddingStart="4dp"
+                    android:text="New Episode"
+                    android:textColor="#7A7A7C"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+<androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvCineReco"
+                    android:layout_width="match_parent"
+                    android:layout_height="262dp"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="2dp"
+                    android:clipToPadding="false"
+                    android:visibility="gone" />
+
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+                    
+
+                                        
 
 
             <LinearLayout
@@ -1680,52 +1775,7 @@
                     </LinearLayout>
 
                     <!-- ============ POPULAR: rail con sello de calidad ============ -->
-                    <LinearLayout
-                        android:id="@+id/layoutCinePopular"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="2dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:paddingStart="20dp"
-                            android:paddingEnd="20dp">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
-                                android:layout_height="wrap_content"
-                                android:text="Popular Movies"
-                                android:textColor="#FFFFFF"
-                                android:textSize="14.5sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/txtSeeAllPopular"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:text="See all ›"
-                                android:textColor="#98989F"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvCinePopular"
-                            android:layout_width="match_parent"
-                            android:layout_height="204dp"
-                            android:layout_marginTop="12dp"
-                            android:clipChildren="false"
-                            android:clipToPadding="false"
-                            android:paddingStart="20dp"
-                            android:paddingEnd="20dp" />
-                    </LinearLayout>
+                    
 
                 <FrameLayout
                     android:id="@+id/layoutCineDeck"
@@ -1869,27 +1919,9 @@
 
                 <!-- Segmento iOS: Todos / Peliculas / Series -->
                 <!-- Rail "Porque viste X" -->
-                <TextView
-                    android:id="@+id/txtCineRecoLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:letterSpacing="0.16"
-                    android:paddingStart="4dp"
-                    android:text="New Episode"
-                    android:textColor="#7A7A7C"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvCineReco"
-                    android:layout_width="match_parent"
-                    android:layout_height="262dp"
-                    android:layout_marginTop="6dp"
-                    android:layout_marginBottom="2dp"
-                    android:clipToPadding="false"
-                    android:visibility="gone" />
+                
 
                                 <LinearLayout
                     android:layout_width="match_parent"

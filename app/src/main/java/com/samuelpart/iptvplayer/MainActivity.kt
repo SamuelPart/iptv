@@ -131,25 +131,9 @@ class MainActivity : AppCompatActivity() {
 
         applyAppTheme()
 
-        // Enable premium Immersive Full Screen mode (hiding the top status bar: battery, notifications, wifi, signal)
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setDecorFitsSystemWindows(false)
-                window.insetsController?.let { controller ->
-                    controller.hide(android.view.WindowInsets.Type.statusBars())
-                    controller.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility = (
-                    android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                )
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        // La barra de estado (hora, red, notificaciones) siempre visible,
+        // con el color grafito de la app (definido en themes.xml).
+
 
         setupBottomNavigation()
         setupRecyclerViews()
@@ -314,7 +298,10 @@ class MainActivity : AppCompatActivity() {
                 if (newState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE) {
                     val snap = coverflowSnap?.findSnapView(recyclerView.layoutManager)
                     val pos = if (snap != null) recyclerView.getChildAdapterPosition(snap) else -1
-                    if (pos >= 0) updatePlatformLogoFor(pos)
+                    if (pos >= 0) {
+                        currentCoverflowPos = pos
+                        updatePlatformLogoFor(pos)
+                    }
                 }
             }
         })
@@ -329,13 +316,9 @@ class MainActivity : AppCompatActivity() {
         // PANTALLA PREMIER COMPLETA (los 5 bloques aprobados de una vez):
         // 1 top bar + 2 carrusel 3D + 3 Popular + 4 New Episode (+ 5 nav pro
         // ya activo globalmente). El mobiliario anterior permanece apagado.
-        val premierVisible = setOf(
-            R.id.premierTopBar, R.id.rvCineCoverflow,
-            R.id.layoutCinePopular, R.id.txtCineRecoLabel, R.id.rvCineReco
-        )
         for (i in 0 until binding.containerCine.childCount) {
             val v = binding.containerCine.getChildAt(i)
-            v.visibility = if (premierVisible.contains(v.id)) View.VISIBLE else View.GONE
+            v.visibility = if (v.id == R.id.premierScroll) View.VISIBLE else View.GONE
         }
 
         binding.txtSeeAllPopular.setOnClickListener {
@@ -2261,14 +2244,42 @@ class MainActivity : AppCompatActivity() {
     private var deckTracker: android.view.VelocityTracker? = null
     private var coverflowSnap: androidx.recyclerview.widget.LinearSnapHelper? = null
 
-    private fun platformLabelOf(m: CineMedia): String {
-        val g = m.group.trim()
-        return if (g.isNotEmpty() && !g.equals("Peliculas", true) && !g.equals("películas", true) && !g.equals("Series", true)) {
-            g.uppercase()
-        } else {
-            android.net.Uri.parse(m.url).host?.substringBefore('.')?.uppercase() ?: "LUMEN"
+    private val platformsInFlight = mutableSetOf<String>()
+
+    private fun brandFromText(text: String): String? {
+        val g = text.lowercase()
+        return when {
+            g.contains("netflix") -> "NETFLIX"
+            g.contains("disney") -> "DISNEY+"
+            g.contains("hbo") || (g.contains("max") && !g.contains("maxim") && !g.contains("cinemax")) -> "MAX"
+            g.contains("prime") || g.contains("amazon") -> "PRIME VIDEO"
+            g.contains("apple") -> "APPLE TV+"
+            g.contains("hulu") -> "HULU"
+            g.contains("paramount") -> "PARAMOUNT+"
+            g.contains("crunchy") -> "CRUNCHYROLL"
+            g.contains("tubi") -> "TUBI"
+            g.contains("peacock") -> "PEACOCK"
+            else -> null
         }
     }
+
+    private fun platformLabelOf(m: CineMedia): String {
+        brandFromText(m.group)?.let { return it }
+        brandFromText(m.title)?.let { return it }
+        m.platformName?.let { return it }
+        // Pedir a TMDB el streaming real (una vez por titulo) y repintar al llegar
+        if (m.tmdbId != null && platformsInFlight.add(m.url)) {
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try { CineRepository.fetchWatchProviders(m) } catch (_: Exception) { }
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    currentCoverflowPos?.let { updatePlatformLogoFor(it) }
+                }
+            }
+        }
+        return android.net.Uri.parse(m.url).host?.substringBefore('.')?.uppercase() ?: "LUMEN"
+    }
+
+    private var currentCoverflowPos: Int? = null
 
     private fun updatePlatformLogoFor(pos: Int) {
         val a = binding.rvCineCoverflow.adapter as? CineCoverAdapter ?: return

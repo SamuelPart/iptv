@@ -442,6 +442,55 @@ object CineRepository {
         return results.getJSONObject(0)
     }
 
+    /** Estilo visual de los grandes servicios. */
+    private fun stylizeProvider(name: String): String {
+        val n = name.lowercase()
+        return when {
+            "netflix" in n -> "NETFLIX"
+            "disney" in n -> "DISNEY+"
+            "hbo" in n || "max" in n -> "MAX"
+            "prime" in n || "amazon" in n -> "PRIME VIDEO"
+            "apple" in n -> "APPLE TV+"
+            "hulu" in n -> "HULU"
+            "paramount" in n -> "PARAMOUNT+"
+            "crunchy" in n -> "CRUNCHYROLL"
+            "tubi" in n -> "TUBI"
+            "peacock" in n -> "PEACOCK"
+            else -> name.uppercase()
+        }
+    }
+
+    /** Plataforma real donde se transmite (TMDB watch/providers). Pone en
+     *  media.platformName el primer flatrate de la region (PE, si no US). */
+    fun fetchWatchProviders(media: CineMedia) {
+        val id = media.tmdbId ?: return
+        val typePath = if (media.type == "movie") "movie" else "tv"
+        var conn: HttpURLConnection? = null
+        try {
+            val urlString = "https://api.themoviedb.org/3/$typePath/$id/watch/providers?api_key=$TMDB_API_KEY"
+            conn = URL(urlString).openConnection() as HttpURLConnection
+            conn.connectTimeout = 6000
+            conn.readTimeout = 6000
+            if (conn.responseCode == 200) {
+                val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+                val results = json.optJSONObject("results") ?: return
+                val region = results.optJSONObject("PE") ?: results.optJSONObject("US") ?: return
+                val flat = region.optJSONArray("flatrate")
+                    ?: region.optJSONArray("free")
+                    ?: region.optJSONArray("rent")
+                    ?: return
+                if (flat.length() > 0) {
+                    val name = flat.getJSONObject(0).optString("provider_name", "")
+                    if (name.isNotEmpty()) media.platformName = stylizeProvider(name)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            try { conn?.disconnect() } catch (_: Exception) {}
+        }
+    }
+
     fun fetchTmdMetadata(media: CineMedia) {
         try {
             val typePath = if (media.type == "movie") "movie" else "tv"
