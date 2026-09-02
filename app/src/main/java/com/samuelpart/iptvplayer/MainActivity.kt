@@ -304,6 +304,15 @@ class MainActivity : AppCompatActivity() {
         // Rail "Porque viste X" (Cine v2)
         cineRecoAdapter = CineRecoAdapter { media -> openCineDetail(media) }
         binding.rvCineReco.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvCineCoverflow.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvCineCoverflow.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                transformCoverflow(binding.rvCineCoverflow)
+            }
+        })
+        androidx.recyclerview.widget.LinearSnapHelper().attachToRecyclerView(binding.rvCineCoverflow)
+        binding.rvCineCoverflow.post { transformCoverflow(binding.rvCineCoverflow) }
+        binding.rvCinePopular.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvCineReco.adapter = cineRecoAdapter
 
         setupCineDeck()
@@ -1929,6 +1938,7 @@ class MainActivity : AppCompatActivity() {
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
             refreshCoverData()
+            setupCineFeatured()
             CineNewNotifier.onCatalogLoaded(this@MainActivity, catalog)
             
             binding.layoutCineLoading.visibility = View.GONE
@@ -2085,6 +2095,60 @@ class MainActivity : AppCompatActivity() {
         seg(binding.catSegSeries, selectedCineType == "series")
     }
 
+    private fun transformCoverflow(rv: androidx.recyclerview.widget.RecyclerView) {
+        val mid = rv.width / 2f
+        if (mid <= 0) return
+        for (i in 0 until rv.childCount) {
+            val v = rv.getChildAt(i)
+            val c = (v.left + v.right) / 2f
+            val d = ((mid - c) / mid).coerceIn(-1f, 1f)
+            val a = kotlin.math.abs(d)
+            v.scaleX = 1f - 0.18f * a
+            v.scaleY = 1f - 0.18f * a
+            v.rotationY = if (d < 0) 14f * a else -14f * a
+            v.alpha = 1f - 0.35f * a
+            v.translationZ = (1f - a) * 10f
+            v.findViewById<View>(R.id.coverInfo)?.alpha = (1f - 1.7f * a).coerceIn(0f, 1f)
+        }
+    }
+
+    private fun runCineHeadline(container: android.widget.LinearLayout) {
+        container.removeAllViews()
+        val text = "GRANDES ESTRENOS"
+        text.forEachIndexed { i, ch ->
+            val tv = android.widget.TextView(this).apply {
+                this.text = if (ch == ' ') "\u00A0" else ch.toString()
+                textSize = 26f
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                setTextColor(android.graphics.Color.WHITE)
+                letterSpacing = 0.05f
+                alpha = 0f
+                translationX = 18f
+            }
+            container.addView(tv)
+            tv.post {
+                tv.animate().alpha(1f).translationX(0f)
+                    .setStartDelay(55L * i)
+                    .setDuration(300)
+                    .start()
+            }
+        }
+    }
+
+    private fun setupCineFeatured() {
+        if (allCineMedia.isEmpty()) return
+        val posters = allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
+        if (posters.isEmpty()) return
+        binding.rvCineCoverflow.adapter = CineCoverAdapter(
+            posters.sortedByDescending { it.rating ?: 0.0 }.take(10)
+        ) { openCineDetail(it) }
+        binding.rvCinePopular.adapter = CinePopularAdapter(
+            posters.sortedBy { kotlin.math.abs(it.title.hashCode()) }.take(15)
+        ) { openCineDetail(it) }
+        runCineHeadline(binding.cineHeadlineLtrs)
+        binding.rvCineCoverflow.post { transformCoverflow(binding.rvCineCoverflow) }
+    }
+
     private fun setDeckMode(on: Boolean) {
         deckMode = on
         binding.layoutCineDeck.visibility = if (on) View.VISIBLE else View.GONE
@@ -2096,6 +2160,8 @@ class MainActivity : AppCompatActivity() {
         binding.cineChipsScroll.visibility = cat
         binding.txtCineCount.visibility = cat
         binding.cineCatalogDock.visibility = if (on) View.GONE else View.VISIBLE
+        binding.cineFeaturedBlock.visibility = if (on) View.VISIBLE else View.GONE
+        binding.layoutCinePopular.visibility = if (on) View.VISIBLE else View.GONE
         binding.layoutCineLoading.visibility = if (on) View.GONE else binding.layoutCineLoading.visibility
         if (on) {
             binding.rvCineReco.visibility = View.GONE

@@ -1599,6 +1599,91 @@
                 </LinearLayout>
 
                 <!-- Cine v3 · Deck "Descubre" (2 cartas: atras rotada + frontal) -->
+                    <!-- ============ DESTACADO: carrusel 3D (estilo premier) ============ -->
+                    <LinearLayout
+                        android:id="@+id/cineFeaturedBlock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="10dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:text="ESTRENOS · 2026"
+                            android:textColor="#C9A96E"
+                            android:letterSpacing="0.24"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:id="@+id/cineHeadlineLtrs"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginTop="4dp"
+                            android:orientation="horizontal"
+                            android:clipChildren="false" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvCineCoverflow"
+                            android:layout_width="match_parent"
+                            android:layout_height="436dp"
+                            android:layout_marginTop="12dp"
+                            android:clipChildren="false"
+                            android:clipToPadding="false"
+                            android:paddingStart="64dp"
+                            android:paddingEnd="64dp" />
+                    </LinearLayout>
+
+                    <!-- ============ POPULAR: rail con sello de calidad ============ -->
+                    <LinearLayout
+                        android:id="@+id/layoutCinePopular"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="POPULAR"
+                                android:textColor="&#64;android:color/white"
+                                android:textAlpha="0.92"
+                                android:letterSpacing="0.14"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Ver todo ›"
+                                android:textColor="#C9A96E"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvCinePopular"
+                            android:layout_width="match_parent"
+                            android:layout_height="250dp"
+                            android:layout_marginTop="12dp"
+                            android:clipChildren="false"
+                            android:clipToPadding="false"
+                            android:paddingStart="20dp"
+                            android:paddingEnd="20dp" />
+                    </LinearLayout>
+
                 <FrameLayout
                     android:id="@+id/layoutCineDeck"
                     android:layout_width="match_parent"
@@ -1748,7 +1833,7 @@
                     android:layout_marginTop="6dp"
                     android:letterSpacing="0.16"
                     android:paddingStart="4dp"
-                    android:text="PORQUE VISTE"
+                    android:text="NUEVO EPISODIO"
                     android:textColor="#7A7A7C"
                     android:textSize="10sp"
                     android:textStyle="bold"

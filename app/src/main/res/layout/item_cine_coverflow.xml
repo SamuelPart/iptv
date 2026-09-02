@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="252dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:clipChildren="false">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="240dp"
+        android:layout_height="330dp"
+        app:cardCornerRadius="22dp"
+        app:cardElevation="10dp"
+        app:cardBackgroundColor="@color/ios_surface_2">
+
+        <ImageView
+            android:id="@+id/imgCoverPoster"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Poster" />
+    </androidx.cardview.widget.CardView>
+
+    <LinearLayout
+        android:id="@+id/coverInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="14dp">
+
+        <TextView
+            android:id="@+id/txtCoverTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="Morbius"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtCoverMeta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="★ 3.6 · Estreno: 2022"
+            android:textColor="#98989F"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/btnCoverVer"
+            android:layout_width="108dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_chip_active"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="Ver"
+            android:textColor="#16181C"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>
