@@ -175,7 +175,15 @@ class MainActivity : AppCompatActivity() {
         val navTint = androidx.core.content.ContextCompat.getColorStateList(this, R.color.nav_item_tint)
         binding.bottomNavigation.itemIconTintList = navTint
         binding.bottomNavigation.itemTextColor = navTint
+        updateLumenNav(R.id.navigation_home)
+        binding.navBtnHome.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_home }
+        binding.navBtnChannels.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_channels }
+        binding.navBtnSearch.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_search }
+        binding.navBtnCine.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_cine }
+        binding.navBtnSettings.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_settings }
+
         binding.bottomNavigation.setOnItemSelectedListener { item ->
+            updateLumenNav(item.itemId)
             when (item.itemId) {
                 R.id.navigation_home -> {
                     showTab(View.VISIBLE, View.GONE, View.GONE, View.GONE, View.GONE)
@@ -2244,6 +2252,35 @@ class MainActivity : AppCompatActivity() {
     private var deckTracker: android.view.VelocityTracker? = null
     private var coverflowSnap: androidx.recyclerview.widget.LinearSnapHelper? = null
 
+    private fun updateLumenNav(activeId: Int) {
+        val entries = listOf(
+            Triple(binding.navBtnHome, binding.imgNavHome, R.id.navigation_home),
+            Triple(binding.navBtnChannels, binding.imgNavCh, R.id.navigation_channels),
+            Triple(binding.navBtnSearch, binding.imgNavSearch, R.id.navigation_search),
+            Triple(binding.navBtnCine, binding.imgNavCine, R.id.navigation_cine),
+            Triple(binding.navBtnSettings, binding.imgNavSettings, R.id.navigation_settings)
+        )
+        entries.forEach { (frame, iv, id) ->
+            val on = id == activeId
+            frame.setBackgroundResource(if (on) R.drawable.bg_circle_champagne else android.R.color.transparent)
+            iv.setColorFilter(android.graphics.Color.parseColor(if (on) "#16181C" else "#8A8A93"))
+        }
+    }
+
+    private fun platformIconOf(label: String): Int = when {
+        label.contains("NETFLIX") -> R.drawable.ic_brand_netflix
+        label.contains("DISNEY") -> R.drawable.ic_brand_disney
+        label.contains("MAX") -> R.drawable.ic_brand_max
+        label.contains("PRIME") -> R.drawable.ic_brand_prime
+        label.contains("APPLE") -> R.drawable.ic_brand_apple
+        label.contains("HULU") -> R.drawable.ic_brand_hulu
+        label.contains("PARAMOUNT") -> R.drawable.ic_brand_paramount
+        label.contains("CRUNCHYROLL") -> R.drawable.ic_brand_crunchyroll
+        label.contains("TUBI") -> R.drawable.ic_brand_tubi
+        label.contains("PEACOCK") -> R.drawable.ic_brand_peacock
+        else -> R.drawable.icon_lumen_prisma
+    }
+
     private val platformsInFlight = mutableSetOf<String>()
 
     private fun brandFromText(text: String): String? {
@@ -2285,12 +2322,7 @@ class MainActivity : AppCompatActivity() {
         val a = binding.rvCineCoverflow.adapter as? CineCoverAdapter ?: return
         val m = a.itemAt(pos) ?: return
         val label = platformLabelOf(m)
-        binding.txtPlatformLogo.text = label
-        binding.txtPlatformLogo.setTextColor(android.graphics.Color.parseColor(when {
-            label.contains("NETFLIX") -> "#E50914"
-            label == "LUMEN" -> "#C9A96E"
-            else -> "#FFFFFF"
-        }))
+        binding.imgPlatformLogo.setImageResource(platformIconOf(label))
     }
 
     private fun onDeckTouch(v: View, ev: android.view.MotionEvent): Boolean {

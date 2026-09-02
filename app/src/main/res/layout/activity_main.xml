@@ -38,6 +38,7 @@
         android:layout_marginHorizontal="14dp"
         android:layout_marginBottom="12dp"
         android:background="@drawable/bg_nav_pill"
+        android:visibility="gone"
         app:elevation="16dp"
         app:itemIconTint="@color/nav_item_tint"
         app:itemTextColor="@color/nav_item_tint"
@@ -46,6 +47,109 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Barra inferior global premium: pildora flotante con iconos -->
+    <LinearLayout
+        android:id="@+id/lumenNavBar"
+        android:layout_width="0dp"
+        android:layout_height="58dp"
+        android:layout_marginHorizontal="18dp"
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/bg_nav_pill"
+        android:elevation="14dp"
+        android:paddingHorizontal="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <FrameLayout
+            android:id="@+id/navBtnHome"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/bg_circle_champagne">
+
+            <ImageView
+                android:id="@+id/imgNavHome"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ios_home"
+                app:tint="#16181C" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/navBtnChannels"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/imgNavCh"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ios_tv"
+                app:tint="#8A8A93" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/navBtnSearch"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/imgNavSearch"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ios_search"
+                app:tint="#8A8A93" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/navBtnCine"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/imgNavCine"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ios_movie"
+                app:tint="#8A8A93" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/navBtnSettings"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/imgNavSettings"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ios_gear"
+                app:tint="#8A8A93" />
+        </FrameLayout>
+    </LinearLayout>
 
     <!-- Bottom Ads Container -->
     <LinearLayout
@@ -1484,7 +1588,7 @@
                         android:gravity="center_vertical"
                         android:paddingStart="14dp"
                         android:paddingEnd="14dp"
-                        android:layout_marginTop="4dp">
+                        android:layout_marginTop="16dp">
 
                         <ImageButton
                             android:id="@+id/premierMenu"
@@ -1496,17 +1600,20 @@
                             app:tint="#FFFFFF"
                             android:contentDescription="Menu" />
 
-                        <TextView
-                            android:id="@+id/txtPlatformLogo"
+                        <FrameLayout
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:text="LUMEN"
-                            android:textColor="#C9A96E"
-                            android:letterSpacing="0.28"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
+                            android:layout_height="30dp">
+
+                            <ImageView
+                                android:id="@+id/imgPlatformLogo"
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:layout_gravity="center"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/icon_lumen_prisma"
+                                android:contentDescription="Logo plataforma" />
+                        </FrameLayout>
 
                         <View
                             android:layout_width="40dp"
