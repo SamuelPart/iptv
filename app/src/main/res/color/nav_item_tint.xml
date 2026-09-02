@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nav tint: electric indigo when selected, soft gray otherwise -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="#C9A96E" android:state_checked="true" />
-    <item android:color="#98989F" />
+    <item android:color="#FFFFFF" android:state_checked="true" />
+    <item android:color="#8A8A93" />
 </selector>

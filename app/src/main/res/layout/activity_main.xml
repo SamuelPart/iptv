@@ -37,9 +37,11 @@
         android:layout_height="66dp"
         android:layout_marginHorizontal="14dp"
         android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_bottom_nav_ios"
+        android:background="@drawable/bg_nav_pill"
         app:elevation="16dp"
+        app:itemIconTint="@color/nav_item_tint"
         app:itemTextColor="@color/nav_item_tint"
+        app:labelVisibilityMode="unlabeled"
         app:menu="@menu/bottom_nav_menu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -1476,14 +1478,15 @@
                             android:contentDescription="Menu" />
 
                         <TextView
+                            android:id="@+id/txtPlatformLogo"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:gravity="center"
                             android:text="LUMEN"
                             android:textColor="#C9A96E"
-                            android:letterSpacing="0.32"
-                            android:textSize="15sp"
+                            android:letterSpacing="0.28"
+                            android:textSize="14sp"
                             android:textStyle="bold" />
 
                         <View
@@ -1498,24 +1501,6 @@
                         android:orientation="vertical"
                         android:layout_marginStart="20dp"
                         android:layout_marginTop="8dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="MAJOR MOVIE"
-                            android:textColor="#FFFFFF"
-                            android:letterSpacing="0.22"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="OF"
-                            android:textColor="#FFFFFF"
-                            android:letterSpacing="0.22"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -1747,8 +1732,11 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/txtSeeAllPopular"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:clickable="true"
+                                android:focusable="true"
                                 android:text="See all ›"
                                 android:textColor="#98989F"
                                 android:textSize="11sp"
@@ -1758,7 +1746,7 @@
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvCinePopular"
                             android:layout_width="match_parent"
-                            android:layout_height="250dp"
+                            android:layout_height="204dp"
                             android:layout_marginTop="12dp"
                             android:clipChildren="false"
                             android:clipToPadding="false"

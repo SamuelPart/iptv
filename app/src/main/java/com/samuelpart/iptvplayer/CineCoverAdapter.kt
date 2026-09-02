@@ -28,6 +28,8 @@ class CineCoverAdapter(
 
     override fun getItemCount() = items.size
 
+    fun itemAt(pos: Int): CineMedia? = items.getOrNull(pos)
+
     override fun onBindViewHolder(holder: VH, position: Int) {
         val m = items[position]
         val v = holder.itemView

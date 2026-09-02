@@ -309,8 +309,17 @@ class MainActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
                 transformCoverflow(binding.rvCineCoverflow)
             }
+
+            override fun onScrollStateChanged(recyclerView: androidx.recyclerview.widget.RecyclerView, newState: Int) {
+                if (newState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE) {
+                    val snap = coverflowSnap?.findSnapView(recyclerView.layoutManager)
+                    val pos = if (snap != null) recyclerView.getChildAdapterPosition(snap) else -1
+                    if (pos >= 0) updatePlatformLogoFor(pos)
+                }
+            }
         })
-        androidx.recyclerview.widget.LinearSnapHelper().attachToRecyclerView(binding.rvCineCoverflow)
+        coverflowSnap = androidx.recyclerview.widget.LinearSnapHelper()
+        coverflowSnap?.attachToRecyclerView(binding.rvCineCoverflow)
         binding.rvCineCoverflow.post { transformCoverflow(binding.rvCineCoverflow) }
         binding.rvCinePopular.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvCineReco.adapter = cineRecoAdapter
@@ -326,6 +335,10 @@ class MainActivity : AppCompatActivity() {
         for (i in 0 until binding.containerCine.childCount) {
             val v = binding.containerCine.getChildAt(i)
             v.visibility = if (premierVisible.contains(v.id)) View.VISIBLE else View.GONE
+        }
+
+        binding.txtSeeAllPopular.setOnClickListener {
+            startActivity(Intent(this, CinePopularAllActivity::class.java))
         }
 
         // Hamburguesa: abre Configuracion (funcion real)
@@ -2162,7 +2175,10 @@ class MainActivity : AppCompatActivity() {
             posters.sortedBy { kotlin.math.abs(it.title.hashCode()) }.take(15)
         ) { openCineDetail(it) }
         runCineHeadline(binding.cineHeadlineLtrs)
-        binding.rvCineCoverflow.post { transformCoverflow(binding.rvCineCoverflow) }
+        binding.rvCineCoverflow.post {
+            transformCoverflow(binding.rvCineCoverflow)
+            updatePlatformLogoFor(0)
+        }
     }
 
     private fun setDeckMode(on: Boolean) {
@@ -2243,6 +2259,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var deckTracker: android.view.VelocityTracker? = null
+    private var coverflowSnap: androidx.recyclerview.widget.LinearSnapHelper? = null
+
+    private fun platformLabelOf(m: CineMedia): String {
+        val g = m.group.trim()
+        return if (g.isNotEmpty() && !g.equals("Peliculas", true) && !g.equals("películas", true) && !g.equals("Series", true)) {
+            g.uppercase()
+        } else {
+            android.net.Uri.parse(m.url).host?.substringBefore('.')?.uppercase() ?: "LUMEN"
+        }
+    }
+
+    private fun updatePlatformLogoFor(pos: Int) {
+        val a = binding.rvCineCoverflow.adapter as? CineCoverAdapter ?: return
+        val m = a.itemAt(pos) ?: return
+        val label = platformLabelOf(m)
+        binding.txtPlatformLogo.text = label
+        binding.txtPlatformLogo.setTextColor(android.graphics.Color.parseColor(when {
+            label.contains("NETFLIX") -> "#E50914"
+            label == "LUMEN" -> "#C9A96E"
+            else -> "#FFFFFF"
+        }))
+    }
 
     private fun onDeckTouch(v: View, ev: android.view.MotionEvent): Boolean {
         when (ev.actionMasked) {

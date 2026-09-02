@@ -46,6 +46,10 @@
 
         <!-- Movie Details Activity -->
         <activity
+            android:name=".CinePopularAllActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".CineMovieDetailActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
