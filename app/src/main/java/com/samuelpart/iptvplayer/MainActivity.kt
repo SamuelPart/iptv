@@ -2054,14 +2054,14 @@ class MainActivity : AppCompatActivity() {
             .maxByOrNull { it.savedAt }
         val reco: List<CineMedia>
         if (seed?.media != null) {
-            reco = allCineMedia
+            reco = premierSource()
                 .filter { it.group == seed.media.group && it.title != seed.title }
                 .filter { !it.posterUrl.isNullOrBlank() }
                 .sortedByDescending { it.rating ?: 0.0 }
                 .take(12)
             binding.txtCineRecoLabel.text = "PORQUE VISTE ${seed.title.uppercase()}"
         } else {
-            reco = allCineMedia
+            reco = premierSource()
                 .filter { !it.posterUrl.isNullOrBlank() && (it.rating ?: 0.0) > 0.0 }
                 .sortedByDescending { it.rating ?: 0.0 }
                 .take(12)
@@ -2154,7 +2154,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupCineFeatured() {
         if (allCineMedia.isEmpty()) return
-        val posters = allCineMedia.toList()
+        val posters = premierSource()
         if (posters.isEmpty()) return
         binding.rvCineCoverflow.adapter = CineCoverAdapter(
             posters.sortedByDescending { it.rating ?: 0.0 }.take(10)
@@ -2167,6 +2167,7 @@ class MainActivity : AppCompatActivity() {
             transformCoverflow(binding.rvCineCoverflow)
             updatePlatformLogoFor(0)
         }
+        buildCineSections()
     }
 
     private fun setDeckMode(on: Boolean) {
@@ -2278,6 +2279,29 @@ class MainActivity : AppCompatActivity() {
         else -> R.drawable.icon_lumen_prisma
     }
 
+    private var premierKind = "all"
+
+    private fun premierSource(): List<CineMedia> =
+        if (premierKind == "all") allCineMedia
+        else allCineMedia.filter { it.type == premierKind }
+
+    private fun updateKindChips() {
+        fun setActive(v: android.widget.TextView, on: Boolean) {
+            v.setBackgroundResource(if (on) R.drawable.bg_chip_active else R.drawable.bg_chip_idle)
+            v.setTextColor(android.graphics.Color.parseColor(if (on) "#16181C" else "#C9A96E"))
+        }
+        setActive(binding.chipKindMovies, premierKind == "movie")
+        setActive(binding.chipKindSeries, premierKind == "series")
+    }
+
+    private fun switchPremierKind(kind: String) {
+        premierKind = if (premierKind == kind) "all" else kind
+        updateKindChips()
+        setupCineFeatured()
+        buildCineSections()
+        buildCineReco()
+    }
+
     private val platformsInFlight = mutableSetOf<String>()
 
     private fun brandFromText(text: String): String? {
@@ -2315,6 +2339,68 @@ class MainActivity : AppCompatActivity() {
 
     private var currentCoverflowPos: Int? = null
 
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    private fun buildCineSections() {
+        val container = binding.layoutCineSections
+        container.removeAllViews()
+        val src = premierSource()
+        listOf(
+            Triple("ACCIÓN", "accion", false),
+            Triple("COMEDIA", "comedia", false),
+            Triple("ROMANCE", "romance", false),
+            Triple("TERROR", "terror", false),
+            Triple("ANIMÉ", "anime", true)
+        ).forEach { (title, key, isAnime) ->
+            val items = if (isAnime) {
+                src.filter { it.title.lowercase().contains("anime") || it.group.lowercase().contains("anime") }
+            } else {
+                src.filter { TasteProfile.genreKeysOf(it).contains(key) }
+            }
+            if (items.size < 3) return@forEach
+            val sorted = items.sortedBy { Math.abs(it.title.hashCode()) }.take(12)
+
+            val header = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(dp(20), 0, dp(20), 0)
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = dp(18) }
+            }
+            val titleV = android.widget.TextView(this).apply {
+                text = title
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 14.5f
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val seeV = android.widget.TextView(this).apply {
+                text = "See all ›"
+                setTextColor(android.graphics.Color.parseColor("#98989F"))
+                textSize = 11f
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                setOnClickListener { openCineList(title, "genre", key) }
+            }
+            header.addView(titleV)
+            header.addView(seeV)
+            container.addView(header)
+
+            val rv = androidx.recyclerview.widget.RecyclerView(this).apply {
+                layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context, androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, dp(212)
+                ).apply { topMargin = dp(10) }
+                clipToPadding = false
+                clipChildren = false
+                setPadding(dp(20), 0, dp(20), 0)
+                adapter = CinePopularAdapter(sorted) { openCineDetail(it) }
+            }
+            container.addView(rv)
+        }
+    }
+
     private fun setupCineMenu() {
         binding.premierMenu.setOnClickListener { openCineMenu() }
         binding.cineMenuScrim.setOnClickListener { closeCineMenu() }
@@ -2345,6 +2431,14 @@ class MainActivity : AppCompatActivity() {
         binding.chipPlatDisney.setOnClickListener { openCineList("DISNEY+", "platform", "disney") }
         binding.chipPlatMax.setOnClickListener { openCineList("MAX", "platform", "hbo") }
         binding.chipPlatPrime.setOnClickListener { openCineList("PRIME VIDEO", "platform", "prime") }
+        binding.chipGenreTe.setOnClickListener { openCineList("TERROR", "genre", "terror") }
+        binding.chipGenreDr.setOnClickListener { openCineList("DRAMA", "genre", "drama") }
+        binding.chipPlatApple.setOnClickListener { openCineList("APPLE TV+", "platform", "apple") }
+        binding.chipPlatHulu.setOnClickListener { openCineList("HULU", "platform", "hulu") }
+
+        binding.chipKindMovies.setOnClickListener { switchPremierKind("movie") }
+        binding.chipKindSeries.setOnClickListener { switchPremierKind("series") }
+        updateKindChips()
     }
 
     private fun openCineMenu() {
