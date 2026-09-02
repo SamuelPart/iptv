@@ -153,12 +153,15 @@ object CineScraper {
      *     and intercepts the fresh video request, headers included.
      */
     suspend fun resolveBestVideoUrl(context: Context, pageUrl: String): WebViewResolver.Resolved? {
-        // Iframe-hosts (nupload etc): extraccion = callejon sin salida
-        // (anti-hotlink ?redi=ref), ese reproductor web se abre directo.
-        if (WebVideoPlayerActivity.isEmbedUrl(pageUrl)) return null
         val fast = resolveWebVideoUrl(pageUrl)
         if (!fast.isNullOrEmpty()) {
             return WebViewResolver.Resolved(url = fast, referer = pageUrl, userAgent = CHROME_UA)
+        }
+        // Iframe-hosts (nupload): UNA pasada CORTA (7s) — si no publican el
+        // video tras los auto-clicks de play, no esperamos eternidad. El resto
+        // sigue con doble pasada de 22s como antes.
+        if (WebVideoPlayerActivity.isEmbedUrl(pageUrl)) {
+            return WebViewResolver.resolve(context, pageUrl, timeoutMs = 7000L)
         }
         // Un segundo pase si el player de JS tardo demasiado en publicar el stream
         return WebViewResolver.resolve(context, pageUrl)

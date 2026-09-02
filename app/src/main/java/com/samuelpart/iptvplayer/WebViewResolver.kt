@@ -62,6 +62,25 @@ object WebViewResolver {
                 return /\.(m3u8|mpd|mp4|mkv|webm)(\?|&|#|$)/i.test(u)
                     || /videoplayback|mime=video|\/manifest|\/pass_md5\//i.test(u);
             }
+            // Desciende al documento de iframes (misma origin): video-js suele estar anidado
+            var docs = [document];
+            try {
+                var fr = document.querySelectorAll('iframe');
+                for (var f = 0; f < fr.length; f++) {
+                    try { if (fr[f].contentDocument) docs.push(fr[f].contentDocument); } catch (e0) {}
+                }
+            } catch (e1) {}
+            function pickVideo(doc) {
+                var vs = doc.querySelectorAll('video');
+                for (var i = 0; i < vs.length; i++) {
+                    var s = vs[i].currentSrc || vs[i].src;
+                    if (ok(s)) return s;
+                    var ss = vs[i].querySelectorAll('source');
+                    for (var k = 0; k < ss.length; k++) { if (ok(ss[k].src)) return ss[k].src; }
+                }
+                return '';
+            }
+            for (var d = 0; d < docs.length; d++) { var hit = pickVideo(docs[d]); if (hit) return hit; }
             var vs = document.querySelectorAll('video');
             for (var i = 0; i < vs.length; i++) {
                 var s = vs[i].currentSrc || vs[i].src;
@@ -85,8 +104,24 @@ object WebViewResolver {
             try {
                 var v = document.querySelector('video');
                 if (v) { v.muted = true; var p = v.play(); if (p && p.catch) { p.catch(function(){}); } }
-                var b = document.querySelector('.vjs-big-play-button,.jw-icon-playback,.jw-display-icon-container,.plyr__control--overlaid,.play-button,.play-btn,#play-button,button[aria-label="Play"],.play.overlay');
+                var sel = '.vjs-big-play-button,.jw-icon-playback,.jw-display-icon-container,.plyr__control--overlaid,.play-button,.play-btn,#play-button,button[aria-label="Play"],.play.overlay,.vjs-poster,.overlay-play,.video-js';
+                var b = document.querySelector(sel);
                 if (b) { b.click(); }
+                // Clicks dentro de iframes del mismo origen
+                try {
+                    var fr = document.querySelectorAll('iframe');
+                    for (var f = 0; f < fr.length; f++) {
+                        try {
+                            var idoc = fr[f].contentDocument;
+                            if (idoc) {
+                                var bv = idoc.querySelector(sel);
+                                if (bv) bv.click();
+                                var iv = idoc.querySelector('video');
+                                if (iv) { iv.muted = true; var ip = iv.play(); if (ip && ip.catch) { ip.catch(function(){}); } }
+                            }
+                        } catch (e2) {}
+                    }
+                } catch (e3) {}
             } catch (e) {}
         })();
     """.trimIndent()
