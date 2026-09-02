@@ -317,6 +317,12 @@ class MainActivity : AppCompatActivity() {
 
         setupCineDeck()
 
+        // CANVAS EN BLANCO: se limpia el tab Cine por completo; se reconstruye
+        // bajo direccion del usuario (pantalla Premier).
+        for (i in 0 until binding.containerCine.childCount) {
+            binding.containerCine.getChildAt(i).visibility = View.GONE
+        }
+
         // 4. Favorites horizontal strip in Home
         binding.rvFavorites.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         favoriteAdapter = FavoriteAdapter(
