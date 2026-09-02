@@ -46,6 +46,9 @@
 
         <!-- Movie Details Activity -->
         <activity
+            android:name=".CineSearchActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".CinePopularAllActivity"
             android:exported="false" />
 
