@@ -82,10 +82,8 @@ object CineNewNotifier {
                 val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 val prev = prefs.getString("alerts_log_v1", "") ?: ""
                 val entry = "${media.title}|${genre}|${media.posterUrl ?: ""}"
-                val lines = (listOf(entry) + prev.split("
-").filter { it.isNotBlank() }).take(30)
-                prefs.edit().putString("alerts_log_v1", lines.joinToString("
-")).apply()
+                val lines = (listOf(entry) + prev.split("\n").filter { it.isNotBlank() }).take(30)
+                prefs.edit().putString("alerts_log_v1", lines.joinToString("\n")).apply()
             } catch (_: Exception) { }
             try {
                 NotificationManagerCompat.from(context).notify(id, builder.build())
