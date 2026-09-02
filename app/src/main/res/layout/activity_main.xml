@@ -1658,8 +1658,7 @@
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
                                 android:text="POPULAR"
-                                android:textColor="&#64;android:color/white"
-                                android:textAlpha="0.92"
+                                android:textColor="#EBFFFFFF"
                                 android:letterSpacing="0.14"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
