@@ -46,6 +46,10 @@
 
         <!-- Movie Details Activity -->
         <activity
+            android:name=".WebVideoPlayerActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
+            android:hardwareAccelerated="true" />
+        <activity
             android:name=".CineSearchActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity

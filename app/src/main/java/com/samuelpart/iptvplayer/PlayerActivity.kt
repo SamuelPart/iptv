@@ -132,6 +132,27 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // IFRAME MODE: pages que deben reproducirse con su propio player web
+        // (p. ej. nupload.top) — no extraemos video, solo tocamos el iframe
+        // dentro de nuestro reproductor.
+        run {
+            val raw = intent.getStringExtra("channelUrl") ?: ""
+            if (raw.isNotBlank() && WebVideoPlayerActivity.isEmbedUrl(raw)) {
+                val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
+                startActivity(
+                    Intent(this, WebVideoPlayerActivity::class.java).apply {
+                        putExtra("channelName", title)
+                        putExtra("channelUrl", raw)
+                        putExtra("streamReferer", intent.getStringExtra("streamReferer"))
+                        putExtra("streamUserAgent", intent.getStringExtra("streamUserAgent"))
+                    }
+                )
+                finish()
+                return
+            }
+        }
+
         
         try {
             binding = ActivityPlayerBinding.inflate(layoutInflater)

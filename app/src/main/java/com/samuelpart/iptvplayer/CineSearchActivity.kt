@@ -68,7 +68,7 @@ class CineSearchActivity : AppCompatActivity() {
             binding.txtCineSearchHint.visibility = View.VISIBLE
             binding.txtCineSearchHint.text = if (catalog.isEmpty())
                 "Descargando catálogo..." else "Escribe para buscar en películas y series"
-            binding.rvCineSearch.adapter = CineMediaAdapter(emptyList()) { }
+            binding.rvCineSearch.adapter = CineMediaAdapter(emptyList(), onMediaClick = { })
             return
         }
         val results = catalog
