@@ -42,9 +42,7 @@ object CineRepository {
         ".avi", ".ts", ".flv", ".wmv", ".mpg", ".mpeg", ".m4v"
     )
 
-    private val CATALOG_URL_REWRITES = mapOf(
-        "https://nupload.top/watch/OkUB0DCU7nscXOAjjdrVp9VSnbgzcTFeH4GbWx9Dt7w" to "https://pelisflix1.fans/pelicula/diario-de-una-pasion/"
-    )
+    private val CATALOG_URL_REWRITES = emptyMap<String, String>()
 
     private fun rewriteUrl(u: String): String = CATALOG_URL_REWRITES[u] ?: u
 
@@ -325,6 +323,26 @@ object CineRepository {
                 hasMetadata = false
             }
         }
+    }
+
+    private var cachedBundled: List<CineMedia>? = null
+
+    /** Parse solo del catalogo empaquetado (sin red): para pintar el premier al instante. */
+    suspend fun getBundledQuickCatalog(context: Context): List<CineMedia> = withContext(Dispatchers.IO) {
+        cachedBundled?.let { return@withContext it }
+        val movies = mutableListOf<CineMedia>()
+        val episodes = mutableListOf<ParsedEpisode>()
+        val tvShows = mutableListOf<CineMedia>()
+        try {
+            val reader = BufferedReader(InputStreamReader(context.resources.openRawResource(R.raw.cine_catalog)))
+            parseM3uStream(reader, movies, episodes, tvShows)
+            reader.close()
+        } catch (_: Exception) { }
+        val quick = ArrayList<CineMedia>(movies.size + tvShows.size)
+        quick.addAll(movies)
+        quick.addAll(tvShows)
+        cachedBundled = quick
+        quick
     }
 
     private fun launchBackgroundPrefetch(catalog: List<CineMedia>) {

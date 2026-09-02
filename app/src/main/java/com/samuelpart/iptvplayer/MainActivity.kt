@@ -1953,6 +1953,18 @@ class MainActivity : AppCompatActivity() {
             binding.layoutCineLoading.visibility = View.VISIBLE
             binding.rvCineGrid.visibility = View.GONE
             
+            // FAST PASS: catalogo empaquetado sin red -> peliculas visibles al instante
+            val quick = withContext(Dispatchers.IO) {
+                CineRepository.getBundledQuickCatalog(this@MainActivity)
+            }
+            if (allCineMedia.isEmpty() && quick.isNotEmpty()) {
+                allCineMedia = quick
+                refreshCoverData()
+                setupCineFeatured()
+                buildCineReco()
+            }
+            binding.layoutCineLoading.visibility = View.GONE
+
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
             refreshCoverData()
@@ -2163,6 +2175,9 @@ class MainActivity : AppCompatActivity() {
             posters.sortedBy { kotlin.math.abs(it.title.hashCode()) }.take(15)
         ) { openCineDetail(it) }
         runCineHeadline(binding.cineHeadlineLtrs)
+        binding.rvCineCoverflow.setItemViewCacheSize(20)
+        binding.rvCinePopular.setItemViewCacheSize(20)
+        binding.rvCineReco.setItemViewCacheSize(12)
         binding.rvCineCoverflow.post {
             transformCoverflow(binding.rvCineCoverflow)
             updatePlatformLogoFor(0)
