@@ -26,14 +26,14 @@ class CinePopularAllActivity : AppCompatActivity() {
             val movies = catalog
                 .filter { it.type == "movie" }
                 .sortedBy { Math.abs(it.title.hashCode()) }
-            binding.rvPopularAll.adapter = CineMediaAdapter(movies) { m ->
+            binding.rvPopularAll.adapter = CineMediaAdapter(movies, onMediaClick = { m ->
                 val intent = Intent(
                     this@CinePopularAllActivity,
                     if (m.type == "movie") CineMovieDetailActivity::class.java else CineTvShowDetailActivity::class.java
                 )
                 intent.putExtra("media", m)
                 startActivity(intent)
-            }
+            })
         }
     }
 }
