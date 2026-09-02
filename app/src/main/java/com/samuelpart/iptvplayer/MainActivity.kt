@@ -326,10 +326,16 @@ class MainActivity : AppCompatActivity() {
 
         setupCineDeck()
 
-        // CINE A CERO: todo oculto; se reconstruye bloque a bloque con la
-        // referencia Premier bajo aprobacion del usuario (top -> bottom).
+        // PANTALLA PREMIER COMPLETA (los 5 bloques aprobados de una vez):
+        // 1 top bar + 2 carrusel 3D + 3 Popular + 4 New Episode (+ 5 nav pro
+        // ya activo globalmente). El mobiliario anterior permanece apagado.
+        val premierVisible = setOf(
+            R.id.premierTopBar, R.id.rvCineCoverflow,
+            R.id.layoutCinePopular, R.id.txtCineRecoLabel, R.id.rvCineReco
+        )
         for (i in 0 until binding.containerCine.childCount) {
-            binding.containerCine.getChildAt(i).visibility = View.GONE
+            val v = binding.containerCine.getChildAt(i)
+            v.visibility = if (premierVisible.contains(v.id)) View.VISIBLE else View.GONE
         }
 
         binding.txtSeeAllPopular.setOnClickListener {
@@ -1971,7 +1977,6 @@ class MainActivity : AppCompatActivity() {
             cineAdapter.updateList(catalog)
             binding.txtCineCount.text = "Total: ${catalog.size}"
             buildCineReco()
-            if (deckMode) refreshDeck() else setDeckMode(deckMode)
         }
     }
 
