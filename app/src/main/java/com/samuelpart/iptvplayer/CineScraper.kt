@@ -153,6 +153,9 @@ object CineScraper {
      *     and intercepts the fresh video request, headers included.
      */
     suspend fun resolveBestVideoUrl(context: Context, pageUrl: String): WebViewResolver.Resolved? {
+        // Iframe-hosts: jamas se extraen — van directo al reproductor-web
+        // (PlayerActivity redirige); null al instante = cero espera.
+        if (WebVideoPlayerActivity.isEmbedUrl(pageUrl)) return null
         val fast = resolveWebVideoUrl(pageUrl)
         if (!fast.isNullOrEmpty()) {
             return WebViewResolver.Resolved(url = fast, referer = pageUrl, userAgent = CHROME_UA)

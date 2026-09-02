@@ -374,8 +374,12 @@ class CineTvShowDetailActivity : AppCompatActivity() {
                 if (resolved != null) {
                     playStreamDirectly(resolved.url, startMs, displayTitle, resolved.referer, resolved.userAgent)
                 } else {
-                    Toast.makeText(this@CineTvShowDetailActivity, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
-                    stopInlinePlayback()
+                    if (WebVideoPlayerActivity.isEmbedUrl(streamUrl)) {
+                        playStreamDirectly(streamUrl, startMs, displayTitle, activeReferer, activeUserAgent)
+                    } else {
+                        Toast.makeText(this@CineTvShowDetailActivity, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
+                        stopInlinePlayback()
+                    }
                 }
             }
         } else {

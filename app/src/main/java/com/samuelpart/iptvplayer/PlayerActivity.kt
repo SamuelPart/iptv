@@ -133,6 +133,26 @@ class PlayerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // IFRAME MODE: paginas web orientadas a iframe (nupload.top etc) se
+        // reproducen CON SU PROPIO PLAYER dentro del nuestro. VLC solo recibe
+        // enlaces directos de video (.mp4/.mkv/.m3u8/...).
+        run {
+            val raw = intent.getStringExtra("channelUrl") ?: ""
+            if (raw.isNotBlank() && WebVideoPlayerActivity.isEmbedUrl(raw)) {
+                val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
+                startActivity(
+                    Intent(this, WebVideoPlayerActivity::class.java).apply {
+                        putExtra("channelName", title)
+                        putExtra("channelUrl", raw)
+                        putExtra("streamReferer", intent.getStringExtra("streamReferer"))
+                        putExtra("streamUserAgent", intent.getStringExtra("streamUserAgent"))
+                    }
+                )
+                finish()
+                return
+            }
+        }
+
         try {
             binding = ActivityPlayerBinding.inflate(layoutInflater)
             setContentView(binding.root)
