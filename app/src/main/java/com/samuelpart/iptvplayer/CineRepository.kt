@@ -480,8 +480,17 @@ object CineRepository {
                     ?: region.optJSONArray("rent")
                     ?: return
                 if (flat.length() > 0) {
-                    val name = flat.getJSONObject(0).optString("provider_name", "")
+                    // Preferir el primer provider de marca reconocible
+                    var pick = flat.getJSONObject(0)
+                    val known = listOf("netflix", "disney", "hbo", "max", "prime", "amazon", "apple", "hulu", "paramount", "crunchy", "tubi", "peacock")
+                    for (i in 0 until flat.length()) {
+                        val o = flat.getJSONObject(i)
+                        if (known.any { it in o.optString("provider_name", "").lowercase() }) { pick = o; break }
+                    }
+                    val name = pick.optString("provider_name", "")
                     if (name.isNotEmpty()) media.platformName = stylizeProvider(name)
+                    val lp = pick.optString("logo_path", "")
+                    if (lp.isNotEmpty()) media.platformLogoUrl = "https://image.tmdb.org/t/p/original$lp"
                 }
             }
         } catch (e: Exception) {

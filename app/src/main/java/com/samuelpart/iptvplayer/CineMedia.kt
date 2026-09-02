@@ -19,6 +19,7 @@ data class CineMedia(
     var urls: ArrayList<String> = arrayListOf(), // List of duplicate server URLs grouped under same title
     var trailerUrl: String? = null, // YouTube trailer link
     var platformName: String? = null, // proveedor de streaming (TMDB watch/providers)
+    var platformLogoUrl: String? = null, // logo oficial del proveedor (image.tmdb.org original)
     var cast: List<CastMember> = emptyList() // Dynamic TMDb Cast and Crew list!
 ) : Serializable
 

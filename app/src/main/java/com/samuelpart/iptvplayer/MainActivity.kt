@@ -333,10 +333,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, CinePopularAllActivity::class.java))
         }
 
-        // Hamburguesa: abre Configuracion (funcion real)
-        binding.premierMenu.setOnClickListener {
-            binding.bottomNavigation.selectedItemId = R.id.navigation_settings
-        }
+        setupCineMenu()
 
         // 4. Favorites horizontal strip in Home
         binding.rvFavorites.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -2318,11 +2315,70 @@ class MainActivity : AppCompatActivity() {
 
     private var currentCoverflowPos: Int? = null
 
+    private fun setupCineMenu() {
+        binding.premierMenu.setOnClickListener { openCineMenu() }
+        binding.cineMenuScrim.setOnClickListener { closeCineMenu() }
+        binding.btnMenuClose.setOnClickListener { closeCineMenu() }
+
+        binding.menuItemFav.setOnClickListener { openCineList("FAVORITOS", "favorites") }
+        binding.menuItemContinue.setOnClickListener { openCineList("SEGUIR VIENDO", "continue") }
+        binding.menuItemRecent.setOnClickListener { openCineList("ESTRENOS", "recent") }
+        binding.menuItemAlerts.setOnClickListener { openCineList("ALERTAS", "alerts") }
+        binding.menuItemHistory.setOnClickListener { openCineList("HISTORIAL", "history") }
+        binding.menuItemSettings.setOnClickListener {
+            closeCineMenu()
+            binding.bottomNavigation.selectedItemId = R.id.navigation_settings
+        }
+
+        // Grupos expandibles: generos y plataformas
+        fun toggle(v: android.widget.LinearLayout) {
+            v.visibility = if (v.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        }
+        binding.menuItemGenres.setOnClickListener { toggle(binding.menuGenresChips) }
+        binding.menuItemPlatforms.setOnClickListener { toggle(binding.menuPlatformsChips) }
+
+        binding.chipGenreAc.setOnClickListener { openCineList("ACCION", "genre", "accion") }
+        binding.chipGenreCo.setOnClickListener { openCineList("COMEDIA", "genre", "comedia") }
+        binding.chipGenreRo.setOnClickListener { openCineList("ROMANCE", "genre", "romance") }
+        binding.chipGenreAn.setOnClickListener { openCineList("ANIME", "genre", "anime") }
+        binding.chipPlatNetflix.setOnClickListener { openCineList("NETFLIX", "platform", "netflix") }
+        binding.chipPlatDisney.setOnClickListener { openCineList("DISNEY+", "platform", "disney") }
+        binding.chipPlatMax.setOnClickListener { openCineList("MAX", "platform", "hbo") }
+        binding.chipPlatPrime.setOnClickListener { openCineList("PRIME VIDEO", "platform", "prime") }
+    }
+
+    private fun openCineMenu() {
+        binding.cineMenuOverlay.visibility = View.VISIBLE
+        val w = -(binding.cineMenuPanel.width.takeIf { it > 0 } ?: (300 * resources.displayMetrics.density).toInt()).toFloat()
+        binding.cineMenuPanel.translationX = w
+        binding.cineMenuPanel.animate().translationX(0f).setDuration(240).start()
+    }
+
+    private fun closeCineMenu() {
+        val w = -(binding.cineMenuPanel.width.takeIf { it > 0 } ?: (300 * resources.displayMetrics.density).toInt()).toFloat()
+        binding.cineMenuPanel.animate().translationX(w).setDuration(200)
+            .withEndAction { binding.cineMenuOverlay.visibility = View.GONE }
+            .start()
+    }
+
+    private fun openCineList(title: String, kind: String, param: String = "") {
+        closeCineMenu()
+        startActivity(Intent(this, CinePopularAllActivity::class.java).apply {
+            putExtra("title", title)
+            putExtra("kind", kind)
+            putExtra("param", param)
+        })
+    }
+
     private fun updatePlatformLogoFor(pos: Int) {
         val a = binding.rvCineCoverflow.adapter as? CineCoverAdapter ?: return
         val m = a.itemAt(pos) ?: return
         val label = platformLabelOf(m)
-        binding.imgPlatformLogo.setImageResource(platformIconOf(label))
+        if (!m.platformLogoUrl.isNullOrBlank()) {
+            Glide.with(binding.imgPlatformLogo).load(m.platformLogoUrl).into(binding.imgPlatformLogo)
+        } else {
+            binding.imgPlatformLogo.setImageResource(platformIconOf(label))
+        }
     }
 
     private fun onDeckTouch(v: View, ev: android.view.MotionEvent): Boolean {
