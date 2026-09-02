@@ -56,11 +56,23 @@ class CinePopularAllActivity : AppCompatActivity() {
                     }
                 }
 
-                "platform" -> catalog.filter { m ->
-                    val p = param.lowercase()
-                    m.group.lowercase().contains(p) || m.title.lowercase().contains(p) ||
-                        (m.platformName?.lowercase()?.contains(p) == true) ||
-                        android.net.Uri.parse(m.url).host?.contains(p) == true
+                "platform" -> {
+                    val aliases = when (param.lowercase()) {
+                        "hbo" -> listOf("hbo", "max")
+                        "netflix" -> listOf("netflix")
+                        "disney" -> listOf("disney")
+                        "prime" -> listOf("prime", "amazon")
+                        else -> listOf(param.lowercase())
+                    }
+                    catalog.filter { m ->
+                        aliases.any { p ->
+                            m.group.lowercase().contains(p) ||
+                                m.title.lowercase().contains(p) ||
+                                m.searchTitle.lowercase().contains(p) ||
+                                (m.platformName?.lowercase()?.contains(p) == true) ||
+                                android.net.Uri.parse(m.url).host?.contains(p) == true
+                        }
+                    }
                 }
 
                 "alerts" -> {

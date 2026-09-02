@@ -2375,7 +2375,13 @@ class MainActivity : AppCompatActivity() {
         val m = a.itemAt(pos) ?: return
         val label = platformLabelOf(m)
         if (!m.platformLogoUrl.isNullOrBlank()) {
-            Glide.with(binding.imgPlatformLogo).load(m.platformLogoUrl).into(binding.imgPlatformLogo)
+            binding.imgPlatformLogo.setImageResource(android.R.color.transparent)
+            Glide.with(binding.imgPlatformLogo)
+                .load(m.platformLogoUrl)
+                .transform(com.bumptech.glide.load.resource.bitmap.RoundedCorners(
+                    (9 * resources.displayMetrics.density).toInt()
+                ))
+                .into(binding.imgPlatformLogo)
         } else {
             binding.imgPlatformLogo.setImageResource(platformIconOf(label))
         }
