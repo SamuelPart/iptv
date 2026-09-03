@@ -43,7 +43,7 @@ object ScraperConfig {
         Portal("PelisFlix", "https://pelisflix1.fans", "/?s={query}")
     )
 
-    private val DEFAULT_EXTRA_WEB_DOMAINS = listOf("repelis24.ing", "pelisflix1.fans", "pelisflix", "nupload.top", "nupload", "cuevana8.plus", "cuevana8", "cuevana", "hanerix.com", "hanerix")
+    private val DEFAULT_EXTRA_WEB_DOMAINS = listOf("repelis24.ing", "pelisflix1.fans", "pelisflix", "nupload.top", "nupload", "cuevana8.plus", "cuevana8", "cuevana", "hanerix.com", "hanerix", "hgcloud.to", "hgcloud")
 
     private val DEFAULT_AD_DOMAINS = listOf(
         "doubleclick.net", "googlesyndication.com", "google-analytics.com",

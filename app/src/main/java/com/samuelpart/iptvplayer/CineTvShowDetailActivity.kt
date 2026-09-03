@@ -372,8 +372,6 @@ class CineTvShowDetailActivity : AppCompatActivity() {
                 Intent(this@CineTvShowDetailActivity, WebVideoPlayerActivity::class.java).apply {
                     putExtra("channelName", displayTitle)
                     putExtra("channelUrl", streamUrl)
-                    putExtra("tmdbId", media.tmdbId ?: -1)
-                    putExtra("mediaType", media.type)
                     putExtra("streamReferer", activeReferer)
                     putExtra("streamUserAgent", activeUserAgent)
                 }

@@ -58,12 +58,6 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var originalHost: String = ""
     private var currentPageUrl: String = ""
     private var currentUserAgent: String = ""
-    private var expectedRuntimeSec: Int? = null
-    private var runtimeChecked = false
-    private var runtimeInflight = false
-    private var preferNativeDirect = false
-    private var tmdbIdArg: Int = -1
-    private var mediaTypeArg: String = "movie"
     private var pageBroken = false
     private var rescueTried = false
 
@@ -73,32 +67,93 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         // DOM & players junk
         private val AD_OVERLAY_JS = """
             (function(){
-                try {
-                    var junk = [];
-                    document.querySelectorAll('div[class*="ad"],div[id*="ad"],div[class*="banner"],.popup,.overlay-ad,.adsbygoogle,.a-ads,.bn,.banner,.vjs-ads-overlay').forEach(function(e){
-                        if (e && e.tagName && !e.querySelector('video')) junk.push(e);
-                    });
-                    document.querySelectorAll('iframe').forEach(function(f){
-                        var s = (f.className||'') + ' ' + (f.id||'') + ' ' + (f.src||'');
-                        if (/zoom|bingo|ad|banner|promo|doubleclick|pop/i.test(s) && !/play|video|stream|embed/i.test(s)) junk.push(f);
-                    });
-                    // Overlays fijos con alto zIndex sin video adentro
-                    document.querySelectorAll('div').forEach(function(e){
+                if (window.__adkiller !== 1) {
+                    window.__adkiller = 1;
+                    try {
+                        window.open = function(){ return null; };
+                        window.alert = function(){};
+                        window.confirm = function(){ return false; };
+                        window.prompt = function(){ return ''; };
+                        window.onbeforeunload = null;
+                    } catch (e0) {}
+                    try {
+                        var root = document.documentElement || document.body;
+                        if (root) {
+                            new MutationObserver(function(list){
+                                var dirty = false;
+                                for (var i = 0; i < list.length; i++) {
+                                    if (list[i].addedNodes && list[i].addedNodes.length > 0) { dirty = true; break; }
+                                }
+                                if (dirty && window.__zapAds) window.__zapAds();
+                            }).observe(root, { childList: true, subtree: true });
+                        }
+                    } catch (e1) {}
+                }
+                window.__zapAds = function() {
+                    try {
+                        var host = (location.hostname || '') + '';
+                        var junk = [];
+                        [
+                            'div[class*="ad"]', 'div[id*="ad"]', 'span[class*="ad"]',
+                            '.adsbygoogle', '.a-ads', '.bn', '.banner', '.popup',
+                            '.popunder', '.overlay-ad', '.vjs-ads-overlay', '.jw-ad',
+                            '.advert', 'ins.adsbygoogle', '[id^="aswift"]'
+                        ].forEach(function(sel){
+                            document.querySelectorAll(sel).forEach(function(e){
+                                if (e && !e.querySelector('video')) junk.push(e);
+                            });
+                        });
+                        document.querySelectorAll('a[target="_blank"]').forEach(function(a){
+                            var href = (a.getAttribute('href') || '') + '';
+                            if (href.length > 8 && href.indexOf(host) < 0) junk.push(a);
+                            else a.removeAttribute('target');
+                        });
+                        document.querySelectorAll('iframe').forEach(function(f){
+                            var src = (f.src || '') + '';
+                            var blob = (f.className || '') + ' ' + (f.id || '') + ' ' + src;
+                            var looksAd = /zoom|bingo|ad|banner|promo|doubleclick|pop|bet|casino|dating|ads/i.test(blob);
+                            var looksPlayer = /play|video|stream|embed|player|voe|mixdrop|streamtape|dood|filemoon|upstream|uqload|vidplay|emprex|hgcloud|hanerix|filelions|lulustream|dsvplay/i.test(blob);
+                            var cross = src.length > 8 && src.indexOf(host) < 0;
+                            if (looksAd && !looksPlayer) junk.push(f);
+                            else if (cross && !looksPlayer) junk.push(f);
+                        });
+                        document.querySelectorAll('div').forEach(function(e){
+                            if (junk.indexOf(e) >= 0) return;
+                            try {
+                                var st = window.getComputedStyle(e);
+                                var z = parseInt(st.zIndex || '0');
+                                if ((st.position === 'fixed' || st.position === 'absolute') && z > 90
+                                    && e.offsetWidth > window.innerWidth * 0.6
+                                    && !e.querySelector('video')
+                                    && !e.closest('.vjs-video,.jwplayer,.plyr,.player,.video-container')) {
+                                    junk.push(e);
+                                }
+                            } catch (ex) {}
+                        });
+                        junk.forEach(function(e){ try { e.style.display = 'none'; e.remove(); } catch (ex) {} });
+                        document.documentElement.style.overflow = 'auto';
+                        if (document.body) document.body.style.overflow = 'auto';
+                    } catch (e3) {}
+                };
+                if (window.__clickGuard !== 1) {
+                    window.__clickGuard = 1;
+                    document.addEventListener('click', function(ev){
                         try {
-                            var st = window.getComputedStyle(e);
-                            var z = parseInt(st.zIndex||'0');
-                            if ((st.position==='fixed'||st.position==='absolute') && z>90
-                                && e.offsetWidth > window.innerWidth*0.6 && !e.querySelector('video')
-                                && !e.closest('.vjs-video,.jwplayer,.plyr')) {
-                                junk.push(e);
+                            var host = (location.hostname || '') + '';
+                            var t = ev.target;
+                            while (t && t !== document.body) {
+                                if (t.tagName === 'A') {
+                                    var h = (t.getAttribute('href') || '') + '';
+                                    if (h.length > 8 && h.indexOf(host) < 0 && h.charAt(0) !== '#') {
+                                        ev.preventDefault(); ev.stopPropagation();
+                                    }
+                                }
+                                t = t.parentElement;
                             }
-                        } catch (ex) {}
-                    });
-                    junk.forEach(function(e){ try { e.style.display='none'; e.remove(); } catch (ex) {} });
-                    // Fake scroll disabler
-                    document.documentElement.style.overflow='auto';
-                    document.body && (document.body.style.overflow='auto');
-                } catch (e) {}
+                        } catch (e4) {}
+                    }, true);
+                }
+                window.__zapAds();
             })();
         """.trimIndent()
 
@@ -174,27 +229,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var isVideoRolling = false
     private var iframeHops = 0
     private var cinematicApplied = false
-    private var extractionAttempted = false
-    private val sniffedVideoUrls = java.util.concurrent.CopyOnWriteArrayList<String>()
 
-    private val DEEP_PICK_JS = "(function(){" +
-        "function ok(u){if(!u||typeof u!=='string')return false;if(!/^https?:/i.test(u))return false;" +
-        "var l=u.toLowerCase();" +
-        "return l.indexOf('m3u8')>=0||l.indexOf('.mp4')>=0||l.indexOf('.mpd')>=0||l.indexOf('webm')>=0||l.indexOf('videoplayback')>=0||l.indexOf('mime=video')>=0;}" +
-        "function strong(u){var l=u.toLowerCase();return l.indexOf('m3u8')>=0||l.indexOf('videoplayback')>=0||l.indexOf('mime=video')>=0;}" +
-        "var vs=document.querySelectorAll('video');" +
-        "for(var i=0;i<vs.length;i++){" +
-        "try{vs[i].preload='auto';if(vs[i].load)vs[i].load();}catch(el){}" +
-        "var d=vs[i].duration||0;var t=vs[i].currentSrc||vs[i].src;" +
-        "if(ok(t)){return 'DUR:'+Math.round(d)+'|'+t;}" +
-        "var ss=vs[i].querySelectorAll('source');" +
-        "for(var k=0;k<ss.length;k++){if(ok(ss[k].src)){return 'DUR:'+Math.round(d)+'|'+ss[k].src;}}" +
-        "}" +
-        "var all=document.querySelectorAll('source');" +
-        "for(var j=0;j<all.length;j++){if(ok(all[j].src)){return 'NODUR|'+all[j].src;}}" +
-        "try{var es=performance.getEntriesByType('resource');" +
-        "for(var r=es.length-1;r>=0;r--){var n=es[r].name;if(strong(n)){return 'NODUR|'+n;}}}catch(e){}" +
-        "return '';})();"
+
 
     private val CINEMATIC_JS = "(function(){" +
         "try {" +
@@ -213,9 +249,6 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         override fun run() {
             if (isFinishing || isDestroyed) return
             botTicks++
-            if (preferNativeDirect && botTicks >= 4 && botTicks % 2 == 0) {
-                tryExpressNativeExtraction()
-            }
             try {
                 if (isVideoRolling) {
                     // CORRIENDO: solo limpia anuncios, jamás clicks/.play()
@@ -254,11 +287,6 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     }
                 }
             } catch (_: Exception) { }
-            val nx = botTicks == 14 || botTicks == 22 ||
-                (preferNativeDirect && (botTicks == 8 || botTicks == 12 || botTicks == 16 || botTicks == 20 || botTicks == 26))
-            if ((!isVideoRolling || preferNativeDirect) && !extractionAttempted && nx) {
-                attemptProfessionalExtraction()
-            }
             if (!isVideoRolling && (pageBroken || botTicks >= 28)) {
                 triggerRescue()
                 return
@@ -288,14 +316,6 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
         val pageUrl = intent.getStringExtra("channelUrl") ?: ""
         originalHost = Uri.parse(pageUrl).host?.lowercase() ?: ""
-        tmdbIdArg = intent.getIntExtra("tmdbId", -1)
-        mediaTypeArg = intent.getStringExtra("mediaType") ?: "movie"
-        preferNativeDirect = originalHost.contains("hanerix")
-        if (preferNativeDirect) {
-            fetchRuntimeIfNeeded {}
-            binding.webFramePlayer.visibility = View.INVISIBLE
-            binding.txtWebBootMsg.text = "Extrayendo enlace directo…"
-        }
         binding.txtWebPlayerTitle.text = title
 
         binding.btnWebPlayerBack.setOnClickListener { finish() }
@@ -344,17 +364,11 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     }) {
                     return emptyResponse
                 }
-                // sniffer profesional: urls de video verdadero que la pagina pida
-                if (sniffedVideoUrls.size < 40 &&
-                    (listOf(".m3u8", ".mp4", ".mpd", ".webm").any { url.lowercase().contains(it) } ||
-                        url.contains("videoplayback", true) || url.contains("mime=video", true))
-                ) {
-                    sniffedVideoUrls.add(url)
-                }
                 return super.shouldInterceptRequest(view, request)
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                try { view?.evaluateJavascript(AD_OVERLAY_JS, null) } catch (_: Exception) {}
                 binding.webPlayerProgress.visibility = View.VISIBLE
                 if (url != null) currentPageUrl = url
             }
@@ -465,128 +479,10 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             }
         }
     }
-    /** Express (hanerix): apenas el BOT abra el iframe y pida el m3u8,
-     *  cazamos el enlace VERIFICADO y lo lanzamos a VLC nativo al toque. */
-    private fun tryExpressNativeExtraction() {
-        try {
-            binding.webFramePlayer.evaluateJavascript(DEEP_PICK_JS) { v ->
-                if (isFinishing || isDestroyed) return@evaluateJavascript
-                val raw = v ?: ""
-                val found = buildString {
-                    for (ci in 0 until raw.length) {
-                        val ch = raw[ci]
-                        if (ch.code != 92 && ch.code != 34) append(ch)
-                    }
-                }
-                val pick = pickVerified(found, expectedRuntimeSec)
-                if (pick != null) { launchDirectVideo(pick); return@evaluateJavascript }
-                val sniff = sniffedVideoUrls.lastOrNull { isStrongStream(it) }
-                if (sniff != null) launchDirectVideo(sniff)
-            }
-        } catch (_: Exception) { }
-    }
-
-    /** Extractor profesional de ENLACE DIRECTO — CON FIRMA DE DURACION:
-     *  solo acepta el video si su duracion casa con el runtime de TMDb
-     *  (o supera el piso anti-ads 1500s). Los banners/ads jamas pasan. */
-    private fun attemptProfessionalExtraction() {
-        extractionAttempted = true
-        android.widget.Toast.makeText(
-            this, "Buscando el enlace directo del video…", android.widget.Toast.LENGTH_SHORT
-        ).show()
-        fetchRuntimeIfNeeded { expected ->
-            try {
-                binding.webFramePlayer.evaluateJavascript(DEEP_PICK_JS) { v ->
-                    if (isFinishing || isDestroyed) return@evaluateJavascript
-                    val raw = v ?: ""
-                    val found = buildString {
-                        for (ci in 0 until raw.length) {
-                            val ch = raw[ci]
-                            if (ch.code != 92 && ch.code != 34) append(ch)
-                        }
-                    }
-                    val pick = pickVerified(found, expected)
-                    when {
-                        pick != null -> launchDirectVideo(pick)
-                        else -> {
-                            val sniff = sniffedVideoUrls.lastOrNull { isStrongStream(it) }
-                            if (sniff != null) launchDirectVideo(sniff)
-                            else extractionAttempted = false
-                        }
-                    }
-                }
-            } catch (_: Exception) {
-                extractionAttempted = false
-            }
-        }
-    }
-
-    private fun fetchRuntimeIfNeeded(cb: (Int?) -> Unit) {
-        if (runtimeChecked) { cb(expectedRuntimeSec); return }
-        if (tmdbIdArg <= 0 || runtimeInflight) { cb(expectedRuntimeSec); return }
-        runtimeInflight = true
-        lifecycleScope.launch {
-            val sec = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                try { CineRepository.fetchRuntimeSeconds(tmdbIdArg, mediaTypeArg) } catch (_: Exception) { null }
-            }
-            expectedRuntimeSec = sec
-            runtimeChecked = true
-            runtimeInflight = false
-            cb(sec)
-        }
-    }
-
-    private fun isStrongStream(u: String): Boolean {
-        val l = u.lowercase()
-        return l.contains("m3u8") || l.contains("videoplayback") || l.contains("mime=video")
-    }
-
-    /** DUR verifica: diff <= max(10% runtime, 480s) o piso 1500s.
-     *  NODUR solo si es strong. */
-    private fun pickVerified(payload: String, expectedSec: Int?): String? {
-        if (payload.isEmpty()) return null
-        if (payload.startsWith("DUR:")) {
-            val dur = payload.substringAfter("DUR:").substringBefore('|').toIntOrNull() ?: 0
-            val url = payload.substringAfter('|')
-            if (!url.startsWith("http")) return null
-            // dur<=0: metadata no cargo aun — acepta solo señales fuertes
-            if (dur <= 0) {
-                return if (isStrongStream(url)) url else null
-            }
-            val okDur = expectedSec?.let {
-                kotlin.math.abs(dur - it) <= maxOf(it / 10, 480)
-            } ?: (dur >= 800)
-            return if (okDur) url else null
-        }
-        if (payload.startsWith("NODUR|")) {
-            val url = payload.substringAfter('|')
-            return if (url.startsWith("http") && isStrongStream(url)) url else null
-        }
-        return null
-    }
-
-
-    private fun launchDirectVideo(directUrl: String) {
-        botHandler.removeCallbacks(botRunnable)
-        android.widget.Toast.makeText(
-            this, "Enlace directo encontrado — abriendo reproductor nativo", android.widget.Toast.LENGTH_SHORT
-        ).show()
-        startActivity(
-            Intent(this, PlayerActivity::class.java).apply {
-                putExtra("channelName", binding.txtWebPlayerTitle.text?.toString() ?: "Video")
-                putExtra("channelUrl", directUrl)
-                putExtra("streamReferer", currentPageUrl.ifBlank { "https://$originalHost/" })
-                putExtra("streamUserAgent", currentUserAgent)
-                putExtra("freshStream", true)
-            }
-        )
-        finish()
-    }
 
     /** El video empezo: la capa oscura se desvanece y el video toma TODA
      *  la pantalla — el usuario jamas ve la pagina de origen. */
     private fun showCinematic() {
-        if (preferNativeDirect) return // hanerix jamas muestra la web
         if (cinematicApplied) return
         cinematicApplied = true
         try {
