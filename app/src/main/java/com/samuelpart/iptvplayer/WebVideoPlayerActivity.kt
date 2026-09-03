@@ -212,6 +212,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return true
                 val host = Uri.parse(url).host?.lowercase() ?: ""
+                // Iframes internos (servers/embeds que el portal invoca): SÍ cargan
+                if (request?.isForMainFrame == false) return false
                 // Nada de salirse a Google/anuncios: solo host original (o esquemas base)
                 return !(host == originalHost || host.endsWith(".$originalHost") ||
                     url.startsWith("about:") || url.startsWith("data:"))
@@ -301,14 +303,16 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    /** Anti-caida: si el iframe murio, buscar el MISMO titulo en los portales
-     *  (TioPlus, RePelis24 etc) y reproducir la primera via en VLC nativo. */
+    /** Anti-caida SIN EXTRACCION: si el iframe murio, buscar el MISMO titulo
+     *  en los portales (TioPlus, RePelis24, RePelis24 Oficial, avcos
+     *  pelisflix1.fans si esta habilitado) y RECARGAR esa pagina aqui mismo —
+     *  el BOT se encargara de darle play a la nueva web/embed. Nada de VLC. */
     private fun triggerRescue() {
         if (rescueTried || isFinishing || isDestroyed) return
         rescueTried = true
         botHandler.removeCallbacks(botRunnable)
         val title = binding.txtWebPlayerTitle.text?.toString()?.ifBlank { null } ?: "esa pelicula"
-        android.widget.Toast.makeText(this, "Enlace caducado — buscando fuentes alternativas…", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(this, "Enlace caducado — buscando otra fuente…", android.widget.Toast.LENGTH_SHORT).show()
         lifecycleScope.launch {
             try {
                 val query = title.replace(Regex("[^A-Za-z0-9 ]"), " ").trim()
@@ -317,28 +321,23 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 }
                 val alt = results.firstOrNull { m ->
                     val h = Uri.parse(m.url).host?.lowercase() ?: ""
-                    h.contains(originalHost).not() && !isEmbedUrl(m.url)
+                    h != originalHost && !h.endsWith(".$originalHost") && !isEmbedUrl(m.url)
                 } ?: results.firstOrNull { !isEmbedUrl(it.url) }
                 if (alt == null) {
                     android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Sin alternativas por ahora: $title", android.widget.Toast.LENGTH_LONG).show()
                     return@launch
                 }
-                android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Probando: ${alt.title}…", android.widget.Toast.LENGTH_SHORT).show()
-                val resolved = CineScraper.resolveBestVideoUrl(this@WebVideoPlayerActivity, alt.url)
-                if (resolved != null && !isFinishing) {
-                    startActivity(
-                        Intent(this@WebVideoPlayerActivity, PlayerActivity::class.java).apply {
-                            putExtra("channelName", title)
-                            putExtra("channelUrl", resolved.url)
-                            putExtra("streamReferer", resolved.referer)
-                            putExtra("streamUserAgent", resolved.userAgent)
-                        }
-                    )
-                    finish()
-                } else {
-                    android.widget.Toast.makeText(this@WebVideoPlayerActivity, "No se pudo reiniciar la reproduccion", android.widget.Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
+                android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Nueva fuente: ${alt.title}…", android.widget.Toast.LENGTH_SHORT).show()
+                // Reinicia sobre la MISMA pantalla: nuevo host, nueva carcel, BOT de cero
+                originalHost = Uri.parse(alt.url).host?.lowercase() ?: originalHost
+                pageBroken = false
+                isVideoRolling = false
+                botTicks = 0
+                botHandler.removeCallbacks(botRunnable)
+                binding.webFramePlayer.loadUrl(
+                    alt.url, mapOf("Referer" to "https://$originalHost/")
+                )
+            } catch (_: Exception) {
                 android.widget.Toast.makeText(this@WebVideoPlayerActivity, "No se pudo reiniciar la reproduccion", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
