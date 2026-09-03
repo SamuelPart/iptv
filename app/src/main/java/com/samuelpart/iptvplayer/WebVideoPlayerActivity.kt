@@ -58,6 +58,11 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var originalHost: String = ""
     private var currentPageUrl: String = ""
     private var currentUserAgent: String = ""
+    private var expectedRuntimeSec: Int? = null
+    private var runtimeChecked = false
+    private var runtimeInflight = false
+    private var tmdbIdArg: Int = -1
+    private var mediaTypeArg: String = "movie"
     private var pageBroken = false
     private var rescueTried = false
 
@@ -172,25 +177,22 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private val sniffedVideoUrls = java.util.concurrent.CopyOnWriteArrayList<String>()
 
     private val DEEP_PICK_JS = "(function(){" +
-        "function ok(u){" +
-        "if (!u || typeof u !== 'string') return false;" +
-        "if (!/^https?:/i.test(u)) return false;" +
-        "return /\\.(m3u8|mpd|mp4|webm)(\\?|&|#|$)/i.test(u) || /videoplayback|mime=video/i.test(u);" +
+        "function ok(u){if(!u||typeof u!=='string')return false;if(!/^https?:/i.test(u))return false;" +
+        "var l=u.toLowerCase();" +
+        "return l.indexOf('m3u8')>=0||l.indexOf('.mp4')>=0||l.indexOf('.mpd')>=0||l.indexOf('webm')>=0||l.indexOf('videoplayback')>=0||l.indexOf('mime=video')>=0;}" +
+        "function strong(u){var l=u.toLowerCase();return l.indexOf('m3u8')>=0||l.indexOf('videoplayback')>=0||l.indexOf('mime=video')>=0;}" +
+        "var vs=document.querySelectorAll('video');" +
+        "for(var i=0;i<vs.length;i++){" +
+        "var d=vs[i].duration||0;var t=vs[i].currentSrc||vs[i].src;" +
+        "if(ok(t)){return 'DUR:'+Math.round(d)+'|'+t;}" +
+        "var ss=vs[i].querySelectorAll('source');" +
+        "for(var k=0;k<ss.length;k++){if(ok(ss[k].src)){return 'DUR:'+Math.round(d)+'|'+ss[k].src;}}" +
         "}" +
-        "var vs = document.querySelectorAll('video');" +
-        "for (var i = 0; i < vs.length; i++) {" +
-        "var s = vs[i].currentSrc || vs[i].src; if (ok(s)) return s;" +
-        "var ss = vs[i].querySelectorAll('source');" +
-        "for (var k = 0; k < ss.length; k++) { if (ok(ss[k].src)) return ss[k].src; }" +
-        "}" +
-        "var all = document.querySelectorAll('source');" +
-        "for (var j = 0; j < all.length; j++) { if (ok(all[j].src)) return all[j].src; }" +
-        "try {" +
-        "var es = performance.getEntriesByType('resource');" +
-        "for (var r = es.length - 1; r >= 0; r--) { if (ok(es[r].name)) return es[r].name; }" +
-        "} catch (e) {}" +
-        "return '';" +
-        "})();"
+        "var all=document.querySelectorAll('source');" +
+        "for(var j=0;j<all.length;j++){if(ok(all[j].src)){return 'NODUR|'+all[j].src;}}" +
+        "try{var es=performance.getEntriesByType('resource');" +
+        "for(var r=es.length-1;r>=0;r--){var n=es[r].name;if(strong(n)){return 'NODUR|'+n;}}}catch(e){}" +
+        "return '';})();"
 
     private val CINEMATIC_JS = "(function(){" +
         "try {" +
@@ -279,6 +281,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
         val pageUrl = intent.getStringExtra("channelUrl") ?: ""
         originalHost = Uri.parse(pageUrl).host?.lowercase() ?: ""
+        tmdbIdArg = intent.getIntExtra("tmdbId", -1)
+        mediaTypeArg = intent.getStringExtra("mediaType") ?: "movie"
         binding.txtWebPlayerTitle.text = title
 
         binding.btnWebPlayerBack.setOnClickListener { finish() }
@@ -448,41 +452,81 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             }
         }
     }
-
-    /** Extractor profesional de ENLACE DIRECTO (cero iframe/embed/player):
-     *  cuando el BOT no puede darle play in-page, saca de la propia pagina/
-     *  red el .mp4/.m3u8 verdadero y lo entrega a VLC nativo. */
+    /** Extractor profesional de ENLACE DIRECTO — CON FIRMA DE DURACION:
+     *  solo acepta el video si su duracion casa con el runtime de TMDb
+     *  (o supera el piso anti-ads 1500s). Los banners/ads jamas pasan. */
     private fun attemptProfessionalExtraction() {
         extractionAttempted = true
         android.widget.Toast.makeText(
-            this, "Buscando enlace directo del video…", android.widget.Toast.LENGTH_SHORT
+            this, "Buscando el enlace directo del video…", android.widget.Toast.LENGTH_SHORT
         ).show()
-
-        // 1) red sniffada (la verdad del traffico)
-        val sniff = sniffedVideoUrls.lastOrNull()
-        if (sniff != null) { launchDirectVideo(sniff); return }
-
-        // 2) DOM + performance entries profundos (incl. hop pages)
-        try {
-            binding.webFramePlayer.evaluateJavascript(DEEP_PICK_JS) { v ->
-                if (isFinishing || isDestroyed) return@evaluateJavascript
-                val raw = v ?: return@evaluateJavascript
-                val found = buildString {
-                    for (ci in 0 until raw.length) {
-                        val ch = raw[ci]
-                        if (ch.code != 92 && ch.code != 34) append(ch)
+        fetchRuntimeIfNeeded { expected ->
+            try {
+                binding.webFramePlayer.evaluateJavascript(DEEP_PICK_JS) { v ->
+                    if (isFinishing || isDestroyed) return@evaluateJavascript
+                    val raw = v ?: ""
+                    val found = buildString {
+                        for (ci in 0 until raw.length) {
+                            val ch = raw[ci]
+                            if (ch.code != 92 && ch.code != 34) append(ch)
+                        }
+                    }
+                    val pick = pickVerified(found, expected)
+                    when {
+                        pick != null -> launchDirectVideo(pick)
+                        else -> {
+                            val sniff = sniffedVideoUrls.lastOrNull { isStrongStream(it) }
+                            if (sniff != null) launchDirectVideo(sniff)
+                            else extractionAttempted = false
+                        }
                     }
                 }
-                if (found.startsWith("http")) {
-                    launchDirectVideo(found)
-                } else {
-                    extractionAttempted = false // segundo intento en tick 22
-                }
+            } catch (_: Exception) {
+                extractionAttempted = false
             }
-        } catch (_: Exception) {
-            extractionAttempted = false
         }
     }
+
+    private fun fetchRuntimeIfNeeded(cb: (Int?) -> Unit) {
+        if (runtimeChecked) { cb(expectedRuntimeSec); return }
+        if (tmdbIdArg <= 0 || runtimeInflight) { cb(expectedRuntimeSec); return }
+        runtimeInflight = true
+        lifecycleScope.launch {
+            val sec = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                try { CineRepository.fetchRuntimeSeconds(tmdbIdArg, mediaTypeArg) } catch (_: Exception) { null }
+            }
+            expectedRuntimeSec = sec
+            runtimeChecked = true
+            runtimeInflight = false
+            cb(sec)
+        }
+    }
+
+    private fun isStrongStream(u: String): Boolean {
+        val l = u.lowercase()
+        return l.contains("m3u8") || l.contains("videoplayback") || l.contains("mime=video")
+    }
+
+    /** DUR verifica: diff <= max(10% runtime, 480s) o piso 1500s.
+     *  NODUR solo si es strong. */
+    private fun pickVerified(payload: String, expectedSec: Int?): String? {
+        if (payload.isEmpty()) return null
+        if (payload.startsWith("DUR:")) {
+            val dur = payload.substringAfter("DUR:").substringBefore('|').toIntOrNull() ?: 0
+            val url = payload.substringAfter('|')
+            if (!url.startsWith("http")) return null
+            val okDur = expectedSec?.let {
+                kotlin.math.abs(dur - it) <= maxOf(it / 10, 480)
+            } ?: (dur >= 1500)
+            return if (okDur) url else null
+        }
+        if (payload.startsWith("NODUR|")) {
+            val url = payload.substringAfter('|')
+            return if (url.startsWith("http") && isStrongStream(url)) url else null
+        }
+        return null
+    }
+
 
     private fun launchDirectVideo(directUrl: String) {
         botHandler.removeCallbacks(botRunnable)
