@@ -56,6 +56,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private val botHandler = Handler(Looper.getMainLooper())
     private var botTicks = 0
     private var originalHost: String = ""
+    private var pageBroken = false
+    private var rescueTried = false
 
     companion object {
         private val EMBED_HOSTS = listOf("nupload")
@@ -151,6 +153,10 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     }
                 }
             } catch (_: Exception) { }
+            if (!isVideoRolling && (pageBroken || botTicks >= 28)) {
+                triggerRescue()
+                return
+            }
             val delay = if (isVideoRolling) 3000L else 900L
             val limit = if (isVideoRolling) 6000 else 200
             if (botTicks < limit) botHandler.postDelayed(this, delay)
@@ -230,10 +236,22 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 binding.webPlayerProgress.visibility = View.GONE
+                if (pageBroken) { triggerRescue(); return }
                 // Dispara el BOT por PRIMERA vez al terminarse la carga…
                 botHandler.removeCallbacks(botRunnable)
                 botTicks = 0
                 botHandler.postDelayed(botRunnable, 400)
+            }
+
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: android.webkit.WebResourceResponse?) {
+                val code = errorResponse?.statusCode ?: 0
+                if ((request?.isForMainFrame == true) && code >= 400) {
+                    pageBroken = true
+                }
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                if (request?.isForMainFrame == true) pageBroken = true
             }
         }
 
@@ -281,6 +299,49 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         binding.frameWebFullscreen.removeAllViews()
         binding.webFramePlayer.destroy()
         super.onDestroy()
+    }
+
+    /** Anti-caida: si el iframe murio, buscar el MISMO titulo en los portales
+     *  (TioPlus, RePelis24 etc) y reproducir la primera via en VLC nativo. */
+    private fun triggerRescue() {
+        if (rescueTried || isFinishing || isDestroyed) return
+        rescueTried = true
+        botHandler.removeCallbacks(botRunnable)
+        val title = binding.txtWebPlayerTitle.text?.toString()?.ifBlank { null } ?: "esa pelicula"
+        android.widget.Toast.makeText(this, "Enlace caducado — buscando fuentes alternativas…", android.widget.Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            try {
+                val query = title.replace(Regex("[^A-Za-z0-9 ]"), " ").trim()
+                val results = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    try { CineScraper.searchPortalsHeadless(query) } catch (_: Exception) { emptyList() }
+                }
+                val alt = results.firstOrNull { m ->
+                    val h = Uri.parse(m.url).host?.lowercase() ?: ""
+                    h.contains(originalHost).not() && !isEmbedUrl(m.url)
+                } ?: results.firstOrNull { !isEmbedUrl(it.url) }
+                if (alt == null) {
+                    android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Sin alternativas por ahora para "$title"", android.widget.Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Probando: ${alt.title}…", android.widget.Toast.LENGTH_SHORT).show()
+                val resolved = CineScraper.resolveBestVideoUrl(this@WebVideoPlayerActivity, alt.url)
+                if (resolved != null && !isFinishing) {
+                    startActivity(
+                        Intent(this@WebVideoPlayerActivity, PlayerActivity::class.java).apply {
+                            putExtra("channelName", title)
+                            putExtra("channelUrl", resolved.url)
+                            putExtra("streamReferer", resolved.referer)
+                            putExtra("streamUserAgent", resolved.userAgent)
+                        }
+                    )
+                    finish()
+                } else {
+                    android.widget.Toast.makeText(this@WebVideoPlayerActivity, "No se pudo reiniciar la reproduccion", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(this@WebVideoPlayerActivity, "No se pudo reiniciar la reproduccion", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private val CAST_PERMISSION_REQUEST_CODE = 4201
