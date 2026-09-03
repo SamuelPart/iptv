@@ -432,9 +432,11 @@ class PlayerActivity : AppCompatActivity() {
 
         binding.playerProgress.visibility = View.VISIBLE
 
+        val freshStream = intent.getBooleanExtra("freshStream", false)
         val savedPos = getSharedPreferences("iptv_pref", android.content.Context.MODE_PRIVATE)
             .getLong("pos_$channelName", 0L)
-        pendingSeekPosition = if (startPosition > 0L) startPosition else savedPos
+        // freshStream: recien extraido por el BOT -> NUNCA reanuda
+        pendingSeekPosition = if (startPosition > 0L) startPosition else if (freshStream) 0L else savedPos
 
         try {
             // Optimized VLC arguments for peak Android IPTV performance
@@ -470,9 +472,15 @@ class PlayerActivity : AppCompatActivity() {
                             updatePlayPauseButtonIcon(true)
                             
                             if (pendingSeekPosition > 0L) {
-                                mediaPlayer?.time = pendingSeekPosition
-                                Toast.makeText(this@PlayerActivity, "Reanudando desde ${formatTime(pendingSeekPosition)}", Toast.LENGTH_SHORT).show()
-                                pendingSeekPosition = 0L // reset
+                                val len = mediaPlayer?.length ?: 0L
+                                // CLAMP: posicion guardada > final real = se cerraba solo
+                                if (len > 0 && pendingSeekPosition >= len - 20000L) {
+                                    pendingSeekPosition = 0L
+                                } else {
+                                    mediaPlayer?.time = pendingSeekPosition
+                                    Toast.makeText(this@PlayerActivity, "Reanudando desde ${formatTime(pendingSeekPosition)}", Toast.LENGTH_SHORT).show()
+                                    pendingSeekPosition = 0L
+                                }
                             }
                             
                             startTimelineUpdates()

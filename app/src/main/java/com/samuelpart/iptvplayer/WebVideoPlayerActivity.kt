@@ -291,7 +291,11 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         tmdbIdArg = intent.getIntExtra("tmdbId", -1)
         mediaTypeArg = intent.getStringExtra("mediaType") ?: "movie"
         preferNativeDirect = originalHost.contains("hanerix")
-        if (preferNativeDirect) fetchRuntimeIfNeeded {}
+        if (preferNativeDirect) {
+            fetchRuntimeIfNeeded {}
+            binding.webFramePlayer.visibility = View.INVISIBLE
+            binding.txtWebBootMsg.text = "Extrayendo enlace directo…"
+        }
         binding.txtWebPlayerTitle.text = title
 
         binding.btnWebPlayerBack.setOnClickListener { finish() }
@@ -573,6 +577,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 putExtra("channelUrl", directUrl)
                 putExtra("streamReferer", currentPageUrl.ifBlank { "https://$originalHost/" })
                 putExtra("streamUserAgent", currentUserAgent)
+                putExtra("freshStream", true)
             }
         )
         finish()
@@ -581,6 +586,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     /** El video empezo: la capa oscura se desvanece y el video toma TODA
      *  la pantalla — el usuario jamas ve la pagina de origen. */
     private fun showCinematic() {
+        if (preferNativeDirect) return // hanerix jamas muestra la web
         if (cinematicApplied) return
         cinematicApplied = true
         try {
