@@ -61,6 +61,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var expectedRuntimeSec: Int? = null
     private var runtimeChecked = false
     private var runtimeInflight = false
+    private var preferNativeDirect = false
     private var tmdbIdArg: Int = -1
     private var mediaTypeArg: String = "movie"
     private var pageBroken = false
@@ -212,6 +213,9 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         override fun run() {
             if (isFinishing || isDestroyed) return
             botTicks++
+            if (preferNativeDirect && botTicks >= 4 && botTicks % 2 == 0) {
+                tryExpressNativeExtraction()
+            }
             try {
                 if (isVideoRolling) {
                     // CORRIENDO: solo limpia anuncios, jamás clicks/.play()
@@ -250,7 +254,9 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     }
                 }
             } catch (_: Exception) { }
-            if (!isVideoRolling && !extractionAttempted && (botTicks == 14 || botTicks == 22)) {
+            val nx = botTicks == 14 || botTicks == 22 ||
+                (preferNativeDirect && (botTicks == 8 || botTicks == 12 || botTicks == 16 || botTicks == 20 || botTicks == 26))
+            if ((!isVideoRolling || preferNativeDirect) && !extractionAttempted && nx) {
                 attemptProfessionalExtraction()
             }
             if (!isVideoRolling && (pageBroken || botTicks >= 28)) {
@@ -284,6 +290,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         originalHost = Uri.parse(pageUrl).host?.lowercase() ?: ""
         tmdbIdArg = intent.getIntExtra("tmdbId", -1)
         mediaTypeArg = intent.getStringExtra("mediaType") ?: "movie"
+        preferNativeDirect = originalHost.contains("hanerix")
+        if (preferNativeDirect) fetchRuntimeIfNeeded {}
         binding.txtWebPlayerTitle.text = title
 
         binding.btnWebPlayerBack.setOnClickListener { finish() }
@@ -453,6 +461,27 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             }
         }
     }
+    /** Express (hanerix): apenas el BOT abra el iframe y pida el m3u8,
+     *  cazamos el enlace VERIFICADO y lo lanzamos a VLC nativo al toque. */
+    private fun tryExpressNativeExtraction() {
+        try {
+            binding.webFramePlayer.evaluateJavascript(DEEP_PICK_JS) { v ->
+                if (isFinishing || isDestroyed) return@evaluateJavascript
+                val raw = v ?: ""
+                val found = buildString {
+                    for (ci in 0 until raw.length) {
+                        val ch = raw[ci]
+                        if (ch.code != 92 && ch.code != 34) append(ch)
+                    }
+                }
+                val pick = pickVerified(found, expectedRuntimeSec)
+                if (pick != null) { launchDirectVideo(pick); return@evaluateJavascript }
+                val sniff = sniffedVideoUrls.lastOrNull { isStrongStream(it) }
+                if (sniff != null) launchDirectVideo(sniff)
+            }
+        } catch (_: Exception) { }
+    }
+
     /** Extractor profesional de ENLACE DIRECTO — CON FIRMA DE DURACION:
      *  solo acepta el video si su duracion casa con el runtime de TMDb
      *  (o supera el piso anti-ads 1500s). Los banners/ads jamas pasan. */
