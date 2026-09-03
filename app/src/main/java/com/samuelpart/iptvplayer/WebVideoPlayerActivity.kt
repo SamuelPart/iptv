@@ -320,7 +320,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     h.contains(originalHost).not() && !isEmbedUrl(m.url)
                 } ?: results.firstOrNull { !isEmbedUrl(it.url) }
                 if (alt == null) {
-                    android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Sin alternativas por ahora para "$title"", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Sin alternativas por ahora: $title", android.widget.Toast.LENGTH_LONG).show()
                     return@launch
                 }
                 android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Probando: ${alt.title}…", android.widget.Toast.LENGTH_SHORT).show()
