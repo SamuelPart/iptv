@@ -415,27 +415,18 @@ class PlayerActivity : AppCompatActivity() {
         // visit the source page RIGHT NOW, extract the fresh temporary video URL
         // (they expire every few hours, so nothing is stored) and then play it.
         // Live TV channels are always direct streams: never resolve them.
+        // EXTRACTOR RETIRADO: las paginas/embeds NUNCA pasan por VLC — van al
+        // WebPlayer fullscreen con BOT (vive en otra activity).
         if (!isLiveTv && CineScraper.shouldResolvePage(streamUrl)) {
-            if (pageResolveAttempted) {
-                binding.playerProgress.visibility = View.GONE
-                Toast.makeText(this, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
-                return
-            }
-            pageResolveAttempted = true
-            binding.playerProgress.visibility = View.VISIBLE
-            lifecycleScope.launch {
-                val resolved = CineScraper.resolveBestVideoUrl(this@PlayerActivity, streamUrl)
-                if (isFinishing || isDestroyed) return@launch
-                if (resolved != null) {
-                    channelUrl = resolved.url
-                    streamReferer = resolved.referer
-                    streamUserAgent = resolved.userAgent
-                    initializePlayer()
-                } else {
-                    binding.playerProgress.visibility = View.GONE
-                    Toast.makeText(this@PlayerActivity, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
+            startActivity(
+                Intent(this, WebVideoPlayerActivity::class.java).apply {
+                    putExtra("channelName", channelName)
+                    putExtra("channelUrl", streamUrl)
+                    putExtra("streamReferer", streamReferer)
+                    putExtra("streamUserAgent", streamUserAgent)
                 }
-            }
+            )
+            finish()
             return
         }
 

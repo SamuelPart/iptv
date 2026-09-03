@@ -138,7 +138,7 @@ object CineScraper {
      */
     fun shouldResolvePage(url: String): Boolean {
         if (!url.startsWith("http://") && !url.startsWith("https://")) return false
-        if (WebViewResolver.looksLikeVideoUrl(url)) return false // already a direct stream
+            if (CineRepository.looksLikeDirectVideo(url)) return false // already a direct stream
         if (ScraperConfig.isWebPageUrl(url)) return true
         if (ScraperConfig.isKnownHosterUrl(url)) return true
         val path = (Uri.parse(url).path ?: "").lowercase()
@@ -152,62 +152,6 @@ object CineScraper {
      *  2) If the page needs JavaScript, a hidden WebView runs it like a browser
      *     and intercepts the fresh video request, headers included.
      */
-    suspend fun resolveBestVideoUrl(context: Context, pageUrl: String): WebViewResolver.Resolved? {
-        // Iframe-hosts: jamas se extraen — van directo al reproductor-web
-        // (PlayerActivity redirige); null al instante = cero espera.
-        if (WebVideoPlayerActivity.isEmbedUrl(pageUrl)) return null
-        val fast = resolveWebVideoUrl(pageUrl)
-        if (!fast.isNullOrEmpty()) {
-            return WebViewResolver.Resolved(url = fast, referer = pageUrl, userAgent = CHROME_UA)
-        }
-        // Iframe-hosts (nupload): UNA pasada CORTA (7s) — si no publican el
-        // video tras los auto-clicks de play, no esperamos eternidad. El resto
-        // sigue con doble pasada de 22s como antes.
-        if (WebVideoPlayerActivity.isEmbedUrl(pageUrl)) {
-            return WebViewResolver.resolve(context, pageUrl, timeoutMs = 7000L)
-        }
-        // Un segundo pase si el player de JS tardo demasiado en publicar el stream
-        return WebViewResolver.resolve(context, pageUrl)
-            ?: WebViewResolver.resolve(context, pageUrl)
-    }
-
-    /**
-     * Fast plain-HTTP resolution. Follows one level of embedded player
-     * (iframe) before giving up — most portals hide the video one hop deeper.
-     */
-    suspend fun resolveWebVideoUrl(webUrl: String): String? = withContext(Dispatchers.IO) {
-        try {
-            val html = fetchHtml(webUrl) ?: return@withContext null
-
-            // 1. Standard HTML5 source tags: <source src="https://..." type="video/mp4">
-            val sourcePattern = Pattern.compile("<source[^>]+src=\"([^\"]+)\"", Pattern.CASE_INSENSITIVE)
-            val sourceMatcher = sourcePattern.matcher(html)
-            while (sourceMatcher.find()) {
-                val src = absolutize(sourceMatcher.group(1), webUrl)
-                if (WebViewResolver.looksLikeVideoUrl(src)) {
-                    return@withContext src
-                }
-            }
-
-            // 2. Raw media links directly in the page source
-            val streams = extractVideoStreams(html)
-            val direct = streams.firstOrNull { WebViewResolver.looksLikeVideoUrl(it) }
-            if (direct != null) {
-                return@withContext direct
-            }
-
-            // 3. The page only exposes an embedded player: follow it one level deeper
-            val embed = streams.firstOrNull()
-            if (embed != null && !WebViewResolver.looksLikeVideoUrl(embed)) {
-                val innerHtml = fetchHtml(embed) ?: return@withContext null
-                return@withContext extractVideoStreams(innerHtml).firstOrNull { WebViewResolver.looksLikeVideoUrl(it) }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return@withContext null
-    }
-
     private fun absolutize(src: String, pageUrl: String): String {
         return when {
             src.startsWith("//") -> "https:$src"

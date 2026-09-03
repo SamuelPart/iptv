@@ -362,9 +362,11 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         // Hide system status bar (clocks, battery, etc.)
         hideStatusBarInline()
 
-        // EMBED/IFRAME: va DIRECTO al WebPlayer fullscreen (cero extractor,
-        // cero player VLC vertical). VLC solo recibe video directo real.
-        if (WebVideoPlayerActivity.isEmbedUrl(streamUrl)) {
+        // OBsoleto el extractor: pagina/embed -> WebPlayer + BOT; solo VLC para
+        // video directo real (extensiones).
+        if (CineRepository.looksLikeDirectVideo(streamUrl)) {
+            playStreamDirectly(streamUrl, startMs, displayTitle)
+        } else {
             stopInlinePlayback()
             startActivity(
                 Intent(this@CineTvShowDetailActivity, WebVideoPlayerActivity::class.java).apply {
@@ -376,30 +378,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
             )
             return
         }
-        // Check if the URL is a streaming page or embedded player rather than a direct
-        // video stream. Domains come from ScraperConfig (hot-updated from GitHub), so
-        // dead portal domains are fixed remotely. The page is visited RIGHT NOW to
-        // extract the fresh temporary video URL — nothing is stored.
-        if (CineScraper.shouldResolvePage(streamUrl)) {
-            Toast.makeText(this@CineTvShowDetailActivity, "Extrayendo video en tiempo real...", Toast.LENGTH_SHORT).show()
-            lifecycleScope.launch {
-                val resolved = CineScraper.resolveBestVideoUrl(this@CineTvShowDetailActivity, streamUrl)
-                if (isFinishing || isDestroyed) return@launch
-                if (resolved != null) {
-                    playStreamDirectly(resolved.url, startMs, displayTitle, resolved.referer, resolved.userAgent)
-                } else {
-                    if (WebVideoPlayerActivity.isEmbedUrl(streamUrl)) {
-                        playStreamDirectly(streamUrl, startMs, displayTitle, activeReferer, activeUserAgent)
-                    } else {
-                        Toast.makeText(this@CineTvShowDetailActivity, "Error: No se pudo extraer el video en tiempo real", Toast.LENGTH_SHORT).show()
-                        stopInlinePlayback()
-                    }
-                }
-            }
-        } else {
-            playStreamDirectly(streamUrl, startMs, displayTitle)
         }
-    }
 
     private var activeStreamUrl: String = ""
     private var activeReferer: String? = null

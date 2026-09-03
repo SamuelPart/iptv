@@ -118,6 +118,17 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                                 if (t.includes('continuar') || t.includes('continue') || t.includes('ver video') || t.includes('play video')) b.click();
                             } catch (e3) {}
                         });
+                        // Chips de SERVIDOR (pelisflix/tioplus): voe, filemoon, latino...
+                        doc.querySelectorAll('a,button,li.option,.server-item,.server').forEach(function(b){
+                            try {
+                                var t2 = ((b.innerText||'') + ' ' + (b.title||'')).toLowerCase();
+                                if (t2 && t2.length < 30 &&
+                                    /voe|dood|filemoon|mixdrop|streamtape|upstream|vidplay|latino|espan|server|opcion|opción|hd/.test(t2)
+                                    && !b.querySelector('video')) {
+                                    b.click();
+                                }
+                            } catch (e9) {}
+                        });
                     } catch (e4) {}
                 }
                 tryPlay(document);
@@ -127,6 +138,21 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     });
                 } catch (e6) {}
                 $AD_OVERLAY_JS
+                if (!playedNow) {
+                    try {
+                        var fr2 = document.querySelectorAll('iframe');
+                        for (var f2 = 0; f2 < fr2.length; f2++) {
+                            try {
+                                var s3 = fr2[f2].src || '';
+                                if (/^https?:/i.test(s3) &&
+                                    /voe|filemoon|dood|mixdrop|streamtape|upstream|luluvdo|vidmoly|nupload|vidplay|oka|embed|play|video|server/i.test(s3) &&
+                                    s3 !== location.href) {
+                                    return 'IFRAME:' + s3;
+                                }
+                            } catch (e8) {}
+                        }
+                    } catch (e10) {}
+                }
                 return playedNow ? '1' : '0';
             })();
         """.trimIndent()
@@ -138,6 +164,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     }
 
     private var isVideoRolling = false
+    private var iframeHops = 0
 
     private val botRunnable = object : Runnable {
         override fun run() {
@@ -149,7 +176,29 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     binding.webFramePlayer.evaluateJavascript(AD_OVERLAY_JS, null)
                 } else {
                     binding.webFramePlayer.evaluateJavascript(BOT_JS) { res ->
-                        if (res != null && res.contains("1")) isVideoRolling = true
+                        if (res == null) return@evaluateJavascript
+                        // Salto a iframe cross-origin (voe/filemoon...): la pagina
+                        // ES el embed, y ahora si podemos pulsar su play.
+                        if (!isVideoRolling && res.contains("IFRAME:") && iframeHops < 3 && botTicks >= 5) {
+                            val src = res.substringAfter("IFRAME:")
+                                .replace("\/", "/")
+                                .replace(""", "")
+                                .replace("\", "")
+                            if (src.startsWith("http")) {
+                                iframeHops++
+                                originalHost = Uri.parse(src).host?.lowercase() ?: originalHost
+                                botTicks = 0
+                                Toast.makeText(
+                                    this@WebVideoPlayerActivity,
+                                    "Abriendo servidor…", Toast.LENGTH_SHORT
+                                ).show()
+                                binding.webFramePlayer.loadUrl(
+                                    src, mapOf("Referer" to "https://$originalHost/")
+                                )
+                                return@evaluateJavascript
+                            }
+                        }
+                        if (res.contains("1") && !res.contains("IFRAME:")) isVideoRolling = true
                     }
                 }
             } catch (_: Exception) { }

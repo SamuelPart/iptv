@@ -145,37 +145,16 @@ class CineMovieDetailActivity : AppCompatActivity() {
 
     private fun playNow() {
         val streamUrl = if (media.urls.isNotEmpty()) media.urls[0] else media.url
-        when {
-            WebVideoPlayerActivity.isEmbedUrl(streamUrl) -> {
-                // EMBED: nada de extractor; WebPlayer fullscreen + BOT
-                startActivity(
-                    Intent(this, WebVideoPlayerActivity::class.java).apply {
-                        putExtra("channelName", media.title)
-                        putExtra("channelUrl", streamUrl)
-                    }
-                )
-            }
-            CineScraper.shouldResolvePage(streamUrl) -> {
-                Toast.makeText(
-                    this, "Extrayendo video en tiempo real...", Toast.LENGTH_SHORT
-                ).show()
-                lifecycleScope.launch {
-                    val resolved = CineScraper.resolveBestVideoUrl(
-                        this@CineMovieDetailActivity, streamUrl
-                    )
-                    if (isFinishing || isDestroyed) return@launch
-                    if (resolved != null) {
-                        openPlayer(resolved.url, resolved.referer, resolved.userAgent)
-                    } else {
-                        Toast.makeText(
-                            this@CineMovieDetailActivity,
-                            "Error: No se pudo extraer el video en tiempo real",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+        if (CineRepository.looksLikeDirectVideo(streamUrl)) {
+            openPlayer(streamUrl, null, null)
+        } else {
+            // PAGINA / EMBED / IFRAME -> WebPlayer fullscreen + BOT (cero extractor)
+            startActivity(
+                Intent(this, WebVideoPlayerActivity::class.java).apply {
+                    putExtra("channelName", media.title)
+                    putExtra("channelUrl", streamUrl)
                 }
-            }
-            else -> openPlayer(streamUrl, null, null)
+            )
         }
     }
 
