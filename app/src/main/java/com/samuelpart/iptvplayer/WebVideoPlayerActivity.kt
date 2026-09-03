@@ -56,6 +56,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private val botHandler = Handler(Looper.getMainLooper())
     private var botTicks = 0
     private var originalHost: String = ""
+    private var currentPageUrl: String = ""
+    private var currentUserAgent: String = ""
     private var pageBroken = false
     private var rescueTried = false
 
@@ -166,6 +168,29 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var isVideoRolling = false
     private var iframeHops = 0
     private var cinematicApplied = false
+    private var extractionAttempted = false
+    private val sniffedVideoUrls = java.util.concurrent.CopyOnWriteArrayList<String>()
+
+    private val DEEP_PICK_JS = "(function(){" +
+        "function ok(u){" +
+        "if (!u || typeof u !== 'string') return false;" +
+        "if (!/^https?:/i.test(u)) return false;" +
+        "return /\\.(m3u8|mpd|mp4|webm)(\\?|&|#|$)/i.test(u) || /videoplayback|mime=video/i.test(u);" +
+        "}" +
+        "var vs = document.querySelectorAll('video');" +
+        "for (var i = 0; i < vs.length; i++) {" +
+        "var s = vs[i].currentSrc || vs[i].src; if (ok(s)) return s;" +
+        "var ss = vs[i].querySelectorAll('source');" +
+        "for (var k = 0; k < ss.length; k++) { if (ok(ss[k].src)) return ss[k].src; }" +
+        "}" +
+        "var all = document.querySelectorAll('source');" +
+        "for (var j = 0; j < all.length; j++) { if (ok(all[j].src)) return all[j].src; }" +
+        "try {" +
+        "var es = performance.getEntriesByType('resource');" +
+        "for (var r = es.length - 1; r >= 0; r--) { if (ok(es[r].name)) return es[r].name; }" +
+        "} catch (e) {}" +
+        "return '';" +
+        "})();"
 
     private val CINEMATIC_JS = "(function(){" +
         "try {" +
@@ -222,6 +247,9 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     }
                 }
             } catch (_: Exception) { }
+            if (!isVideoRolling && !extractionAttempted && (botTicks == 14 || botTicks == 22)) {
+                attemptProfessionalExtraction()
+            }
             if (!isVideoRolling && (pageBroken || botTicks >= 28)) {
                 triggerRescue()
                 return
@@ -272,6 +300,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         ws.userAgentString =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                 "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        currentUserAgent = ws.userAgentString
 
         val emptyResponse = WebResourceResponse(
             "text/plain", "utf-8", ByteArrayInputStream(ByteArray(0))
@@ -298,11 +327,19 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     }) {
                     return emptyResponse
                 }
+                // sniffer profesional: urls de video verdadero que la pagina pida
+                if (sniffedVideoUrls.size < 40 &&
+                    (Regex("\.(m3u8|mp4|mpd|webm)(\?|&|#|$)", RegexOption.IGNORE_CASE).containsMatchIn(url) ||
+                        url.contains("videoplayback", true) || url.contains("mime=video", true))
+                ) {
+                    sniffedVideoUrls.add(url)
+                }
                 return super.shouldInterceptRequest(view, request)
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 binding.webPlayerProgress.visibility = View.VISIBLE
+                if (url != null) currentPageUrl = url
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -410,6 +447,57 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 android.widget.Toast.makeText(this@WebVideoPlayerActivity, "No se pudo reiniciar la reproduccion", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    /** Extractor profesional de ENLACE DIRECTO (cero iframe/embed/player):
+     *  cuando el BOT no puede darle play in-page, saca de la propia pagina/
+     *  red el .mp4/.m3u8 verdadero y lo entrega a VLC nativo. */
+    private fun attemptProfessionalExtraction() {
+        extractionAttempted = true
+        android.widget.Toast.makeText(
+            this, "Buscando enlace directo del video…", android.widget.Toast.LENGTH_SHORT
+        ).show()
+
+        // 1) red sniffada (la verdad del traffico)
+        val sniff = sniffedVideoUrls.lastOrNull()
+        if (sniff != null) { launchDirectVideo(sniff); return }
+
+        // 2) DOM + performance entries profundos (incl. hop pages)
+        try {
+            binding.webFramePlayer.evaluateJavascript(DEEP_PICK_JS) { v ->
+                if (isFinishing || isDestroyed) return@evaluateJavascript
+                val raw = v ?: return@evaluateJavascript
+                val found = buildString {
+                    for (ci in 0 until raw.length) {
+                        val ch = raw[ci]
+                        if (ch.code != 92 && ch.code != 34) append(ch)
+                    }
+                }
+                if (found.startsWith("http")) {
+                    launchDirectVideo(found)
+                } else {
+                    extractionAttempted = false // segundo intento en tick 22
+                }
+            }
+        } catch (_: Exception) {
+            extractionAttempted = false
+        }
+    }
+
+    private fun launchDirectVideo(directUrl: String) {
+        botHandler.removeCallbacks(botRunnable)
+        android.widget.Toast.makeText(
+            this, "Enlace directo encontrado — abriendo reproductor nativo", android.widget.Toast.LENGTH_SHORT
+        ).show()
+        startActivity(
+            Intent(this, PlayerActivity::class.java).apply {
+                putExtra("channelName", binding.txtWebPlayerTitle.text?.toString() ?: "Video")
+                putExtra("channelUrl", directUrl)
+                putExtra("streamReferer", currentPageUrl.ifBlank { "https://$originalHost/" })
+                putExtra("streamUserAgent", currentUserAgent)
+            }
+        )
+        finish()
     }
 
     /** El video empezo: la capa oscura se desvanece y el video toma TODA
