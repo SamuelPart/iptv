@@ -1,6 +1,9 @@
 package com.samuelpart.iptvplayer
 
+import android.Manifest
+import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -13,8 +16,21 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import android.os.Build
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.Toast
+import kotlinx.coroutines.launch
 import com.samuelpart.iptvplayer.databinding.ActivityWebVideoPlayerBinding
 import java.io.ByteArrayInputStream
 
@@ -145,6 +161,13 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         // Iframe SIEMPRE a lo grande: landscape + pantalla completa
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        // Barra de notificaciones OCULTA dentro del player (se desliza para verla)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.statusBars())
+        }
         binding = ActivityWebVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         WindowCompat.getInsetsController(window, window.decorView)
@@ -156,6 +179,10 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         binding.txtWebPlayerTitle.text = title
 
         binding.btnWebPlayerBack.setOnClickListener { finish() }
+
+        binding.btnWebCast.setOnClickListener {
+            checkCastPermissionsAndAsk()
+        }
 
         val web = binding.webFramePlayer
         val ws = web.settings
@@ -254,6 +281,101 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         binding.frameWebFullscreen.removeAllViews()
         binding.webFramePlayer.destroy()
         super.onDestroy()
+    }
+
+    private val CAST_PERMISSION_REQUEST_CODE = 4201
+
+    private fun checkCastPermissionsAndAsk() {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES)
+        } else {
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+        val missing = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) showWebCastDialog()
+        else ActivityCompat.requestPermissions(this, missing.toTypedArray(), CAST_PERMISSION_REQUEST_CODE)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAST_PERMISSION_REQUEST_CODE &&
+            grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+        ) {
+            showWebCastDialog()
+        }
+    }
+
+    private fun showWebCastDialog() {
+        val pageUrl = intent.getStringExtra("channelUrl") ?: return
+        val pageTitle = binding.txtWebPlayerTitle.text?.toString() ?: "Video"
+        val dialogView = layoutInflater.inflate(R.layout.dialog_cast_selector, null)
+        val layoutScanning = dialogView.findViewById<LinearLayout>(R.id.layoutCastScanning)
+        val rv = dialogView.findViewById<RecyclerView>(R.id.rvCastDevices)
+        val btnClose = dialogView.findViewById<Button>(R.id.btnCancelCast)
+        rv.layoutManager = LinearLayoutManager(this)
+
+        lateinit var adapter: CastDeviceAdapter
+        adapter = CastDeviceAdapter(emptyList()) { device ->
+            dialogView.clearFocus()
+            castTo(device.type, device, pageUrl, pageTitle)
+        }
+        rv.adapter = adapter
+
+        val dialog = AlertDialog.Builder(
+            this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert
+        ).setView(dialogView).create()
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        layoutScanning.visibility = android.view.View.VISIBLE
+        lifecycleScope.launch {
+            val devices = try {
+                UniversalCaster.discoverDevices(this@WebVideoPlayerActivity)
+            } catch (_: Exception) { emptyList() }
+            layoutScanning.visibility = android.view.View.GONE
+            val list = devices.toMutableList()
+            list.add(CastDevice("Transmitir con Smart View del Sistema", "system_cast", 0, "SystemCast"))
+            adapter.updateList(list)
+        }
+        dialog.show()
+    }
+
+    private fun castTo(type: String, device: CastDevice, pageUrl: String, title: String) {
+        when (type) {
+            "SystemCast" -> {
+                try {
+                    val castIntent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(Uri.parse(pageUrl), "video/*")
+                        putExtra("title", title)
+                        putExtra("android.intent.extra.Title", title)
+                    }
+                    startActivity(Intent.createChooser(castIntent, "Elige tu TV"))
+                } catch (e: Exception) { e.printStackTrace() }
+            }
+            "Roku", "DLNA" -> {
+                Toast.makeText(this, "Conectando con ${device.name}...", Toast.LENGTH_SHORT).show()
+                lifecycleScope.launch {
+                    val ok = try {
+                        if (type == "Roku") {
+                            UniversalCaster.castToRoku(device.ip, pageUrl, title)
+                        } else {
+                            val ctrl = device.controlUrl
+                                ?: "http://${device.ip}:1400/AVTransport/control"
+                            UniversalCaster.castToDlna(ctrl, pageUrl, title)
+                        }
+                    } catch (_: Exception) { false }
+                    Toast.makeText(
+                        this@WebVideoPlayerActivity,
+                        if (ok) "Enviado a ${device.name}" else "No respondio ${device.name}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            else -> Toast.makeText(this, "Dispositivo no soportado por embeds", Toast.LENGTH_SHORT).show()
+        }
     }
 
     @Deprecated("Back: navega el historial del iframe si puede")

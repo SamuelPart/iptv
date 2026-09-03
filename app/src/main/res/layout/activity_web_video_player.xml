@@ -24,6 +24,20 @@
         android:indeterminateTint="#C9A96E" />
 
     <ImageView
+        android:id="@+id/btnWebCast"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="14dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_circle_glass"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="9dp"
+        android:src="@drawable/ic_cast"
+        app:tint="#F2F2F4" />
+
+    <ImageView
         android:id="@+id/btnWebPlayerBack"
         android:layout_width="40dp"
         android:layout_height="40dp"
