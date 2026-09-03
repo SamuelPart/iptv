@@ -153,6 +153,8 @@ class CineMovieDetailActivity : AppCompatActivity() {
                 Intent(this, WebVideoPlayerActivity::class.java).apply {
                     putExtra("channelName", media.title)
                     putExtra("channelUrl", streamUrl)
+                    putExtra("tmdbId", media.tmdbId ?: -1)
+                    putExtra("mediaType", media.type)
                 }
             )
         }

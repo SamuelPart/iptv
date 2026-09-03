@@ -614,6 +614,28 @@ object CineRepository {
         }
     }
 
+    /** Duracion real segun TMDb (segundos) para el extractor con firma. */
+    fun fetchRuntimeSeconds(tmdbId: Int, type: String): Int? {
+        return try {
+            val typeStr = if (type == "movie") "movie" else "tv"
+            val url = URL(
+                "https://api.themoviedb.org/3/$typeStr/$tmdbId?api_key=$TMDB_API_KEY&language=es"
+            )
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 4000
+            conn.readTimeout = 4000
+            if (conn.responseCode != 200) return null
+            val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+            val min = if (typeStr == "movie") {
+                json.optInt("runtime", 0)
+            } else {
+                val arr = json.optJSONArray("episode_run_time")
+                if (arr != null && arr.length() > 0) arr.optInt(0, 0) else 0
+            }
+            if (min > 0) min * 60 else null
+        } catch (_: Exception) { null }
+    }
+
     fun fetchTmdCredits(media: CineMedia) {
         val tmdbId = media.tmdbId ?: return
         try {
