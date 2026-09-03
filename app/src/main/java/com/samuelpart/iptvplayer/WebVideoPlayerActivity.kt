@@ -183,6 +183,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         "function strong(u){var l=u.toLowerCase();return l.indexOf('m3u8')>=0||l.indexOf('videoplayback')>=0||l.indexOf('mime=video')>=0;}" +
         "var vs=document.querySelectorAll('video');" +
         "for(var i=0;i<vs.length;i++){" +
+        "try{vs[i].preload='auto';if(vs[i].load)vs[i].load();}catch(el){}" +
         "var d=vs[i].duration||0;var t=vs[i].currentSrc||vs[i].src;" +
         "if(ok(t)){return 'DUR:'+Math.round(d)+'|'+t;}" +
         "var ss=vs[i].querySelectorAll('source');" +
@@ -515,9 +516,13 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             val dur = payload.substringAfter("DUR:").substringBefore('|').toIntOrNull() ?: 0
             val url = payload.substringAfter('|')
             if (!url.startsWith("http")) return null
+            // dur<=0: metadata no cargo aun — acepta solo señales fuertes
+            if (dur <= 0) {
+                return if (isStrongStream(url)) url else null
+            }
             val okDur = expectedSec?.let {
                 kotlin.math.abs(dur - it) <= maxOf(it / 10, 480)
-            } ?: (dur >= 1500)
+            } ?: (dur >= 800)
             return if (okDur) url else null
         }
         if (payload.startsWith("NODUR|")) {
