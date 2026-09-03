@@ -180,10 +180,13 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                         // Salto a iframe cross-origin (voe/filemoon...): la pagina
                         // ES el embed, y ahora si podemos pulsar su play.
                         if (!isVideoRolling && res.contains("IFRAME:") && iframeHops < 3 && botTicks >= 5) {
-                            val src = res.substringAfter("IFRAME:")
-                                .replace("\/", "/")
-                                .replace(""", "")
-                                .replace("\", "")
+                            val raw = res.substringAfter("IFRAME:")
+                            val src = buildString {
+                                for (ci in 0 until raw.length) {
+                                    val ch = raw[ci]
+                                    if (ch != '\\' && ch != '\"') append(ch)
+                                }
+                            }
                             if (src.startsWith("http")) {
                                 iframeHops++
                                 originalHost = Uri.parse(src).host?.lowercase() ?: originalHost
