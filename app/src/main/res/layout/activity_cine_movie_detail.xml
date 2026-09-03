@@ -1,468 +1,230 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_ios_gradient">
+    android:fillViewport="true"
+    android:background="#0D0E11">
 
-    <!-- Hero cinematografico 300dp -->
-    <FrameLayout
-        android:id="@+id/layoutBackdropHeaderContainer"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="300dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/imgMovieBackdrop"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:contentDescription="Backdrop" />
-
-        <View
-            android:id="@+id/viewBackdropFade"
-            android:layout_width="match_parent"
-            android:layout_height="230dp"
-            android:layout_gravity="bottom"
-            android:background="@drawable/bg_backdrop_fade" />
-
-        <!-- Inline VLC Video Player Layout (Hidden by default) -->
+        <!-- HERO: poster/backdrop full-bleed con play centrado -->
         <FrameLayout
-            android:id="@+id/layoutInlinePlayer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#000000"
-            android:visibility="gone">
-
-            <org.videolan.libvlc.util.VLCVideoLayout
-                android:id="@+id/inlineVlcVideoLayout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+            android:layout_height="520dp">
 
             <ImageView
-                android:id="@+id/imgDoubleTapLeft"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_ten_seconds_skip"
-                android:rotation="180"
-                android:padding="10dp"
-                android:visibility="gone"
-                android:layout_gravity="start|center_vertical"
-                android:layout_marginStart="30dp"
-                app:tint="#FFFFFF" />
-
-            <ImageView
-                android:id="@+id/imgDoubleTapRight"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_ten_seconds_skip"
-                android:padding="10dp"
-                android:visibility="gone"
-                android:layout_gravity="end|center_vertical"
-                android:layout_marginEnd="30dp"
-                app:tint="#FFFFFF" />
-
-            <RelativeLayout
-                android:id="@+id/layoutInlineControls"
+                android:id="@+id/imgDetailHero"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="#44000000">
+                android:scaleType="centerCrop" />
 
-                <ProgressBar
-                    android:id="@+id/inlineProgress"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_centerInParent="true"
-                    android:indeterminateTint="@color/ios_cyan"
-                    android:visibility="gone" />
-
-                <LinearLayout
-                    android:id="@+id/layoutInlineBottomBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:orientation="vertical"
-                    android:background="#DD0F121F"
-                    android:paddingVertical="8dp"
-                    android:paddingHorizontal="12dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="4dp">
-
-                        <TextView
-                            android:id="@+id/txtInlineCurrentTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00:00"
-                            android:textColor="#88FFFFFF"
-                            android:textSize="10sp" />
-
-                        <SeekBar
-                            android:id="@+id/inlineSeekBar"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:progressTint="@color/ios_blue"
-                            android:thumbTint="@color/ios_blue"
-                            android:paddingHorizontal="4dp" />
-
-                        <TextView
-                            android:id="@+id/txtInlineTotalTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="00:00"
-                            android:textColor="#88FFFFFF"
-                            android:textSize="10sp" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="32dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <ImageButton
-                            android:id="@+id/btnInlinePlayPause"
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:padding="4dp"
-                            android:scaleType="fitCenter"
-                            android:background="?android:attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/ic_ios_pause"
-                            app:tint="@color/ios_blue"
-                            android:contentDescription="Reproducir/Pausar" />
-
-                        <Button
-                            android:id="@+id/btnInlineServers"
-                            style="?android:attr/buttonStyleSmall"
-                            android:layout_width="wrap_content"
-                            android:layout_height="26dp"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_button_secondary"
-                            android:text="Servidores"
-                            android:textColor="#FFFFFF"
-                            android:textSize="8sp"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="0dp"
-                            android:textStyle="bold" />
-
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1" />
-
-                        <ImageButton
-                            android:id="@+id/btnInlineFullscreen"
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:padding="4dp"
-                            android:scaleType="fitCenter"
-                            android:layout_marginEnd="8dp"
-                            android:background="?android:attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/ic_maximize_video"
-                            app:tint="#FFFFFF"
-                            android:contentDescription="Maximizar" />
-
-                        <ImageButton
-                            android:id="@+id/btnInlineClose"
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:padding="4dp"
-                            android:scaleType="fitCenter"
-                            android:background="?android:attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/ic_close_video"
-                            android:contentDescription="Cerrar Video" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </RelativeLayout>
-
-        </FrameLayout>
-
-        <!-- Hint de play centrado sobre el backdrop -->
-        <FrameLayout
-            android:id="@+id/ivHeaderPlayHint"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_gravity="center"
-            android:background="@drawable/bg_circle_champagne"
-            android:clickable="true"
-            android:focusable="true"
-            android:elevation="8dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_backdrop_fade" />
 
             <ImageView
+                android:id="@+id/btnDetailBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_circle_glass"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="9dp"
+                android:src="@drawable/ic_back_chevron"
+                app:tint="#F2F2F4" />
+
+            <ImageView
+                android:id="@+id/imgDetailPlatform"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                android:scaleType="fitCenter" />
+
+            <FrameLayout
+                android:id="@+id/btnHeroPlay"
+                android:layout_width="74dp"
+                android:layout_height="74dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_play_modern"
-                app:tint="#16181C" />
+                android:background="@drawable/bg_circle_champagne"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="10dp">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="3dp"
+                    android:src="@drawable/ic_ios_play"
+                    app:tint="#16181C" />
+            </FrameLayout>
         </FrameLayout>
 
-    </FrameLayout>
-
-    <!-- Boton volver: circulo de vidrio iPhone -->
-    <ImageButton
-        android:id="@+id/btnMovieBack"
-        android:layout_width="46dp"
-        android:layout_height="46dp"
-        android:layout_margin="16dp"
-        android:background="@drawable/bg_circle_glass"
-        android:padding="12dp"
-        android:src="@drawable/ic_back_chevron"
-        app:tint="#FFFFFF"
-        android:elevation="10dp" />
-
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-
+        <!-- TARJETA DE CONTENIDO (solapa el hero) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="112dp">
+            android:layout_marginTop="-44dp"
+            android:background="@drawable/bg_card_ios"
+            android:paddingStart="22dp"
+            android:paddingEnd="22dp"
+            android:paddingTop="26dp"
+            android:paddingBottom="32dp">
 
-            <View
-                android:id="@+id/viewSpaceHeader"
-                android:layout_width="match_parent"
-                android:layout_height="300dp" />
+            <TextView
+                android:id="@+id/txtDetailTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#F5F5F7"
+                android:textSize="30sp"
+                android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/txtDetailSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#9A9AA3"
+                android:textSize="13sp"
+                android:textStyle="italic" />
+
+            <!-- chips row: genero | 16+ | ★ rating | fav -->
             <LinearLayout
-                android:id="@+id/layoutMovieDetailCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="14dp">
 
-                <!-- D) Sinopsis primero, texto directo -->
                 <TextView
-                    android:id="@+id/txtMovieOverview"
-                    android:layout_width="match_parent"
+                    android:id="@+id/chipGenreDetail"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:lineSpacingMultiplier="1.45"
-                    android:text="Cargando sinopsis de la película..."
-                    android:textColor="#D9D9DF"
-                    android:textSize="14.5sp" />
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_chip_idle"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="7dp"
+                    android:text="Acción"
+                    android:textColor="#C9A96E"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="20dp"
-                    android:background="#14FFFFFF" />
+                <TextView
+                    android:id="@+id/chipAgeDetail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_chip_idle"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="7dp"
+                    android:text="16+"
+                    android:textColor="#C9C9D1"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
-                <!-- Fila info: poster mini + titulo/chips -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="20dp">
+                    android:gravity="center_vertical">
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="100dp"
-                        android:layout_height="150dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="8dp"
-                        app:cardBackgroundColor="@color/ios_surface_2">
-
-                        <ImageView
-                            android:id="@+id/imgMoviePoster"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:scaleType="centerCrop"
-                            android:contentDescription="Poster" />
-                    </androidx.cardview.widget.CardView>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginStart="16dp">
-
-                        <TextView
-                            android:id="@+id/txtMovieTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="TITLE"
-                            android:textColor="#FFFFFF"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:textAllCaps="false"
-                            android:maxLines="3"
-                            android:ellipsize="end" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="10dp"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:id="@+id/txtMovieRatingBadge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/bg_chip_active"
-                                android:paddingStart="10dp"
-                                android:paddingEnd="10dp"
-                                android:paddingTop="5dp"
-                                android:paddingBottom="5dp"
-                                android:text="★ 8.5"
-                                android:textColor="#16181C"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:visibility="gone"
-                                tools:visibility="visible" />
-
-                            <TextView
-                                android:id="@+id/txtMovieMeta"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
-                                android:text="2024 · Sci-Fi · 2h 46m"
-                                android:textColor="#98989F"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <!-- Acciones secundarias en chips de vidrio -->
-                        <LinearLayout
-                            android:id="@+id/layoutActionButtons"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="14dp">
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnMovieTrailer"
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
-                                android:layout_height="42dp"
-                                android:layout_marginEnd="5dp"
-                                android:background="@drawable/bg_button_secondary"
-                                android:text="Trailer"
-                                android:textAllCaps="false"
-                                android:textColor="#FFFFFF"
-                                android:textSize="12.5sp"
-                                android:textStyle="bold"
-                                android:visibility="gone"
-                                tools:visibility="visible" />
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnMovieShare"
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
-                                android:layout_height="42dp"
-                                android:layout_marginStart="5dp"
-                                android:background="@drawable/bg_button_secondary"
-                                android:text="Compartir"
-                                android:textAllCaps="false"
-                                android:textColor="#FFFFFF"
-                                android:textSize="12.5sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="22dp"
-                    android:background="#14FFFFFF" />
-
-                <!-- ELENCO -->
-                <LinearLayout
-                    android:id="@+id/layoutCastSection"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    tools:visibility="visible">
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:src="@drawable/ic_ios_star_fill"
+                        app:tint="#E50914" />
 
                     <TextView
+                        android:id="@+id/txtDetailRating"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:text="ELENCO"
-                        android:textColor="@color/ios_cyan"
-                        android:letterSpacing="0.14"
-                        android:textSize="12sp"
+                        android:layout_marginStart="6dp"
+                        android:text="—"
+                        android:textColor="#F5F5F7"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvCast"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="22dp"
-                    android:background="#14FFFFFF" />
-
-                <!-- SERVIDORES -->
-                <LinearLayout
-                    android:id="@+id/layoutMovieServers"
-                    android:layout_width="match_parent"
+                <Space
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    tools:visibility="visible">
+                    android:layout_weight="1" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="SERVIDORES"
-                        android:textColor="@color/ios_cyan"
-                        android:letterSpacing="0.14"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="10dp" />
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvMovieServers"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
-                </LinearLayout>
-
+                <ImageView
+                    android:id="@+id/btnDetailFav"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_heart_modern" />
             </LinearLayout>
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="Story Line"
+                android:textColor="#F5F5F7"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtDetailStory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:maxLines="5"
+                android:ellipsize="end"
+                android:textColor="#9A9AA3"
+                android:textSize="13.5sp"
+                android:lineSpacingExtra="3dp" />
+
+            <TextView
+                android:id="@+id/btnStoryMore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="More"
+                android:textColor="#E50914"
+                android:textSize="12.5sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtCastHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:visibility="gone"
+                android:text="Star Cast"
+                android:textColor="#F5F5F7"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDetailCast"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="10dp"
+                android:visibility="gone"
+                android:clipToPadding="false"
+                android:clipChildren="false" />
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
-    <!-- Barra fija: Ver ahora -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:orientation="horizontal"
-        android:background="#F214161B"
-        android:padding="14dp">
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnMoviePlay"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_chip_active"
-            android:text="Ver ahora"
-            android:textAllCaps="false"
-            android:textColor="#16181C"
-            android:textSize="16sp"
-            android:textStyle="bold" />
     </LinearLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.core.widget.NestedScrollView>
