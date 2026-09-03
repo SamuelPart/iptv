@@ -184,7 +184,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                             val src = buildString {
                                 for (ci in 0 until raw.length) {
                                     val ch = raw[ci]
-                                    if (ch != '\\' && ch != '\"') append(ch)
+                                    if (ch.code != 92 && ch.code != 34) append(ch)
                                 }
                             }
                             if (src.startsWith("http")) {
