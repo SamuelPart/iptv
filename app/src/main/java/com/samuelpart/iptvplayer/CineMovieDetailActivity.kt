@@ -333,6 +333,20 @@ class CineMovieDetailActivity : AppCompatActivity() {
         // Hide system status bar (clocks, battery, etc.)
         hideStatusBarInline()
 
+        // EMBED/IFRAME: va DIRECTO al WebPlayer fullscreen (cero extractor,
+        // cero player VLC vertical). VLC solo recibe video directo real.
+        if (WebVideoPlayerActivity.isEmbedUrl(streamUrl)) {
+            stopInlinePlayback()
+            startActivity(
+                Intent(this@CineMovieDetailActivity, WebVideoPlayerActivity::class.java).apply {
+                    putExtra("channelName", media.title)
+                    putExtra("channelUrl", streamUrl)
+                    putExtra("streamReferer", activeReferer)
+                    putExtra("streamUserAgent", activeUserAgent)
+                }
+            )
+            return
+        }
         // Check if the URL is a streaming page or embedded player rather than a direct
         // video stream. Domains come from ScraperConfig (hot-updated from GitHub), so
         // dead portal domains are fixed remotely. The page is visited RIGHT NOW to
