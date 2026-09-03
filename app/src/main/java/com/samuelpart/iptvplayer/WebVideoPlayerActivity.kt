@@ -1,5 +1,6 @@
 package com.samuelpart.iptvplayer
 
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -118,19 +119,32 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         }
     }
 
+    private var isVideoRolling = false
+
     private val botRunnable = object : Runnable {
         override fun run() {
             if (isFinishing || isDestroyed) return
             botTicks++
             try {
-                binding.webFramePlayer.evaluateJavascript(BOT_JS, null)
+                if (isVideoRolling) {
+                    // CORRIENDO: solo limpia anuncios, jamás clicks/.play()
+                    binding.webFramePlayer.evaluateJavascript(AD_OVERLAY_JS, null)
+                } else {
+                    binding.webFramePlayer.evaluateJavascript(BOT_JS) { res ->
+                        if (res != null && res.contains("1")) isVideoRolling = true
+                    }
+                }
             } catch (_: Exception) { }
-            if (botTicks < 200) botHandler.postDelayed(this, 900)
+            val delay = if (isVideoRolling) 3000L else 900L
+            val limit = if (isVideoRolling) 6000 else 200
+            if (botTicks < limit) botHandler.postDelayed(this, delay)
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Iframe SIEMPRE a lo grande: landscape + pantalla completa
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         binding = ActivityWebVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         WindowCompat.getInsetsController(window, window.decorView)
