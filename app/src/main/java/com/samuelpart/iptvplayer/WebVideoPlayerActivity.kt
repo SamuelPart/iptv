@@ -329,7 +329,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 }
                 // sniffer profesional: urls de video verdadero que la pagina pida
                 if (sniffedVideoUrls.size < 40 &&
-                    (Regex("\.(m3u8|mp4|mpd|webm)(\?|&|#|$)", RegexOption.IGNORE_CASE).containsMatchIn(url) ||
+                    (listOf(".m3u8", ".mp4", ".mpd", ".webm").any { url.lowercase().contains(it) } ||
                         url.contains("videoplayback", true) || url.contains("mime=video", true))
                 ) {
                     sniffedVideoUrls.add(url)
