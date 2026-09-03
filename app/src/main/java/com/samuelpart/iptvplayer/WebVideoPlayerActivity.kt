@@ -232,17 +232,63 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
 
 
-    private val CINEMATIC_JS = "(function(){" +
-        "try {" +
-        "var v = document.querySelector('video'); if (!v) return '';" +
-        "var p = v;" +
-        "while (p.parentElement && p.parentElement !== document.body) { p = p.parentElement; }" +
-        "p.style.cssText += 'position:fixed !important; left:0 !important; top:0 !important; width:100vw !important; height:100vh !important; max-width:100vw !important; max-height:100vh !important; z-index:2147483000 !important; background:#000 !important;';" +
-        "v.style.cssText += ' width:100% !important; height:100% !important;';" +
-        "v.setAttribute('controls',''); v.setAttribute('playsinline',''); v.muted = false;" +
-        "return 'ok';" +
-        "} catch (e) { return ''; }" +
-        "})();"
+    private val CINEMATIC_JS = """
+        (function(){
+            try {
+                // Elige el <video> real (el mas grande / el que ya tiene fuente).
+                var vids = document.querySelectorAll('video');
+                var v = null;
+                for (var i = 0; i < vids.length; i++) {
+                    var c = vids[i];
+                    var area = (c.videoWidth || 0) * (c.videoHeight || 0);
+                    var best = v ? ((v.videoWidth || 0) * (v.videoHeight || 0)) : -1;
+                    if (area > best) v = c;
+                }
+                if (!v) return '';
+                var w = window.innerWidth || document.documentElement.clientWidth || screen.width || 0;
+                var h = window.innerHeight || document.documentElement.clientHeight || screen.height || 0;
+                if (!w || !h) return '';
+                // Los ancestros con transform/filter/perspective crean un
+                // "containing block" y rompen position:fixed — se neutralizan
+                // para que el video quede clavado al viewport de verdad.
+                var n = v.parentElement;
+                while (n && n !== document.documentElement && n !== document.body) {
+                    try {
+                        var ns = n.style;
+                        ns.setProperty('transform', 'none', 'important');
+                        ns.setProperty('-webkit-transform', 'none', 'important');
+                        ns.setProperty('filter', 'none', 'important');
+                        ns.setProperty('perspective', 'none', 'important');
+                        ns.setProperty('contain', 'none', 'important');
+                        ns.setProperty('will-change', 'auto', 'important');
+                    } catch (e1) {}
+                    n = n.parentElement;
+                }
+                // Clava el VIDEO en si (no su contenedor) a TODA la pantalla.
+                var s = v.style;
+                s.setProperty('position', 'fixed', 'important');
+                s.setProperty('top', '0px', 'important');
+                s.setProperty('left', '0px', 'important');
+                s.setProperty('right', 'auto', 'important');
+                s.setProperty('bottom', 'auto', 'important');
+                s.setProperty('width', w + 'px', 'important');
+                s.setProperty('height', h + 'px', 'important');
+                s.setProperty('max-width', w + 'px', 'important');
+                s.setProperty('max-height', h + 'px', 'important');
+                s.setProperty('margin', '0px', 'important');
+                s.setProperty('padding', '0px', 'important');
+                s.setProperty('object-fit', 'contain', 'important');
+                s.setProperty('background', '#000', 'important');
+                s.setProperty('z-index', '2147483000', 'important');
+                s.setProperty('transform', 'none', 'important');
+                v.setAttribute('controls', '');
+                v.setAttribute('playsinline', '');
+                v.setAttribute('webkit-playsinline', '');
+                try { v.muted = false; v.volume = 1; } catch (e2) {}
+                return 'ok';
+            } catch (e) { return ''; }
+        })();
+    """.trimIndent()
 
 
     private val botRunnable = object : Runnable {
@@ -251,8 +297,10 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             botTicks++
             try {
                 if (isVideoRolling) {
-                    // CORRIENDO: solo limpia anuncios, jamás clicks/.play()
+                    // CORRIENDO: limpia anuncios y RE-AFIRMA el video a
+                    // pantalla completa (si la pagina lo reubica, se re-clava)
                     binding.webFramePlayer.evaluateJavascript(AD_OVERLAY_JS, null)
+                    showCinematic()
                 } else {
                     binding.webFramePlayer.evaluateJavascript(BOT_JS) { res ->
                         if (res == null) return@evaluateJavascript
@@ -485,22 +533,26 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    /** El video empezo: la capa oscura se desvanece y el video toma TODA
-     *  la pantalla — el usuario jamas ve la pagina de origen. */
+    /** El video empezo: la capa oscura se desvanece SOLO cuando el video ya
+     *  esta clavado a TODA la pantalla — el usuario jamas ve la pagina de
+     *  origen, ni un reproductor "a medias" corrido hacia abajo. */
     private fun showCinematic() {
-        if (cinematicApplied) return
-        cinematicApplied = true
         try {
-            binding.webFramePlayer.evaluateJavascript(CINEMATIC_JS, null)
-        } catch (_: Exception) { }
-        binding.layerWebBoot.animate()
-            .alpha(0f)
-            .setDuration(450)
-            .withEndAction {
-                binding.layerWebBoot.visibility = View.GONE
-                binding.layerWebBoot.alpha = 1f
+            binding.webFramePlayer.evaluateJavascript(CINEMATIC_JS) { res ->
+                val ok = res != null && res.contains("ok")
+                if (ok && !cinematicApplied) {
+                    cinematicApplied = true
+                    binding.layerWebBoot.animate()
+                        .alpha(0f)
+                        .setDuration(450)
+                        .withEndAction {
+                            binding.layerWebBoot.visibility = View.GONE
+                            binding.layerWebBoot.alpha = 1f
+                        }
+                        .start()
+                }
             }
-            .start()
+        } catch (_: Exception) { }
     }
 
     private val CAST_PERMISSION_REQUEST_CODE = 4201
