@@ -208,7 +208,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                             try {
                                 var s3 = fr2[f2].src || '';
                                 if (/^https?:/i.test(s3) &&
-                                    /voe|filemoon|dood|mixdrop|streamtape|upstream|luluvdo|vidmoly|nupload|vidplay|oka|embed|play|video|server/i.test(s3) &&
+                                    /voe|filemoon|dood|mixdrop|streamtape|upstream|luluvdo|vidmoly|nupload|vidplay|oka|hgcloud|hanerix|filelions|embed|play|video|server/i.test(s3) &&
                                     s3 !== location.href) {
                                     return 'IFRAME:' + s3;
                                 }
@@ -268,15 +268,20 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                             }
                             if (src.startsWith("http")) {
                                 iframeHops++
-                                originalHost = Uri.parse(src).host?.lowercase() ?: originalHost
+                                // EL SECRETO: el embed hgcloud solo vive con el
+                                // Referer del WRAPPER padre, no del host nuevo.
+                                val parentHost = Uri.parse(currentPageUrl).host?.lowercase()
+                                    ?: originalHost
+                                val embedHost = Uri.parse(src).host?.lowercase() ?: parentHost
                                 botTicks = 0
                                 Toast.makeText(
                                     this@WebVideoPlayerActivity,
                                     "Abriendo servidor…", Toast.LENGTH_SHORT
                                 ).show()
                                 binding.webFramePlayer.loadUrl(
-                                    src, mapOf("Referer" to "https://$originalHost/")
+                                    src, mapOf("Referer" to "https://$parentHost/")
                                 )
+                                originalHost = embedHost
                                 return@evaluateJavascript
                             }
                         }
