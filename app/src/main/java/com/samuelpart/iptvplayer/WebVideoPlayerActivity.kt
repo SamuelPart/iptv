@@ -165,6 +165,20 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
     private var isVideoRolling = false
     private var iframeHops = 0
+    private var cinematicApplied = false
+
+    private val CINEMATIC_JS = "(function(){" +
+        "try {" +
+        "var v = document.querySelector('video'); if (!v) return '';" +
+        "var p = v;" +
+        "while (p.parentElement && p.parentElement !== document.body) { p = p.parentElement; }" +
+        "p.style.cssText += 'position:fixed !important; left:0 !important; top:0 !important; width:100vw !important; height:100vh !important; max-width:100vw !important; max-height:100vh !important; z-index:2147483000 !important; background:#000 !important;';" +
+        "v.style.cssText += ' width:100% !important; height:100% !important;';" +
+        "v.setAttribute('controls',''); v.setAttribute('playsinline',''); v.muted = false;" +
+        "return 'ok';" +
+        "} catch (e) { return ''; }" +
+        "})();"
+
 
     private val botRunnable = object : Runnable {
         override fun run() {
@@ -201,7 +215,10 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                                 return@evaluateJavascript
                             }
                         }
-                        if (res.contains("1") && !res.contains("IFRAME:")) isVideoRolling = true
+                        if (res.contains("1") && !res.contains("IFRAME:")) {
+                            isVideoRolling = true
+                            showCinematic()
+                        }
                     }
                 }
             } catch (_: Exception) { }
@@ -393,6 +410,24 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 android.widget.Toast.makeText(this@WebVideoPlayerActivity, "No se pudo reiniciar la reproduccion", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    /** El video empezo: la capa oscura se desvanece y el video toma TODA
+     *  la pantalla — el usuario jamas ve la pagina de origen. */
+    private fun showCinematic() {
+        if (cinematicApplied) return
+        cinematicApplied = true
+        try {
+            binding.webFramePlayer.evaluateJavascript(CINEMATIC_JS, null)
+        } catch (_: Exception) { }
+        binding.layerWebBoot.animate()
+            .alpha(0f)
+            .setDuration(450)
+            .withEndAction {
+                binding.layerWebBoot.visibility = View.GONE
+                binding.layerWebBoot.alpha = 1f
+            }
+            .start()
     }
 
     private val CAST_PERMISSION_REQUEST_CODE = 4201

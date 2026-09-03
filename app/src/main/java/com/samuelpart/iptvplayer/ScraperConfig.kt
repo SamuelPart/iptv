@@ -37,13 +37,13 @@ object ScraperConfig {
     )
 
     private val DEFAULT_PORTALS = listOf(
-        Portal("TioPlus", "https://tioplus.app", "/?s={query}"),
+        Portal("Cuevana8", "https://www.cuevana8.plus", "/?s={query}"),
         Portal("RePelis24", "https://repelis24.life", "/?s={query}"),
         Portal("RePelis24 Oficial", "https://repelis24-oficial.site", "/?s={query}"),
         Portal("PelisFlix", "https://pelisflix1.fans", "/?s={query}")
     )
 
-    private val DEFAULT_EXTRA_WEB_DOMAINS = listOf("repelis24.ing", "pelisflix1.fans", "pelisflix", "nupload.top", "nupload")
+    private val DEFAULT_EXTRA_WEB_DOMAINS = listOf("repelis24.ing", "pelisflix1.fans", "pelisflix", "nupload.top", "nupload", "cuevana8.plus", "cuevana8", "cuevana")
 
     private val DEFAULT_AD_DOMAINS = listOf(
         "doubleclick.net", "googlesyndication.com", "google-analytics.com",

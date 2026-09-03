@@ -37,6 +37,33 @@
         android:src="@drawable/ic_cast"
         app:tint="#F2F2F4" />
 
+    <!-- Capa cine: la app NUNCA muestra el sitio; solo un lienzo oscuro
+         con el titulo mientras el BOT trabaja por lo bajo -->
+    <FrameLayout
+        android:id="@+id/layerWebBoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#050506"
+        android:elevation="5dp">
+
+        <ProgressBar
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="#C9A96E" />
+
+        <TextView
+            android:id="@+id/txtWebBootMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="88dp"
+            android:text="Preparando reproductor…"
+            android:textColor="#8A8A93"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
     <ImageView
         android:id="@+id/btnWebPlayerBack"
         android:layout_width="40dp"
