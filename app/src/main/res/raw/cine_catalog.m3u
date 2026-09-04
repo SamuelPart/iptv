@@ -1,7 +1,8 @@
 #EXTM3U
-#EXTINF:-1 tvg-logo="" group-title="Peliculas",Toy Story 5 (2026)
-https://gscdn.cam/video/embed/du48xogsk8k5
 
+#EXTINF:-1 tvg-logo="" group-title="Peliculas",Toy Story 5 (2026)
+#EXTINF:-1 tvg-logo="" group-title="Peliculas",Guerra mundial Z (2013)
+https://cdn42.pixeldrain.eu.cc/api/file/VXNdb3rr
 #EXTINF:-1 tvg-logo="" group-title="Peliculas",Los burdeles de Paprika (1991)
 https://archive.org/download/paprika-1991_202509/Paprika%20%281991%29.mp4
 
