@@ -1967,6 +1967,11 @@ class MainActivity : AppCompatActivity() {
 
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
+            // Pre-calienta el cache de generos (fuera del hilo de UI) ANTES de
+            // armar secciones: asi ni el primer toque en PELICULAS/SERIES congela.
+            withContext(Dispatchers.Default) {
+                try { catalog.forEach { TasteProfile.genreKeysOf(it) } } catch (_: Exception) {}
+            }
             refreshCoverData()
             setupCineFeatured()
             CineNewNotifier.onCatalogLoaded(this@MainActivity, catalog)
@@ -2312,8 +2317,9 @@ class MainActivity : AppCompatActivity() {
     private fun switchPremierKind(kind: String) {
         premierKind = if (premierKind == kind) "all" else kind
         updateKindChips()
+        // setupCineFeatured() ya llama a buildCineSections() internamente:
+        // antes se llamaba DOS veces por toque y congelaba la pestaña Cine.
         setupCineFeatured()
-        buildCineSections()
         buildCineReco()
     }
 

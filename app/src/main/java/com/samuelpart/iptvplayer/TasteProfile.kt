@@ -33,9 +33,17 @@ object TasteProfile {
         "música" to listOf("musical", "música", "concierto", "concert", "rap", "jazz")
     )
 
+    // Memoizacion de generos por titulo+grupo: clasificar ~9.5k titulos cada vez
+    // que se toca PELICULAS/SERIES en el menu congelaba la UI. Se calcula UNA vez.
+    private val genreCache = java.util.concurrent.ConcurrentHashMap<String, List<String>>()
+
     fun genreKeysOf(media: CineMedia): List<String> {
+        val key = "${media.title}|${media.group}"
+        genreCache[key]?.let { return it }
         val blob = "${media.title} ${media.searchTitle} ${media.group} ${media.overview ?: ""}".lowercase()
-        return GENRE_KEYS.filter { (_, keys) -> keys.any { blob.contains(it) } }.keys.toList()
+        val result = GENRE_KEYS.filter { (_, keys) -> keys.any { blob.contains(it) } }.keys.toList()
+        genreCache[key] = result
+        return result
     }
 
     // ---------- persistencia ----------
