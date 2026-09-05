@@ -32,6 +32,7 @@ object ScraperConfig {
     private const val KEY_CONFIG_JSON = "config_json"
 
     private val CONFIG_URLS = listOf(
+        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a06729-iptv/scraper_config.json",
         "https://raw.githubusercontent.com/SamuelPart/iptv/main/scraper_config.json",
         "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a04133-iptv/scraper_config.json"
     )

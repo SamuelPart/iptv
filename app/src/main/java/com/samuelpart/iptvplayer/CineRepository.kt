@@ -1,6 +1,7 @@
 package com.samuelpart.iptvplayer
 
 import android.content.Context
+import android.net.Uri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,6 +27,7 @@ object CineRepository {
      */
     private const val CATALOG_CACHE_FILE = "cine_catalog_remote.m3u"
     private val CATALOG_URLS = listOf(
+        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a06729-iptv/app/src/main/res/raw/cine_catalog.m3u",
         "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a04133-iptv/app/src/main/res/raw/cine_catalog.m3u",
         "https://raw.githubusercontent.com/SamuelPart/iptv/main/app/src/main/res/raw/cine_catalog.m3u"
     )
@@ -49,6 +51,23 @@ object CineRepository {
     fun looksLikeDirectVideo(url: String): Boolean {
         val lower = url.lowercase().substringBefore('?').substringBefore('#')
         return DIRECT_VIDEO_EXTENSIONS.any { lower.endsWith(it) }
+    }
+
+    /** Hosts que entregan el ARCHIVO de video directo aunque la URL no tenga
+     *  extension (.mp4/.mkv...). Ej: pixeldrain /api/file/{id} devuelve el
+     *  video crudo y Dropbox directo (dl.dropboxusercontent.com). */
+    private val DIRECT_STREAM_HOSTS = listOf(
+        "pixeldrain", "dl.dropboxusercontent.com"
+    )
+
+    /** True si VLC puede reproducir el enlace directamente: extension de video
+     *  O host de descarga directa. Si es true, el enlace NUNCA pasa por el
+     *  reproductor web (va derecho a VLC). */
+    fun isDirectStreamUrl(url: String): Boolean {
+        if (looksLikeDirectVideo(url)) return true
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return false
+        val host = Uri.parse(url).host?.lowercase() ?: return false
+        return DIRECT_STREAM_HOSTS.any { host.contains(it) }
     }
 
     fun isRemotePlaylist(url: String): Boolean {

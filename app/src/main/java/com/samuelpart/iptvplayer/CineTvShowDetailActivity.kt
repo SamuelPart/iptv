@@ -363,8 +363,8 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         hideStatusBarInline()
 
         // OBsoleto el extractor: pagina/embed -> WebPlayer + BOT; solo VLC para
-        // video directo real (extensiones).
-        if (CineRepository.looksLikeDirectVideo(streamUrl)) {
+        // video directo real (extensiones o hosts de descarga directa).
+        if (CineRepository.isDirectStreamUrl(streamUrl)) {
             playStreamDirectly(streamUrl, startMs, displayTitle)
         } else {
             stopInlinePlayback()

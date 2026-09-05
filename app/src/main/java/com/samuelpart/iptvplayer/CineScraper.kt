@@ -138,7 +138,7 @@ object CineScraper {
      */
     fun shouldResolvePage(url: String): Boolean {
         if (!url.startsWith("http://") && !url.startsWith("https://")) return false
-            if (CineRepository.looksLikeDirectVideo(url)) return false // already a direct stream
+            if (CineRepository.isDirectStreamUrl(url)) return false // already a direct stream
         if (ScraperConfig.isWebPageUrl(url)) return true
         if (ScraperConfig.isKnownHosterUrl(url)) return true
         val path = (Uri.parse(url).path ?: "").lowercase()

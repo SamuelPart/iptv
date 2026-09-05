@@ -145,7 +145,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
 
     private fun playNow() {
         val streamUrl = if (media.urls.isNotEmpty()) media.urls[0] else media.url
-        if (CineRepository.looksLikeDirectVideo(streamUrl)) {
+        if (CineRepository.isDirectStreamUrl(streamUrl)) {
             openPlayer(streamUrl, null, null)
         } else {
             // PAGINA / EMBED / IFRAME -> WebPlayer fullscreen + BOT (cero extractor)
