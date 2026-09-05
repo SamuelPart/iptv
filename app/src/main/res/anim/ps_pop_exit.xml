@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PS5-style close: zoom-out swoop back into the grid -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="true"
+    android:interpolator="@android:interpolator/accelerate_quad"
+    android:duration="300">
+    <alpha android:fromAlpha="1" android:toAlpha="0" />
+    <scale
+        android:fromXScale="1" android:toXScale="0.86"
+        android:fromYScale="1" android:toYScale="0.86"
+        android:pivotX="50%" android:pivotY="50%" />
+    <translate android:fromYDelta="0%" android:toYDelta="6%" />
+</set>

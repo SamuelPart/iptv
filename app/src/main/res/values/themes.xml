@@ -1,0 +1,50 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- v3 midnight-indigo glass theme with PlayStation-5 zoom transitions -->
+    <style name="Theme.IPTVPlayer" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/ios_blue</item>
+        <item name="colorPrimaryDark">@color/ios_bg</item>
+        <item name="colorAccent">@color/ios_violet</item>
+
+        <item name="android:windowBackground">@drawable/bg_ios_gradient</item>
+        <item name="android:statusBarColor">#16181C</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+
+        <!-- PlayStation-style transitions for EVERY activity, theme-wide -->
+        <item name="android:windowAnimationStyle">@style/PSAnimations</item>
+
+        <!-- Ventanas emergentes estilo iPhone -->
+        <item name="android:alertDialogTheme">@style/iOSAlertDialog</item>
+        <item name="alertDialogTheme">@style/iOSAlertDialogCompat</item>
+    </style>
+
+    <style name="iOSAlertDialogCompat" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/bg_dialog_ios</item>
+        <item name="android:colorAccent">@color/ios_blue</item>
+        <item name="android:textColorPrimary">#F2FFFFFF</item>
+        <item name="android:windowAnimationStyle">@style/iOSPopupAnimation</item>
+    </style>
+
+    <!-- Animacion de popups iPhone -->
+    <style name="iOSPopupAnimation" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/ps_dialog_in</item>
+        <item name="android:windowExitAnimation">@anim/ps_dialog_out</item>
+    </style>
+
+    <!-- AlertDialogs: panel de vidrio oscuro redondeado -->
+    <style name="iOSAlertDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@drawable/bg_dialog_ios</item>
+        <item name="android:colorAccent">@color/ios_blue</item>
+        <item name="android:textColorPrimary">#F2FFFFFF</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.62</item>
+    </style>
+
+    <!-- Activity transitions: PS5 zoom out from card / swoop back -->
+    <style name="PSAnimations" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/ps_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/ps_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/ps_pop_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/ps_pop_exit</item>
+    </style>
+</resources>

@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#0D0E11">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- HERO: poster/backdrop full-bleed con play centrado -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="520dp">
+
+            <ImageView
+                android:id="@+id/imgDetailHero"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_backdrop_fade" />
+
+            <ImageView
+                android:id="@+id/btnDetailBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_circle_glass"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="9dp"
+                android:src="@drawable/ic_back_chevron"
+                app:tint="#F2F2F4" />
+
+            <ImageView
+                android:id="@+id/imgDetailPlatform"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="16dp"
+                android:visibility="gone"
+                android:scaleType="fitCenter" />
+
+            <FrameLayout
+                android:id="@+id/btnHeroPlay"
+                android:layout_width="74dp"
+                android:layout_height="74dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_circle_champagne"
+                android:clickable="true"
+                android:focusable="true"
+                android:elevation="10dp">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="3dp"
+                    android:src="@drawable/ic_ios_play"
+                    app:tint="#16181C" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <!-- TARJETA DE CONTENIDO (solapa el hero) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="-44dp"
+            android:background="@drawable/bg_card_ios"
+            android:paddingStart="22dp"
+            android:paddingEnd="22dp"
+            android:paddingTop="26dp"
+            android:paddingBottom="32dp">
+
+            <TextView
+                android:id="@+id/txtDetailTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#F5F5F7"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtDetailSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#9A9AA3"
+                android:textSize="13sp"
+                android:textStyle="italic" />
+
+            <!-- chips row: genero | 16+ | ★ rating | fav -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="14dp">
+
+                <TextView
+                    android:id="@+id/chipGenreDetail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_chip_idle"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="7dp"
+                    android:text="Acción"
+                    android:textColor="#C9A96E"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/chipAgeDetail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_chip_idle"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="7dp"
+                    android:text="16+"
+                    android:textColor="#C9C9D1"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:src="@drawable/ic_ios_star_fill"
+                        app:tint="#E50914" />
+
+                    <TextView
+                        android:id="@+id/txtDetailRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="—"
+                        android:textColor="#F5F5F7"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:id="@+id/btnDetailFav"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_heart_modern" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="Story Line"
+                android:textColor="#F5F5F7"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtDetailStory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:maxLines="5"
+                android:ellipsize="end"
+                android:textColor="#9A9AA3"
+                android:textSize="13.5sp"
+                android:lineSpacingExtra="3dp" />
+
+            <TextView
+                android:id="@+id/btnStoryMore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="More"
+                android:textColor="#E50914"
+                android:textSize="12.5sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtCastHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:visibility="gone"
+                android:text="Star Cast"
+                android:textColor="#F5F5F7"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDetailCast"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="10dp"
+                android:visibility="gone"
+                android:clipToPadding="false"
+                android:clipChildren="false" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

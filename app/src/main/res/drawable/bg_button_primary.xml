@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v3 primary action: indigo -> violet -> cyan "aurora" pill (PS5 feel) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="45"
+        android:startColor="#C9A96E"
+        android:centerColor="#B08D57"
+        android:endColor="#8C7348"
+        android:type="linear" />
+    <corners android:radius="28dp" />
+</shape>
