@@ -1,0 +1,1319 @@
+package com.samuelpart.iptvplayer
+
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.mediarouter.media.MediaControlIntent
+import androidx.mediarouter.media.MediaRouteSelector
+import androidx.mediarouter.media.MediaRouter
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.cast.CastMediaControlIntent
+import com.google.android.gms.cast.MediaInfo
+import com.google.android.gms.cast.MediaMetadata
+import com.google.android.gms.cast.MediaLoadRequestData
+import com.google.android.gms.cast.framework.CastContext
+import com.google.android.gms.cast.framework.CastSession
+import com.google.android.gms.cast.framework.SessionManagerListener
+import com.samuelpart.iptvplayer.databinding.ActivityPlayerBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.videolan.libvlc.LibVLC
+import org.videolan.libvlc.Media
+import org.videolan.libvlc.MediaPlayer
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.ArrayList
+
+class PlayerActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityPlayerBinding
+    
+    // LibVLC player variables - Completely replacing ExoPlayer/Media3!
+    private var libVlc: LibVLC? = null
+    private var mediaPlayer: MediaPlayer? = null
+    
+    private var channelName: String = "Canal"
+    private var channelUrl: String? = null
+    // Headers captured during real-time web extraction (required by most video hosters)
+    private var streamReferer: String? = null
+    private var streamUserAgent: String? = null
+    private var pageResolveAttempted = false
+    private var isControllerVisible = true
+    private var startPosition: Long = 0L
+    private var pendingSeekPosition: Long = 0L
+    private var isLiveTv: Boolean = false
+    private var channelLogo: String? = null
+    private var cineMedia: CineMedia? = null
+    private var currentSpeed: Float = 1f
+    private var nightModeActive = false
+    private var subtitleFilePath: String? = null
+    private val failedSources = mutableSetOf<String>()
+    private var volumeGestureAccum = 0f
+    private val gestureHideRunnable = Runnable { binding.txtGestureIndicator.visibility = View.GONE }
+    private val audioManager by lazy { getSystemService(AUDIO_SERVICE) as android.media.AudioManager }
+    private val subtitlePicker = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) applyExternalSubtitle(uri)
+    }
+
+    // List of alternative stream sources from web browser detection
+    private var allSources: ArrayList<String>? = null
+
+    // Remote control variables
+    private var activeCastDevice: CastDevice? = null
+    private var isCastPlaying = true
+    private var castPollingJob: kotlinx.coroutines.Job? = null
+
+    // Google Cast variables
+    private var castContext: CastContext? = null
+    private var castSession: CastSession? = null
+    private val sessionManagerListener = object : SessionManagerListener<CastSession> {
+        override fun onSessionStarted(session: CastSession, sessionId: String) {
+            castSession = session
+            loadMediaOnTv(session)
+        }
+
+        override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) {
+            castSession = session
+        }
+
+        override fun onSessionResuming(session: CastSession, sessionId: String) {}
+
+        override fun onSessionEnded(session: CastSession, error: Int) {
+            castSession = null
+        }
+
+        override fun onSessionStarting(session: CastSession) {}
+        override fun onSessionStartFailed(session: CastSession, error: Int) {}
+        override fun onSessionEnding(session: CastSession) {}
+        override fun onSessionResumeFailed(session: CastSession, error: Int) {}
+        override fun onSessionSuspended(session: CastSession, reason: Int) {}
+    }
+
+    // MediaRouter for Google Cast discovering inside the unified list
+    private lateinit var mediaRouter: MediaRouter
+    private val discoveredDevicesList = mutableListOf<CastDevice>()
+    private lateinit var castDeviceAdapter: CastDeviceAdapter
+
+    private val mediaRouterCallback = object : MediaRouter.Callback() {
+        override fun onRouteAdded(router: MediaRouter, route: MediaRouter.RouteInfo) {
+            super.onRouteAdded(router, route)
+            if (route.supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK) ||
+                route.supportsControlCategory(CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID))) {
+                
+                val address = route.id
+                if (discoveredDevicesList.none { it.ip == address }) {
+                    discoveredDevicesList.add(CastDevice(route.name, address, 0, "Google Cast", route))
+                    runOnUiThread {
+                        castDeviceAdapter.updateList(discoveredDevicesList)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // IFRAME MODE: paginas web orientadas a iframe (nupload.top etc) se
+        // reproducen CON SU PROPIO PLAYER dentro del nuestro. VLC solo recibe
+        // enlaces directos de video (.mp4/.mkv/.m3u8/...).
+        run {
+            val raw = intent.getStringExtra("channelUrl") ?: ""
+            if (raw.isNotBlank() && WebVideoPlayerActivity.isEmbedUrl(raw)) {
+                val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
+                startActivity(
+                    Intent(this, WebVideoPlayerActivity::class.java).apply {
+                        putExtra("channelName", title)
+                        putExtra("channelUrl", raw)
+                        putExtra("streamReferer", intent.getStringExtra("streamReferer"))
+                        putExtra("streamUserAgent", intent.getStringExtra("streamUserAgent"))
+                    }
+                )
+                finish()
+                return
+            }
+        }
+
+        try {
+            binding = ActivityPlayerBinding.inflate(layoutInflater)
+            setContentView(binding.root)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error de inicialización de pantalla", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
+        // Make activity fullscreen
+        hideSystemUI()
+
+        // Get safe parameters from intent
+        channelName = intent.getStringExtra("channelName") ?: "Canal Desconocido"
+        channelUrl = intent.getStringExtra("channelUrl")
+        allSources = intent.getStringArrayListExtra("allSources")
+        startPosition = intent.getLongExtra("startPosition", 0L)
+        isLiveTv = intent.getBooleanExtra("isLiveTv", false)
+        channelLogo = intent.getStringExtra("channelLogo")
+        @Suppress("DEPRECATION")
+        cineMedia = intent.getSerializableExtra("cineMedia") as? CineMedia
+        // Headers captured by the real-time extractor in the detail screen (if any)
+        streamReferer = intent.getStringExtra("streamReferer")
+        streamUserAgent = intent.getStringExtra("streamUserAgent")
+
+        if (channelUrl.isNullOrEmpty()) {
+            Toast.makeText(this, "Error: Enlace de reproducción no disponible", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        binding.txtPlayingName.text = channelName
+        
+        if (isLiveTv) {
+            // Hide rewind/forward and timeline for TV channels as requested
+            binding.btnRewind.visibility = View.GONE
+            binding.btnForward.visibility = View.GONE
+            binding.layoutBottomTimeline.visibility = View.GONE
+            // LIVE look: red pulsing badge in the floating header pill
+            binding.txtLiveBadge.visibility = View.VISIBLE
+            android.animation.ObjectAnimator.ofFloat(binding.txtLiveBadge, "alpha", 0.35f).apply {
+                duration = 850
+                repeatCount = android.animation.ValueAnimator.INFINITE
+                repeatMode = android.animation.ValueAnimator.REVERSE
+                start()
+            }
+        }
+        
+        // iOS spring touch on the player controls
+        binding.btnPlayPause.springPress()
+        binding.btnRewind.springPress()
+        binding.btnForward.springPress()
+        binding.btnBack.springPress()
+        binding.btnPip.springPress()
+        binding.btnShareTv.springPress()
+
+        // Speed + subtitles solo para contenido bajo demanda (no live TV)
+        if (isLiveTv) {
+            binding.btnPlaybackSpeed.visibility = View.GONE
+            binding.btnSubtitles.visibility = View.GONE
+        } else {
+            binding.btnPlaybackSpeed.visibility = View.VISIBLE
+            binding.btnSubtitles.visibility = View.VISIBLE
+        }
+        binding.btnPlaybackSpeed.setOnClickListener { cyclePlaybackSpeed() }
+        binding.btnSubtitles.setOnClickListener { subtitlePicker.launch("*/*") }
+        binding.btnNightMode.setOnClickListener { toggleNightMode() }
+        binding.btnNightMode.springPress()
+        binding.btnPlaybackSpeed.springPress()
+        binding.btnSubtitles.springPress()
+        applyAccentColor()
+
+        // Clicking back button should close player and return to preceding screen (inline player) with exact time!
+        binding.btnBack.setOnClickListener {
+            returnToSmallScreen()
+        }
+
+        // Cast / Share to TV button click listener (Checks permissions first!)
+        binding.btnShareTv.setOnClickListener {
+            checkCastPermissionsAndScan()
+        }
+
+        // PiP / Floating Window button click listener
+        binding.btnPip.setOnClickListener {
+            enterPipMode()
+        }
+
+        // Initialize source selector button visibility based on availability of options
+        if (!allSources.isNullOrEmpty()) {
+            binding.btnSelectSource.visibility = View.VISIBLE
+            binding.btnSelectSource.setOnClickListener {
+                showSourceSelectorDialog()
+            }
+        } else {
+            binding.btnSelectSource.visibility = View.GONE
+        }
+
+        // Initialize Double-Tap Gesture Detector for 10s skip (disabled for Live TV)
+        val gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
+                if (isLiveTv) return false
+                val width = binding.viewTouchTarget.width
+                val x = e.x
+                if (x < width / 2) {
+                    // Left double-tap -> Rewind 10s
+                    mediaPlayer?.let { player ->
+                        val target = (player.time - 10000).coerceAtLeast(0)
+                        player.time = target
+                        animateDoubleTapIndicator(true)
+                    }
+                } else {
+                    // Right double-tap -> Forward 10s
+                    mediaPlayer?.let { player ->
+                        val total = player.length
+                        val target = player.time + 10000
+                        if (total > 0) {
+                            player.time = target.coerceAtMost(total)
+                        } else {
+                            player.time = target
+                        }
+                        animateDoubleTapIndicator(false)
+                    }
+                }
+                return true
+            }
+
+            override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean {
+                val isVisible = binding.layoutPlayerControls.visibility == View.VISIBLE
+                if (isVisible) {
+                    binding.layoutPlayerControls.visibility = View.GONE
+                    hideSystemUI()
+                } else {
+                    binding.layoutPlayerControls.visibility = View.VISIBLE
+                    startAutoHideControlsTimer()
+                }
+                return true
+            }
+
+            override fun onDown(e: android.view.MotionEvent): Boolean {
+                volumeGestureAccum = 0f
+                return true
+            }
+
+            /** Vertical drag: LEFT half = brightness, RIGHT half = volume. */
+            override fun onScroll(
+                e1: android.view.MotionEvent?,
+                e2: android.view.MotionEvent,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
+                val height = binding.viewTouchTarget.height
+                if (height <= 0 || e1 == null) return true
+                if (e1.x < binding.viewTouchTarget.width / 2f) {
+                    val attrs = window.attributes
+                    val current = if (attrs.screenBrightness < 0f) 0.55f else attrs.screenBrightness
+                    val target = (current + (-distanceY / height) * 1.6f).coerceIn(0.05f, 1f)
+                    attrs.screenBrightness = target
+                    window.attributes = attrs
+                    showGestureIndicator("BRIGHTNESS:${(target * 100).toInt()}%")
+                } else {
+                    volumeGestureAccum += -distanceY
+                    if (Math.abs(volumeGestureAccum) > 24f) {
+                        val max = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+                        val cur = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+                        var target = cur
+                        if (volumeGestureAccum > 0 && cur < max) target = cur + 1
+                        if (volumeGestureAccum < 0 && cur > 0) target = cur - 1
+                        if (target != cur) {
+                            audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, target, 0)
+                            showGestureIndicator("VOLUME:${target * 100 / max}%")
+                        }
+                        volumeGestureAccum = 0f
+                    }
+                }
+                return true
+            }
+
+        })
+
+        // Feed touch events from touch target to gesture detector
+        binding.viewTouchTarget.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            true
+        }
+
+        // Remote control panel click listeners
+        binding.btnCastPlayPause.setOnClickListener {
+            toggleCastPlayPause()
+        }
+        binding.btnCastDisconnect.setOnClickListener {
+            stopCastingAndRestoreLocalPlay()
+        }
+
+        // Local Play/Pause button click listener
+        binding.btnPlayPause.setOnClickListener {
+            togglePlayPauseInternal()
+        }
+
+        // Rewind and Forward 10s button listeners
+        binding.btnRewind.setOnClickListener {
+            mediaPlayer?.let {
+                val target = (it.time - 10000).coerceAtLeast(0)
+                it.time = target
+                Toast.makeText(this, "-10s", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnForward.setOnClickListener {
+            mediaPlayer?.let {
+                val total = it.length
+                val target = (it.time + 10000)
+                if (total > 0) {
+                    it.time = target.coerceAtMost(total)
+                } else {
+                    it.time = target
+                }
+                Toast.makeText(this, "+10s", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Seekbar progress user tracking
+        binding.vlcSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    mediaPlayer?.let {
+                        val totalMs = it.length
+                        if (totalMs > 0) {
+                            val seekTarget = (progress * totalMs) / 100
+                            it.time = seekTarget
+                        }
+                    }
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // Safely initialize Google Cast Context
+        try {
+            castContext = CastContext.getSharedInstance(this)
+            castSession = castContext?.sessionManager?.currentCastSession
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // Initialize MediaRouter for Chromecast discovery
+        mediaRouter = MediaRouter.getInstance(this)
+
+        initializePlayer()
+        startAutoHideControlsTimer()
+    }
+
+    private fun initializePlayer() {
+        if (mediaPlayer != null) return
+
+        val streamUrl = channelUrl ?: return
+
+        // If this is a streaming page / embedded player instead of a direct stream,
+        // visit the source page RIGHT NOW, extract the fresh temporary video URL
+        // (they expire every few hours, so nothing is stored) and then play it.
+        // Live TV channels are always direct streams: never resolve them.
+        // EXTRACTOR RETIRADO: las paginas/embeds NUNCA pasan por VLC — van al
+        // WebPlayer fullscreen con BOT (vive en otra activity).
+        if (!isLiveTv && CineScraper.shouldResolvePage(streamUrl)) {
+            startActivity(
+                Intent(this, WebVideoPlayerActivity::class.java).apply {
+                    putExtra("channelName", channelName)
+                    putExtra("channelUrl", streamUrl)
+                    putExtra("streamReferer", streamReferer)
+                    putExtra("streamUserAgent", streamUserAgent)
+                }
+            )
+            finish()
+            return
+        }
+
+        binding.playerProgress.visibility = View.VISIBLE
+
+        val freshStream = intent.getBooleanExtra("freshStream", false)
+        val savedPos = getSharedPreferences("iptv_pref", android.content.Context.MODE_PRIVATE)
+            .getLong("pos_$channelName", 0L)
+        // freshStream: recien extraido por el BOT -> NUNCA reanuda
+        pendingSeekPosition = if (startPosition > 0L) startPosition else if (freshStream) 0L else savedPos
+
+        try {
+            // Optimized VLC arguments for peak Android IPTV performance
+            val options = ArrayList<String>().apply {
+                add("-vvv")
+                add("--http-reconnect")
+                add("--network-caching=800") // Ultra-low latency startup buffering (under 1 second!)
+                add("--file-caching=800")
+                add("--clock-jitter=0") // Instantly sync player clock
+                add("--rtsp-tcp") // Force TCP for lightning fast RTSP connections
+                add("--drop-late-frames")
+                add("--skip-frames")
+            }
+            libVlc = LibVLC(this, options)
+            
+            mediaPlayer = MediaPlayer(libVlc).apply {
+                // Bind layout surface directly
+                attachViews(binding.vlcVideoLayout, null, true, false)
+                
+                // Add event callbacks for buffering and states
+                setEventListener { event ->
+                    when (event.type) {
+                        MediaPlayer.Event.Buffering -> {
+                            val buffering = event.getBuffering()
+                            if (buffering < 100f) {
+                                binding.playerProgress.visibility = View.VISIBLE
+                            } else {
+                                binding.playerProgress.visibility = View.GONE
+                            }
+                        }
+                        MediaPlayer.Event.Playing -> {
+                            binding.playerProgress.visibility = View.GONE
+                            updatePlayPauseButtonIcon(true)
+                            
+                            if (pendingSeekPosition > 0L) {
+                                val len = mediaPlayer?.length ?: 0L
+                                // CLAMP: posicion guardada > final real = se cerraba solo
+                                if (len > 0 && pendingSeekPosition >= len - 20000L) {
+                                    pendingSeekPosition = 0L
+                                } else {
+                                    mediaPlayer?.time = pendingSeekPosition
+                                    Toast.makeText(this@PlayerActivity, "Reanudando desde ${formatTime(pendingSeekPosition)}", Toast.LENGTH_SHORT).show()
+                                    pendingSeekPosition = 0L
+                                }
+                            }
+                            
+                            startTimelineUpdates()
+                        }
+                        MediaPlayer.Event.Paused -> {
+                            updatePlayPauseButtonIcon(false)
+                        }
+                        MediaPlayer.Event.Stopped -> {
+                            binding.playerProgress.visibility = View.GONE
+                        }
+                        MediaPlayer.Event.EndReached -> {
+                            binding.playerProgress.visibility = View.GONE
+                            finish()
+                        }
+                        MediaPlayer.Event.EncounteredError -> {
+                            binding.playerProgress.visibility = View.GONE
+                            channelUrl?.let { failedSources.add(it) }
+                            val nextSource = allSources?.firstOrNull { it !in failedSources }
+                            if (nextSource != null) {
+                                Toast.makeText(
+                                    this@PlayerActivity,
+                                    "Servidor caido — probando otra opcion automaticamente...",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                switchSource(nextSource)
+                            } else {
+                                Toast.makeText(this@PlayerActivity, "Error de reproducción con VLC", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Create and set Media
+            val media = Media(libVlc, Uri.parse(streamUrl)).apply {
+                // Enable hardware decoding for flawless 4K stream performance
+                setHWDecoderEnabled(true, false)
+                // Streams extracted in real time often require these headers or they refuse to load
+                if (!streamReferer.isNullOrEmpty()) addOption(":http-referrer=$streamReferer")
+                if (!streamUserAgent.isNullOrEmpty()) addOption(":http-user-agent=$streamUserAgent")
+                if (!subtitleFilePath.isNullOrEmpty()) addOption(":sub-file=$subtitleFilePath")
+            }
+            mediaPlayer?.media = media
+            media.release()
+            
+            mediaPlayer?.play()
+            
+        } catch (e: Exception) {
+            e.printStackTrace()
+            binding.playerProgress.visibility = View.GONE
+            Toast.makeText(
+                this,
+                "Error al iniciar el reproductor VLC: ${e.localizedMessage}",
+                Toast.LENGTH_LONG
+            ).show()
+            finish()
+        }
+    }
+
+    private var timelineJob: kotlinx.coroutines.Job? = null
+    private fun startTimelineUpdates() {
+        timelineJob?.cancel()
+        timelineJob = lifecycleScope.launch {
+            while (mediaPlayer != null) {
+                val player = mediaPlayer ?: break
+                if (player.isPlaying) {
+                    val currentMs = player.time
+                    val totalMs = player.length
+                    
+                    if (totalMs > 0) {
+                        binding.vlcSeekBar.progress = ((currentMs * 100) / totalMs).toInt()
+                        binding.txtCurrentTime.text = formatTime(currentMs)
+                        binding.txtTotalTime.text = formatTime(totalMs)
+                        
+                        // Save playback progress to resume later if user exits!
+                        getSharedPreferences("iptv_pref", android.content.Context.MODE_PRIVATE)
+                            .edit()
+                            .putLong("pos_$channelName", currentMs)
+                            .apply()
+                    } else {
+                        // Live IPTV Streams
+                        binding.vlcSeekBar.progress = 100
+                        binding.txtCurrentTime.text = "LIVE"
+                        binding.txtTotalTime.text = "LIVE"
+                    }
+                }
+                kotlinx.coroutines.delay(1000)
+            }
+        }
+    }
+
+    private fun formatTime(millis: Long): String {
+        val totalSecs = millis / 1000
+        val seconds = totalSecs % 60
+        val minutes = (totalSecs / 60) % 60
+        val hours = totalSecs / 3600
+        return if (hours > 0) {
+            String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format("%02d:%02d", minutes, seconds)
+        }
+    }
+
+    private var hideControlsJob: kotlinx.coroutines.Job? = null
+    private fun startAutoHideControlsTimer() {
+        hideControlsJob?.cancel()
+        hideControlsJob = lifecycleScope.launch {
+            kotlinx.coroutines.delay(5000)
+            binding.layoutPlayerControls.visibility = View.GONE
+            hideSystemUI()
+        }
+    }
+
+    private fun togglePlayPauseInternal() {
+        val player = mediaPlayer ?: return
+        if (player.isPlaying) {
+            player.pause()
+            updatePlayPauseButtonIcon(false)
+        } else {
+            player.play()
+            updatePlayPauseButtonIcon(true)
+        }
+    }
+
+    private fun updatePlayPauseButtonIcon(isPlaying: Boolean) {
+        if (isPlaying) {
+            binding.btnPlayPause.setImageResource(R.drawable.ic_ios_pause)
+        } else {
+            binding.btnPlayPause.setImageResource(R.drawable.ic_ios_play)
+        }
+    }
+
+    private fun cyclePlaybackSpeed() {
+        val speeds = listOf(0.75f, 1f, 1.5f, 2f)
+        val nextIndex = (speeds.indexOf(currentSpeed) + 1) % speeds.size
+        currentSpeed = speeds[nextIndex]
+        try {
+            mediaPlayer?.rate = currentSpeed
+        } catch (_: Exception) { }
+        binding.btnPlaybackSpeed.text = if (currentSpeed == 1f) "1x" else "${currentSpeed}x"
+        Toast.makeText(this, "Velocidad: ${currentSpeed}x", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toggleNightMode() {
+        nightModeActive = !nightModeActive
+        binding.viewNightDimmer.visibility = if (nightModeActive) View.VISIBLE else View.GONE
+        binding.layoutPlayerControls.alpha = if (nightModeActive) 0.35f else 1.0f
+        Toast.makeText(this, if (nightModeActive) "Modo noche activado" else "Modo noche desactivado", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun applyExternalSubtitle(uri: android.net.Uri) {
+        try {
+            val dst = java.io.File(cacheDir, "subtitle_${channelUrl.hashCode()}.srt")
+            contentResolver.openInputStream(uri)?.use { input ->
+                dst.outputStream().use { output -> input.copyTo(output) }
+            }
+            if (!dst.exists() || dst.length() == 0L) {
+                Toast.makeText(this, "Archivo de subtitulos vacio", Toast.LENGTH_SHORT).show()
+                return
+            }
+            subtitleFilePath = dst.absolutePath
+            val ok = try {
+                mediaPlayer?.addSlave(1, dst.absolutePath, true)
+            } catch (_: Exception) {
+                false
+            }
+            Toast.makeText(
+                this,
+                if (ok == true) "Subtitulos activados" else "Subtitulos listos (se aplican al reproducir)",
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "No se pudo cargar el archivo .srt", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showGestureIndicator(text: String) {
+        binding.txtGestureIndicator.text = text
+        binding.txtGestureIndicator.visibility = View.VISIBLE
+        binding.txtGestureIndicator.removeCallbacks(gestureHideRunnable)
+        binding.txtGestureIndicator.postDelayed(gestureHideRunnable, 900)
+    }
+
+    /** Re-tints the player dock with the user-chosen accent color. */
+    private fun applyAccentColor() {
+        val list = AccentManager.list(this)
+        binding.btnPip.imageTintList = list
+        binding.btnShareTv.imageTintList = list
+        binding.btnSubtitles.imageTintList = list
+        binding.btnNightMode.imageTintList = list
+        binding.btnSelectSource.imageTintList = list
+        binding.btnRewind.imageTintList = list
+        binding.btnForward.imageTintList = list
+        binding.vlcSeekBar.progressTintList = list
+        binding.vlcSeekBar.thumbTintList = list
+        binding.playerProgress.indeterminateTintList = list
+    }
+
+    private fun showSourceSelectorDialog() {
+        val sources = allSources ?: return
+        if (sources.isEmpty()) return
+
+        val friendlyNames = sources.mapIndexed { index, url ->
+            val isCurrent = (url == channelUrl)
+            val indicator = if (isCurrent) " (Actual)" else ""
+            "Opción ${index + 1}: ${getDomainName(url)} [${getFileExtension(url)}]$indicator"
+        }.toTypedArray()
+
+        AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+            .setTitle("Cambiar de Servidor / Calidad")
+            .setItems(friendlyNames) { _, which ->
+                val selectedUrl = sources[which]
+                if (selectedUrl != channelUrl) {
+                    switchSource(selectedUrl)
+                }
+            }
+            .setNegativeButton("Cerrar", null)
+            .show()
+    }
+
+    private fun switchSource(newUrl: String) {
+        channelUrl = newUrl
+        // Reset extraction state so the new server gets its own fresh real-time resolution
+        streamReferer = null
+        streamUserAgent = null
+        pageResolveAttempted = false
+        if (channelName.startsWith("Video Web")) channelName = "Video Web: " + getDomainName(newUrl)
+        binding.txtPlayingName.text = channelName
+        
+        releasePlayer()
+        initializePlayer()
+        
+        Toast.makeText(this, "Cambiando de servidor...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun getFileExtension(url: String): String {
+        return try {
+            val cleanUrl = url.lowercase().split("?")[0]
+            val lastDot = cleanUrl.lastIndexOf('.')
+            if (lastDot != -1) {
+                cleanUrl.substring(lastDot + 1).uppercase()
+            } else {
+                "STREAM"
+            }
+        } catch (e: Exception) {
+            "VIDEO"
+        }
+    }
+
+    private fun getDomainName(url: String): String {
+        return try {
+            val uri = Uri.parse(url)
+            val host = uri.host ?: return "Servidor"
+            host.replace("www.", "")
+        } catch (e: Exception) {
+            "Servidor"
+        }
+    }
+
+    private fun showUnifiedCastDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_cast_selector, null)
+        
+        val layoutScanning = dialogView.findViewById<LinearLayout>(R.id.layoutCastScanning)
+        val rvDevices = dialogView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvCastDevices)
+        val btnClose = dialogView.findViewById<Button>(R.id.btnCancelCast)
+
+        discoveredDevicesList.clear()
+        
+        rvDevices.layoutManager = LinearLayoutManager(this)
+        castDeviceAdapter = CastDeviceAdapter(emptyList()) { selectedDevice ->
+            connectAndCastToDevice(selectedDevice)
+        }
+        rvDevices.adapter = castDeviceAdapter
+
+        val dialog = AlertDialog.Builder(this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert)
+            .setView(dialogView)
+            .create()
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.setOnDismissListener {
+            try {
+                mediaRouter.removeCallback(mediaRouterCallback)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        try {
+            val selector = MediaRouteSelector.Builder()
+                .addControlCategory(CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID))
+                .build()
+            mediaRouter.addCallback(selector, mediaRouterCallback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        layoutScanning.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            val localDevices = UniversalCaster.discoverDevices(this@PlayerActivity)
+            
+            for (dev in localDevices) {
+                if (discoveredDevicesList.none { it.ip == dev.ip }) {
+                    discoveredDevicesList.add(dev)
+                }
+            }
+
+            discoveredDevicesList.add(CastDevice("Transmitir con Smart View del Sistema 📺", "system_cast", 0, "SystemCast"))
+
+            layoutScanning.visibility = View.GONE
+            castDeviceAdapter.updateList(discoveredDevicesList)
+            
+            if (discoveredDevicesList.isEmpty()) {
+                Toast.makeText(this@PlayerActivity, "No se detectaron televisores en tu Wi-Fi.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun connectAndCastToDevice(device: CastDevice) {
+        val streamUrl = channelUrl ?: return
+        
+        if (device.type == "SystemCast") {
+            launchSystemCastChooser()
+            return
+        }
+
+        mediaPlayer?.pause()
+        Toast.makeText(this, "Conectando con: ${device.name}...", Toast.LENGTH_SHORT).show()
+
+        lifecycleScope.launch {
+            var isSuccess = false
+
+            when (device.type) {
+                "Google Cast" -> {
+                    val route = device.routeInfo
+                    if (route != null) {
+                        try {
+                            mediaRouter.selectRoute(route)
+                            isSuccess = true
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+                "Roku" -> {
+                    isSuccess = UniversalCaster.castToRoku(device.ip, streamUrl, channelName)
+                }
+                "DLNA" -> {
+                    val controlUrl = device.controlUrl ?: "http://${device.ip}:1400/AVTransport/control"
+                    isSuccess = UniversalCaster.castToDlna(controlUrl, streamUrl, channelName)
+                }
+            }
+
+            if (isSuccess) {
+                activeCastDevice = device
+                showRemoteControlUi(device.name)
+                Toast.makeText(this@PlayerActivity, "¡Transmitiendo con éxito en: ${device.name}! 📺", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this@PlayerActivity, "No se pudo conectar a ${device.name}. Intenta de nuevo.", Toast.LENGTH_SHORT).show()
+                mediaPlayer?.play()
+            }
+        }
+    }
+
+    private fun loadMediaOnTv(session: CastSession) {
+        val streamUrl = channelUrl ?: return
+        val remoteMediaClient = session.remoteMediaClient ?: return
+
+        try {
+            val movieMetadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MOVIE).apply {
+                putString(MediaMetadata.KEY_TITLE, channelName)
+            }
+
+            val mediaInfo = MediaInfo.Builder(streamUrl)
+                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                .setContentType(getMimeType(streamUrl))
+                .setMetadata(movieMetadata)
+                .build()
+
+            val mediaLoadRequestData = MediaLoadRequestData.Builder()
+                .setMediaInfo(mediaInfo)
+                .setAutoplay(true)
+                .build()
+
+            remoteMediaClient.load(mediaLoadRequestData)
+            
+            Toast.makeText(this, "Transmitiendo en tu TV: $channelName 📺", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error al enviar transmisión a la TV", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getMimeType(url: String): String {
+        val cleanUrl = url.lowercase().split("?")[0]
+        return when {
+            cleanUrl.endsWith(".m3u8") || cleanUrl.contains("m3u8") || cleanUrl.contains("/hls/") -> "application/x-mpegURL"
+            cleanUrl.endsWith(".mpd") -> "application/dash+xml"
+            cleanUrl.endsWith(".ts") -> "video/mp2t"
+            else -> "video/mp4"
+        }
+    }
+
+    private fun releasePlayer() {
+        timelineJob?.cancel()
+        timelineJob = null
+        hideControlsJob?.cancel()
+        hideControlsJob = null
+        
+        mediaPlayer?.let {
+            val currentMs = it.time
+            if (currentMs > 0L) {
+                getSharedPreferences("iptv_pref", android.content.Context.MODE_PRIVATE)
+                    .edit()
+                    .putLong("pos_$channelName", currentMs)
+                    .apply()
+            }
+            it.stop()
+            it.detachViews()
+            it.release()
+            mediaPlayer = null
+        }
+        libVlc?.let {
+            it.release()
+            libVlc = null
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT > 23) {
+            initializePlayer()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        hideSystemUI()
+        try {
+            castContext?.sessionManager?.addSessionManagerListener(sessionManagerListener, CastSession::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        
+        if (Build.VERSION.SDK_INT <= 23) {
+            initializePlayer()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveContinueWatching() // capture position BEFORE the player releases
+        try {
+            castContext?.sessionManager?.removeSessionManagerListener(sessionManagerListener, CastSession::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        
+        if (Build.VERSION.SDK_INT <= 23) {
+            releasePlayer()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        saveContinueWatching()
+        if (Build.VERSION.SDK_INT > 23) {
+            releasePlayer()
+        }
+    }
+
+    /** Records the current playback moment so Home can offer "Continue Watching". */
+    private fun saveContinueWatching() {
+        val url = channelUrl
+        if (url.isNullOrEmpty()) return
+        if (isLiveTv) {
+            ContinueWatchingManager.save(
+                this,
+                ContinueWatchingManager.ResumeEntry(
+                    url = url,
+                    title = channelName,
+                    isChannel = true,
+                    channelLogo = channelLogo,
+                    savedAt = System.currentTimeMillis()
+                )
+            )
+        } else {
+            val time = try { mediaPlayer?.time ?: -1L } catch (_: Exception) { -1L }
+            val len = try { mediaPlayer?.length ?: 0L } catch (_: Exception) { 0L }
+            val effectivePos = if (time > 0) time else startPosition
+            // solo guardar progreso real (>=15s) y que no haya terminado
+            if (effectivePos >= 15000 && (len <= 0 || effectivePos < len - 30000)) {
+                ContinueWatchingManager.save(
+                    this,
+                    ContinueWatchingManager.ResumeEntry(
+                        url = url,
+                        title = channelName,
+                        isChannel = false,
+                        media = cineMedia,
+                        savedAt = System.currentTimeMillis(),
+                        positionMs = effectivePos,
+                        durationMs = len
+                    )
+                )
+                cineMedia?.let { TasteProfile.recordWatch(this, it) }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        castPollingJob?.cancel()
+        castPollingJob = null
+        releasePlayer()
+    }
+
+    private fun hideSystemUI() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            )
+        }
+    }
+
+    private fun showRemoteControlUi(deviceName: String) {
+        mediaPlayer?.pause()
+        binding.vlcVideoLayout.visibility = View.GONE
+        binding.playerProgress.visibility = View.GONE
+        binding.layoutCastController.visibility = View.VISIBLE
+        
+        binding.txtConnectedTv.text = "Transmitiendo en $deviceName 📺"
+        binding.txtCastPlayingTitle.text = "Reproduciendo: $channelName"
+        isCastPlaying = true
+        binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_pause)
+        
+        startCastPolling()
+    }
+
+    private fun toggleCastPlayPause() {
+        val device = activeCastDevice ?: return
+        isCastPlaying = !isCastPlaying
+        
+        if (isCastPlaying) {
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_pause)
+            Toast.makeText(this, "Reanudando en tu TV...", Toast.LENGTH_SHORT).show()
+            
+            lifecycleScope.launch {
+                when (device.type) {
+                    "Google Cast" -> {
+                        castSession?.remoteMediaClient?.play()
+                    }
+                    "Roku" -> {
+                        UniversalCaster.sendRokuKeypress(device.ip, "Play")
+                    }
+                    "DLNA" -> {
+                        val controlUrl = device.controlUrl ?: "http://${device.ip}:1400/AVTransport/control"
+                        UniversalCaster.sendDlnaPlayResumeCommand(controlUrl)
+                    }
+                }
+            }
+        } else {
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_play)
+            Toast.makeText(this, "Pausando en tu TV...", Toast.LENGTH_SHORT).show()
+            
+            lifecycleScope.launch {
+                when (device.type) {
+                    "Google Cast" -> {
+                        castSession?.remoteMediaClient?.pause()
+                    }
+                    "Roku" -> {
+                        UniversalCaster.sendRokuKeypress(device.ip, "Pause")
+                    }
+                    "DLNA" -> {
+                        val controlUrl = device.controlUrl ?: "http://${device.ip}:1400/AVTransport/control"
+                        UniversalCaster.sendDlnaPauseCommand(controlUrl)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun stopCastingAndRestoreLocalPlay() {
+        val device = activeCastDevice ?: return
+        Toast.makeText(this, "Deteniendo transmisión en TV...", Toast.LENGTH_SHORT).show()
+        
+        castPollingJob?.cancel()
+        castPollingJob = null
+        
+        lifecycleScope.launch {
+            when (device.type) {
+                "Google Cast" -> {
+                    try {
+                        castContext?.sessionManager?.endCurrentSession(true)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                "Roku" -> {
+                    UniversalCaster.sendRokuKeypress(device.ip, "Back")
+                }
+                "DLNA" -> {
+                    val controlUrl = device.controlUrl ?: "http://${device.ip}:1400/AVTransport/control"
+                    UniversalCaster.sendDlnaStopCommand(controlUrl)
+                }
+            }
+            
+            runOnUiThread {
+                activeCastDevice = null
+                binding.layoutCastController.visibility = View.GONE
+                binding.vlcVideoLayout.visibility = View.VISIBLE
+                mediaPlayer?.play()
+                Toast.makeText(this@PlayerActivity, "Reproduciendo localmente.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun startCastPolling() {
+        castPollingJob?.cancel()
+        castPollingJob = lifecycleScope.launch {
+            while (activeCastDevice != null) {
+                val device = activeCastDevice ?: break
+                
+                withContext(Dispatchers.IO) {
+                    try {
+                        when (device.type) {
+                            "Google Cast" -> {
+                                val status = castSession?.remoteMediaClient?.mediaStatus
+                                if (status != null) {
+                                    val isPlaying = status.playerState == com.google.android.gms.cast.MediaStatus.PLAYER_STATE_PLAYING
+                                    withContext(Dispatchers.Main) {
+                                        updateRemotePlayPauseButton(isPlaying)
+                                    }
+                                }
+                            }
+                            "Roku" -> {
+                                val url = URL("http://${device.ip}:8060/query/media-player")
+                                val connection = url.openConnection() as HttpURLConnection
+                                connection.connectTimeout = 1000
+                                connection.readTimeout = 1000
+                                if (connection.responseCode in 200..299) {
+                                    val xml = connection.inputStream.bufferedReader().use { it.readText() }
+                                    val statePattern = Regex("""state\s*=\s*"([^"]*)""")
+                                    val match = statePattern.find(xml)
+                                    val state = match?.groupValues?.get(1) ?: "unknown"
+                                    withContext(Dispatchers.Main) {
+                                        updateRemotePlayPauseButton(state == "play" || state == "playing")
+                                    }
+                                }
+                            }
+                            "DLNA" -> {
+                                val controlUrl = device.controlUrl ?: "http://${device.ip}:1400/AVTransport/control"
+                                val isPlaying = UniversalCaster.queryDlnaTransportState(controlUrl)
+                                withContext(Dispatchers.Main) {
+                                    updateRemotePlayPauseButton(isPlaying)
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                
+                kotlinx.coroutines.delay(2000)
+            }
+        }
+    }
+
+    private fun updateRemotePlayPauseButton(isPlaying: Boolean) {
+        isCastPlaying = isPlaying
+        if (isPlaying) {
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_pause)
+        } else {
+            binding.btnCastPlayPause.setImageResource(R.drawable.ic_ios_play)
+        }
+    }
+
+    private fun launchSystemCastChooser() {
+        val streamUrl = channelUrl ?: return
+        try {
+            val castIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(Uri.parse(streamUrl), "video/*")
+                putExtra("title", channelName)
+                putExtra("android.intent.extra.Title", channelName)
+            }
+            startActivity(Intent.createChooser(castIntent, "Selecciona tu Smart TV o Dispositivo de Transmisión 📺"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private val CAST_PERMISSION_REQUEST_CODE = 1001
+
+    private fun checkCastPermissionsAndScan() {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES)
+        } else {
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+
+        val missingPermissions = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingPermissions.isEmpty()) {
+            showUnifiedCastDialog()
+        } else {
+            ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), CAST_PERMISSION_REQUEST_CODE)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAST_PERMISSION_REQUEST_CODE) {
+            val allGranted = grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+            if (allGranted) {
+                showUnifiedCastDialog()
+            } else {
+                Toast.makeText(this, "Para detectar televisores en tu Wi-Fi, debes permitir el permiso de dispositivos cercanos.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun enterPipMode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "Concede el permiso de superposición para activar la ventana flotante", Toast.LENGTH_LONG).show()
+                val intent = Intent(
+                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startActivity(intent)
+                return
+            }
+        }
+
+        // Enter native Picture-in-Picture mode!
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                val params = android.app.PictureInPictureParams.Builder().build()
+                enterPictureInPictureMode(params)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                @Suppress("DEPRECATION")
+                enterPictureInPictureMode()
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            enterPictureInPictureMode()
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (isInPictureInPictureMode) {
+            // Hide all controls so only the video layout is visible in PIP
+            binding.layoutPlayerControls.visibility = View.GONE
+        } else {
+            // Restore visibility of controls
+            binding.layoutPlayerControls.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                android.provider.Settings.canDrawOverlays(this)
+            } else {
+                true
+            }
+            if (hasOverlay) {
+                enterPipMode()
+            }
+        }
+    }
+
+    private fun animateDoubleTapIndicator(isLeft: Boolean) {
+        val indicator = if (isLeft) binding.imgDoubleTapLeft else binding.imgDoubleTapRight
+        indicator.visibility = View.VISIBLE
+        indicator.alpha = 0f
+        indicator.scaleX = 0.8f
+        indicator.scaleY = 0.8f
+        
+        indicator.animate()
+            .alpha(1f)
+            .scaleX(1.05f)
+            .scaleY(1.05f)
+            .setDuration(300)
+            .withEndAction {
+                indicator.animate()
+                    .alpha(0f)
+                    .scaleX(0.85f)
+                    .scaleY(0.85f)
+                    .setStartDelay(400) // Hold on screen for 400ms before fading out!
+                    .setDuration(350)
+                    .withEndAction {
+                        indicator.visibility = View.GONE
+                        indicator.animate().startDelay = 0 // reset start delay for next animation!
+                    }
+                    .start()
+            }
+            .start()
+    }
+
+    private fun returnToSmallScreen() {
+        val currentMs = mediaPlayer?.time ?: 0L
+        val data = Intent().apply {
+            putExtra("endPosition", currentMs)
+        }
+        setResult(RESULT_OK, data)
+        finish()
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() {
+        returnToSmallScreen()
+        super.onBackPressed()
+    }
+}

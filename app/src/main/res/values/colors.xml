@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Legacy names kept for compatibility -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="orange">#FFC9A96E</color>
+    <color name="dark_gray">#FF000000</color>
+    <color name="card_bg">#FF0D0D14</color>
+    <color name="purple_200">#FFD4BFA3</color>
+    <color name="purple_500">#FFC9A96E</color>
+    <color name="purple_700">#FF6B5B3E</color>
+    <color name="teal_200">#FF30D158</color>
+    <color name="teal_700">#FFC9A96E</color>
+
+    <!-- v3 design system: midnight-indigo glass (iPhone cards + PS5 glow) -->
+    <color name="ios_bg">#FF14161A</color>
+    <color name="ios_surface">#FF1B1E24</color>
+    <color name="ios_surface_2">#FF23262D</color>
+    <color name="ios_blue">#FFC9A96E</color>
+    <color name="ios_indigo">#FF9E7E4C</color>
+    <color name="ios_violet">#FFD4BFA3</color>
+    <color name="ios_cyan">#FF30D158</color>
+    <color name="ios_gray">#FF98989F</color>
+    <color name="ios_stroke">#2EFFFFFF</color>
+    <color name="ic_launcher_background">#FF16181C</color>
+</resources>

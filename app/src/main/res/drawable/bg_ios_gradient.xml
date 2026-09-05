@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v3: pure-black canvas with a cool midnight-indigo aurora wash on top -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#12122E"
+        android:centerColor="#050514"
+        android:endColor="#000000"
+        android:type="linear" />
+</shape>
