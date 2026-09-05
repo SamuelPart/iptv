@@ -40,23 +40,27 @@ object CineNewNotifier {
 
     /** Primera ejecución solo guarda la foto; despues, solo notifica lo NUEVO. */
     fun onCatalogLoaded(context: Context, catalog: List<CineMedia>) {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val seen = prefs.getStringSet(KEY_SEEN, null)
-        val current = catalog.map { it.title }.toSet()
-        if (seen == null) {
+        // El catálogo tiene ~9.5k titulos: leer/escribir el set en SharedPreferences
+        // serializa XML pesado. Se hace en IO para NO congelar la UI al arrancar.
+        CoroutineScope(Dispatchers.IO).launch {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val seen = prefs.getStringSet(KEY_SEEN, null)
+            val current = catalog.map { it.title }.toSet()
+            if (seen == null) {
+                prefs.edit().putStringSet(KEY_SEEN, current).apply()
+                return@launch
+            }
+            val fresh = catalog.filter { it.title !in seen }
             prefs.edit().putStringSet(KEY_SEEN, current).apply()
-            return
-        }
-        val fresh = catalog.filter { it.title !in seen }
-        prefs.edit().putStringSet(KEY_SEEN, current).apply()
-        if (fresh.isEmpty()) return
-        if (Build.VERSION.SDK_INT >= 33 &&
-            ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) return
+            if (fresh.isEmpty()) return@launch
+            if (Build.VERSION.SDK_INT >= 33 &&
+                ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) return@launch
 
-        ensureChannel(context)
-        fresh.take(3).forEachIndexed { i, media ->
-            postNotification(context, media, 100 + i)
+            ensureChannel(context)
+            fresh.take(3).forEachIndexed { i, media ->
+                postNotification(context, media, 100 + i)
+            }
         }
     }
 

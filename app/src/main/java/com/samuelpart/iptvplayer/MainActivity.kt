@@ -1959,9 +1959,9 @@ class MainActivity : AppCompatActivity() {
             }
             if (allCineMedia.isEmpty() && quick.isNotEmpty()) {
                 allCineMedia = quick
+                // Solo lo ligero: el armado pesado (featured/secciones/reco) lo
+                // hace el pase completo de abajo para no duplicar trabajo en UI.
                 refreshCoverData()
-                setupCineFeatured()
-                buildCineReco()
             }
             binding.layoutCineLoading.visibility = View.GONE
 
@@ -2359,7 +2359,9 @@ class MainActivity : AppCompatActivity() {
     private fun buildCineSections() {
         val container = binding.layoutCineSections
         container.removeAllViews()
-        val src = premierSource()
+        // Calcula los generos UNA sola vez por titulo (antes se recomputaba
+        // 5x por cada categoria -> era lo que frenaba la pestaña Cine).
+        val annotated = premierSource().map { it to TasteProfile.genreKeysOf(it).toSet() }
         listOf(
             Triple("ACCIÓN", "accion", false),
             Triple("COMEDIA", "comedia", false),
@@ -2368,9 +2370,11 @@ class MainActivity : AppCompatActivity() {
             Triple("ANIMÉ", "anime", true)
         ).forEach { (title, key, isAnime) ->
             val items = if (isAnime) {
-                src.filter { it.title.lowercase().contains("anime") || it.group.lowercase().contains("anime") }
+                annotated.filter { (m, _) ->
+                    m.title.lowercase().contains("anime") || m.group.lowercase().contains("anime")
+                }.map { it.first }
             } else {
-                src.filter { TasteProfile.genreKeysOf(it).contains(key) }
+                annotated.filter { (_, genres) -> genres.contains(key) }.map { it.first }
             }
             if (items.size < 3) return@forEach
             val sorted = items.sortedBy { Math.abs(it.title.hashCode()) }.take(12)
