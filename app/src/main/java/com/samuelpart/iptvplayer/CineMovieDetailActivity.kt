@@ -69,11 +69,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
         binding.txtTitle.text = media.title
         binding.txtOverview.text = if (media.overview.isNullOrEmpty()) "Sin sinopsis disponible." else media.overview
 
-        Glide.with(this)
-            .load(if (!media.posterUrl.isNullOrEmpty()) media.posterUrl else media.rawLogo)
-            .placeholder(R.drawable.bg_placeholder)
-            .into(binding.imgPoster)
-
+        // Backdrop (imagen destacada)
         Glide.with(this)
             .load(
                 when {
@@ -135,9 +131,6 @@ class CineMovieDetailActivity : AppCompatActivity() {
         }
         if (!d.overview.isNullOrBlank()) binding.txtOverview.text = d.overview
 
-        if (!d.posterUrl.isNullOrBlank()) {
-            Glide.with(this).load(d.posterUrl).placeholder(R.drawable.bg_placeholder).into(binding.imgPoster)
-        }
         if (!d.backdropUrl.isNullOrBlank()) {
             Glide.with(this).load(d.backdropUrl).transition(DrawableTransitionOptions.withCrossFade()).into(binding.imgBackdrop)
         }

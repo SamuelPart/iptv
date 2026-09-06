@@ -57,13 +57,15 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         binding.progress.visibility = View.VISIBLE
         lifecycleScope.launch {
             val details = withContext(Dispatchers.IO) { CineRepository.fetchTvDetails(media) }
+            var episodesFetched = false
             withContext(Dispatchers.IO) {
                 if (media.trailerUrl.isNullOrEmpty()) CineRepository.fetchTmdTrailer(media)
                 if (media.episodes.isEmpty() && media.url.isNotBlank() && CineRepository.isRemotePlaylist(media.url)) {
                     media.episodes = CineRepository.fetchEpisodesFromPlaylist(media.url)
-                    setupEpisodes()
+                    episodesFetched = true
                 }
             }
+            if (episodesFetched) setupEpisodes() // main thread
             renderFromMedia()
             if (details != null) renderDetails(details)
             binding.progress.visibility = View.GONE
@@ -104,13 +106,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         binding.txtTitle.text = media.title
         binding.txtOverview.text = if (media.overview.isNullOrEmpty()) "Sin sinopsis disponible." else media.overview
 
-        // Póster
-        Glide.with(this)
-            .load(if (!media.posterUrl.isNullOrEmpty()) media.posterUrl else media.rawLogo)
-            .placeholder(R.drawable.bg_placeholder)
-            .into(binding.imgPoster)
-
-        // Backdrop
+        // Backdrop (imagen destacada)
         Glide.with(this)
             .load(
                 when {
@@ -168,9 +164,6 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         }
         if (!d.overview.isNullOrBlank()) binding.txtOverview.text = d.overview
 
-        if (!d.posterUrl.isNullOrBlank()) {
-            Glide.with(this).load(d.posterUrl).placeholder(R.drawable.bg_placeholder).into(binding.imgPoster)
-        }
         if (!d.backdropUrl.isNullOrBlank()) {
             Glide.with(this).load(d.backdropUrl).transition(DrawableTransitionOptions.withCrossFade()).into(binding.imgBackdrop)
         }

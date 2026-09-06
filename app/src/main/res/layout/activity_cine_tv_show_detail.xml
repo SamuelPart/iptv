@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- FICHA DE SERIE (rediseñada desde cero, estilo ficha profesional) -->
+<!-- FICHA DE SERIE (rediseñada desde cero, estilo ficha profesional, sin póster pequeño) -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -8,7 +8,6 @@
     android:fitsSystemWindows="true">
 
     <ScrollView
-        android:id="@+id/scrollContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
@@ -22,14 +21,14 @@
             <!-- ===== Cabecera: backdrop + botón atrás ===== -->
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="240dp">
+                android:layout_height="230dp">
 
                 <ImageView
                     android:id="@+id/imgBackdrop"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
-                    android:contentDescription="Fondo" />
+                    android:contentDescription="Imagen destacada" />
 
                 <View
                     android:layout_width="match_parent"
@@ -56,92 +55,59 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingLeft="18dp" android:paddingRight="18dp"
+                android:paddingTop="18dp"
                 android:paddingBottom="28dp">
 
-                <!-- Hero: poster + titulo -->
-                <LinearLayout
+                <!-- Título -->
+                <TextView
+                    android:id="@+id/txtTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="-70dp"
+                    android:text="Título de la serie"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtOriginalTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Título original"
+                    android:textColor="#98989F"
+                    android:textSize="13sp" />
+
+                <!-- Chips: formato + puntuación -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
                     android:orientation="horizontal">
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="118dp"
-                        android:layout_height="177dp"
-                        app:cardBackgroundColor="@color/ios_surface_2"
-                        app:cardCornerRadius="14dp"
-                        app:cardElevation="6dp">
-
-                        <ImageView
-                            android:id="@+id/imgPoster"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:scaleType="centerCrop"
-                            android:contentDescription="Póster" />
-                    </androidx.cardview.widget.CardView>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/badgeFormat"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:layout_marginStart="16dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:background="@drawable/bg_chip_active"
+                        android:paddingLeft="10dp" android:paddingRight="10dp"
+                        android:paddingTop="4dp" android:paddingBottom="4dp"
+                        android:text="SERIE"
+                        android:textColor="#1B1E24"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
 
-                        <TextView
-                            android:id="@+id/txtTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:ellipsize="end"
-                            android:maxLines="2"
-                            android:text="Título de la serie"
-                            android:textColor="#FFFFFF"
-                            android:textSize="21sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/txtOriginalTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:text="Título original"
-                            android:textColor="#98989F"
-                            android:textSize="13sp" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/badgeFormat"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/bg_chip_active"
-                                android:paddingLeft="10dp" android:paddingRight="10dp"
-                                android:paddingTop="4dp" android:paddingBottom="4dp"
-                                android:text="SERIE"
-                                android:textColor="#1B1E24"
-                                android:textSize="9.5sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/txtRatingBadge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:background="@drawable/bg_rating_badge"
-                                android:paddingLeft="10dp" android:paddingRight="10dp"
-                                android:paddingTop="4dp" android:paddingBottom="4dp"
-                                android:text="★ 8.4"
-                                android:textColor="#FFFFFF"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/txtRatingBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_rating_badge"
+                        android:paddingLeft="10dp" android:paddingRight="10dp"
+                        android:paddingTop="4dp" android:paddingBottom="4dp"
+                        android:text="★ 8.4"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <!-- Línea meta: año · formato · temporadas · episodios -->
@@ -149,7 +115,7 @@
                     android:id="@+id/txtMetaLine"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
                     android:text="2019 · 4 temporadas · 40 episodios"
                     android:textColor="#C9A96E"
                     android:textSize="12.5sp"
@@ -159,7 +125,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="16dp"
                     android:orientation="horizontal">
 
                     <TextView
@@ -208,7 +174,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
+                    android:layout_marginTop="24dp"
                     android:text="SINOPSIS"
                     android:textColor="#C9A96E"
                     android:textSize="11sp"
