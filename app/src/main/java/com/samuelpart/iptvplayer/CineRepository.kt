@@ -74,6 +74,19 @@ object CineRepository {
         return DIRECT_STREAM_HOSTS.any { host.contains(it) }
     }
 
+    /** Modo de reproduccion de un enlace. */
+    enum class PlayMode { VLC, WEB_PLAYER }
+
+    /** Regla UNICA de enrutamiento para toda la app:
+     *  - VLC        = video directo CLARO (extension de video o host de descarga directa).
+     *  - WEB_PLAYER = todo lo demas que sea http(s): pagina, iframe, embed, portal.
+     *  Regla de oro: solo lo CLARAMENTE directo va a VLC; asi un iframe jamas
+     *  se intenta reproducir en VLC. */
+    fun playModeFor(url: String): PlayMode {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return PlayMode.VLC
+        return if (isDirectStreamUrl(url)) PlayMode.VLC else PlayMode.WEB_PLAYER
+    }
+
     fun isRemotePlaylist(url: String): Boolean {
         // A direct .mp4/.mkv on archive.org or GitHub is a MOVIE, not a playlist
         if (looksLikeDirectVideo(url)) return false

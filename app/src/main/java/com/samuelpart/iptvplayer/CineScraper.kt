@@ -129,22 +129,14 @@ object CineScraper {
     }
 
     /**
-     * Decides whether a URL is a web page / embedded player that must be
-     * resolved in real time, as opposed to a direct stream VLC can play.
-     * Known portals and known video hosters always resolve; any extension-less
-     * URL that looks like an embed page (/e/, /v/, embed, player, watch...)
-     * resolves too. Direct IPTV endpoints (with or without extension) are
-     * never touched.
+     * Decide si un enlace es pagina/iframe/embed (WebPlayer BOT) o video
+     * directo (VLC). Delegado a CineRepository.playModeFor(): una regla unica
+     * y clara para TODA la app. Solo lo CLARAMENTE directo va a VLC; cualquier
+     * otra URL http(s) se trata como pagina/iframe, para que un iframe jamas
+     * se intente reproducir en VLC.
      */
-    fun shouldResolvePage(url: String): Boolean {
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return false
-            if (CineRepository.isDirectStreamUrl(url)) return false // already a direct stream
-        if (ScraperConfig.isWebPageUrl(url)) return true
-        if (ScraperConfig.isKnownHosterUrl(url)) return true
-        val path = (Uri.parse(url).path ?: "").lowercase()
-        return path.contains("/e/") || path.contains("/v/") || path.contains("embed") ||
-                path.contains("player") || path.contains("watch") || path.contains("/video")
-    }
+    fun shouldResolvePage(url: String): Boolean =
+        CineRepository.playModeFor(url) == CineRepository.PlayMode.WEB_PLAYER
 
     /**
      * Full real-time extraction chain used on every press of "Play":

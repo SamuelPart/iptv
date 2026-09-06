@@ -62,7 +62,16 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var rescueTried = false
 
     companion object {
-        private val EMBED_HOSTS = listOf("nupload")
+        // Hosts de iframe/embed conocidos: se usan para que el rescate
+        // anti-caidas NO los proponga como "fuente alternativa" (no son
+        // portales de busqueda). La clasificacion VLC vs BOT vive en
+        // CineRepository.playModeFor().
+        private val EMBED_HOSTS = listOf(
+            "nupload", "niramirus", "hgcloud", "dr0pstream", "dood",
+            "streamtape", "voe", "filemoon", "mixdrop", "upstream",
+            "vidmoly", "uqload", "fembed", "luluvdo", "wolfstream",
+            "streamwish", "filelions", "gscdn", "hanerix"
+        )
 
         // DOM & players junk
         private val AD_OVERLAY_JS = """

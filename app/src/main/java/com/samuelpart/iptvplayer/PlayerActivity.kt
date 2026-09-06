@@ -133,12 +133,14 @@ class PlayerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // IFRAME MODE: paginas web orientadas a iframe (nupload.top etc) se
-        // reproducen CON SU PROPIO PLAYER dentro del nuestro. VLC solo recibe
-        // enlaces directos de video (.mp4/.mkv/.m3u8/...).
+        // IFRAME MODE: paginas web orientadas a iframe (nupload.top, hgcloud,
+        // niramirus...) se reproducen en el WebPlayer BOT. VLC solo recibe
+        // enlaces DIRECTOS de video. Regla: si no es video directo -> BOT.
         run {
             val raw = intent.getStringExtra("channelUrl") ?: ""
-            if (raw.isNotBlank() && WebVideoPlayerActivity.isEmbedUrl(raw)) {
+            val liveTv = intent.getBooleanExtra("isLiveTv", false)
+            if (!liveTv && raw.isNotBlank() &&
+                CineRepository.playModeFor(raw) == CineRepository.PlayMode.WEB_PLAYER) {
                 val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
                 startActivity(
                     Intent(this, WebVideoPlayerActivity::class.java).apply {
@@ -703,6 +705,20 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun switchSource(newUrl: String) {
+        // Si la fuente alternativa es pagina/iframe/embed, se abre el WebPlayer
+        // BOT: jamas se intenta reproducir un iframe en VLC.
+        if (!isLiveTv && CineRepository.playModeFor(newUrl) == CineRepository.PlayMode.WEB_PLAYER) {
+            startActivity(
+                Intent(this, WebVideoPlayerActivity::class.java).apply {
+                    putExtra("channelName", channelName)
+                    putExtra("channelUrl", newUrl)
+                    putExtra("streamReferer", streamReferer)
+                    putExtra("streamUserAgent", streamUserAgent)
+                }
+            )
+            finish()
+            return
+        }
         channelUrl = newUrl
         // Reset extraction state so the new server gets its own fresh real-time resolution
         streamReferer = null
