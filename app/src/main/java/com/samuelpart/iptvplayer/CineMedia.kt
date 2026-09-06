@@ -45,3 +45,35 @@ data class ParsedEpisode(
     val rawLogo: String,
     val group: String
 )
+
+/**
+ * Ficha técnica completa de una SERIE (TMDb /tv/{id}), con todos los campos
+ * que muestra la pantalla de detalle: datos básicos, equipo, datos generales
+ * y contenido.
+ */
+data class TvDetails(
+    var originalTitle: String? = null,
+    var localTitle: String? = null,
+    var firstAirDate: String? = null,
+    var lastAirDate: String? = null,
+    var numberOfSeasons: Int = 0,
+    var numberOfEpisodes: Int = 0,
+    var episodeRuntime: Int? = null,
+    var genres: List<String> = emptyList(),
+    var originCountries: List<String> = emptyList(),
+    var originalLanguage: String? = null,
+    var overview: String? = null,
+    var networks: List<String> = emptyList(),
+    var productionCompanies: List<String> = emptyList(),
+    var creators: List<String> = emptyList(),
+    var cast: List<CastMember> = emptyList(),
+    var director: String? = null,
+    var writers: List<String> = emptyList(),
+    var musicComposer: String? = null,
+    var cinematographer: String? = null,
+    var ageRating: String? = null,
+    var advisories: List<String> = emptyList(),
+    var posterUrl: String? = null,
+    var backdropUrl: String? = null,
+    var rating: Double? = null
+) : Serializable

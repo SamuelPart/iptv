@@ -687,6 +687,169 @@ object CineRepository {
         }
     }
 
+    /** Ficha tecnica completa de una serie desde TMDb /tv/{id} con
+     *  append_to_response=credits,content_ratings. Devuelve null si no hay
+     *  tmdbId o la red falla. */
+    suspend fun fetchTvDetails(media: CineMedia): TvDetails? = withContext(Dispatchers.IO) {
+        try {
+            if (media.tmdbId == null) fetchTmdMetadata(media)
+            val id = media.tmdbId ?: return@withContext null
+
+            val urlString = "https://api.themoviedb.org/3/tv/$id" +
+                "?api_key=$TMDB_API_KEY&language=es&append_to_response=credits,content_ratings"
+            val conn = URL(urlString).openConnection() as HttpURLConnection
+            conn.connectTimeout = 8000
+            conn.readTimeout = 8000
+            if (conn.responseCode != 200) return@withContext null
+            val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+
+            val d = TvDetails()
+            d.localTitle = json.optString("name").ifBlank { null }
+            d.originalTitle = json.optString("original_name").ifBlank { null }
+            d.firstAirDate = json.optString("first_air_date").ifBlank { null }
+            d.lastAirDate = json.optString("last_air_date").ifBlank { null }
+            d.numberOfSeasons = json.optInt("number_of_seasons", 0)
+            d.numberOfEpisodes = json.optInt("number_of_episodes", 0)
+            d.overview = json.optString("overview").ifBlank { null }
+            d.rating = json.optDouble("vote_average", 0.0).takeIf { it > 0.0 }
+
+            val runtimes = json.optJSONArray("episode_run_time")
+            if (runtimes != null && runtimes.length() > 0) {
+                d.episodeRuntime = runtimes.optInt(0, 0).takeIf { it > 0 }
+            }
+
+            json.optJSONArray("genres")?.let { a ->
+                d.genres = (0 until a.length()).mapNotNull { i ->
+                    a.optJSONObject(i)?.optString("name")?.ifBlank { null }
+                }
+            }
+            json.optJSONArray("origin_country")?.let { a ->
+                d.originCountries = (0 until a.length()).mapNotNull { i ->
+                    countryName(a.optString(i))
+                }
+            }
+            d.originalLanguage = languageName(json.optString("original_language"))
+
+            json.optJSONArray("networks")?.let { a ->
+                d.networks = (0 until a.length()).mapNotNull { i ->
+                    a.optJSONObject(i)?.optString("name")?.ifBlank { null }
+                }
+            }
+            json.optJSONArray("production_companies")?.let { a ->
+                d.productionCompanies = (0 until a.length()).mapNotNull { i ->
+                    a.optJSONObject(i)?.optString("name")?.ifBlank { null }
+                }
+            }
+            json.optJSONArray("created_by")?.let { a ->
+                d.creators = (0 until a.length()).mapNotNull { i ->
+                    a.optJSONObject(i)?.optString("name")?.ifBlank { null }
+                }
+            }
+
+            val poster = json.optString("poster_path")
+            if (poster.isNotBlank() && poster != "null") d.posterUrl = "https://image.tmdb.org/t/p/w500$poster"
+            val backdrop = json.optString("backdrop_path")
+            if (backdrop.isNotBlank() && backdrop != "null") d.backdropUrl = "https://image.tmdb.org/t/p/w780$backdrop"
+
+            // --- credits ---
+            val credits = json.optJSONObject("credits")
+            val castArray = credits?.optJSONArray("cast")
+            if (castArray != null && castArray.length() > 0) {
+                val list = mutableListOf<CastMember>()
+                val max = minOf(castArray.length(), 10)
+                for (i in 0 until max) {
+                    val m = castArray.getJSONObject(i)
+                    val name = m.optString("name")
+                    val character = m.optString("character")
+                    val pp = m.optString("profile_path")
+                    val profile = if (pp.isNotBlank() && pp != "null") "https://image.tmdb.org/t/p/w185$pp" else null
+                    list.add(CastMember(name, character, profile))
+                }
+                d.cast = list
+            }
+
+            val crewArray = credits?.optJSONArray("crew")
+            if (crewArray != null) {
+                val writers = mutableListOf<String>()
+                for (i in 0 until crewArray.length()) {
+                    val c = crewArray.getJSONObject(i)
+                    val job = c.optString("job").lowercase()
+                    val name = c.optString("name")
+                    if (name.isBlank()) continue
+                    when {
+                        d.director == null && (job.contains("director")) -> d.director = name
+                        d.musicComposer == null && (job.contains("music") || job.contains("composer")) -> d.musicComposer = name
+                        d.cinematographer == null && (job.contains("photography") || job.contains("cinematography")) -> d.cinematographer = name
+                        (job.contains("writer") || job.contains("screenplay") || job.contains("story") || job.contains("creator")) -> {
+                            if (writers.size < 6 && writers.none { it == name }) writers.add(name)
+                        }
+                    }
+                }
+                d.writers = writers
+            }
+
+            // --- content ratings ---
+            val ratings = json.optJSONObject("content_ratings")?.optJSONArray("results")
+            if (ratings != null && ratings.length() > 0) {
+                val preferred = listOf("US", "ES", "PE", "MX", "GB")
+                var pick: String? = null
+                for (code in preferred) {
+                    for (i in 0 until ratings.length()) {
+                        if (ratings.getJSONObject(i).optString("iso_3166_1") == code) {
+                            pick = ratings.getJSONObject(i).optString("rating")
+                            break
+                        }
+                    }
+                    if (!pick.isNullOrBlank()) break
+                }
+                if (pick.isNullOrBlank()) pick = ratings.getJSONObject(0).optString("rating")
+                if (!pick.isNullOrBlank()) {
+                    d.ageRating = pick
+                    d.advisories = advisoriesFor(pick)
+                }
+            }
+
+            d
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun languageName(code: String): String = when (code.lowercase()) {
+        "en" -> "Inglés"; "es" -> "Español"; "fr" -> "Francés"; "de" -> "Alemán"
+        "it" -> "Italiano"; "pt" -> "Portugués"; "ru" -> "Ruso"; "ko" -> "Coreano"
+        "ja" -> "Japonés"; "zh" -> "Chino"; "hi" -> "Hindi"; "tr" -> "Turco"
+        "ar" -> "Árabe"; "nl" -> "Neerlandés"; "pl" -> "Polaco"; "sv" -> "Sueco"
+        "no" -> "Noruego"; "da" -> "Danés"; "fi" -> "Finés"; "th" -> "Tailandés"
+        else -> code.uppercase()
+    }
+
+    private fun countryName(code: String): String = when (code.uppercase()) {
+        "US" -> "Estados Unidos"; "GB" -> "Reino Unido"; "ES" -> "España"
+        "MX" -> "México"; "AR" -> "Argentina"; "CO" -> "Colombia"; "CL" -> "Chile"
+        "PE" -> "Perú"; "KR" -> "Corea del Sur"; "JP" -> "Japón"; "CN" -> "China"
+        "FR" -> "Francia"; "IT" -> "Italia"; "DE" -> "Alemania"; "CA" -> "Canadá"
+        "AU" -> "Australia"; "BR" -> "Brasil"; "IN" -> "India"; "TR" -> "Turquía"
+        else -> code.uppercase()
+    }
+
+    /** Etiquetas de contenido (advertencias) derivadas de la calificacion. */
+    private fun advisoriesFor(rating: String): List<String> {
+        val r = rating.uppercase()
+        return when {
+            r.contains("TV-MA") || r.contains("NC-17") || r == "R" || r.contains("18") || r == "X" ->
+                listOf("Violencia", "Lenguaje explícito", "Contenido adulto", "Consumo de sustancias")
+            r.contains("TV-14") || r.contains("PG-13") || r.contains("16") || r.contains("14") ->
+                listOf("Violencia moderada", "Lenguaje")
+            r.contains("TV-PG") || r.contains("PG") || r.contains("12") || r.contains("7") || r.contains("10") ->
+                listOf("Apta con supervisión de un adulto")
+            r.contains("G") || r.contains("TV-Y") || r.contains("TV-G") || r.contains("L") || r.contains("0") ->
+                listOf("Apta para todo público")
+            else -> listOf("Sin clasificación")
+        }
+    }
+
     private fun getTrailerKeyFromJson(urlString: String): String? {
         try {
             val url = URL(urlString)
