@@ -26,9 +26,12 @@ object CineRepository {
      * cached on disk and the bundled copy in the APK remains as final fallback.
      */
     private const val CATALOG_CACHE_FILE = "cine_catalog_remote.m3u"
+    // Fuente del catálogo: la rama donde editas (arena/01a04133-iptv) va
+    // PRIMERO, para que tus cambios se vean sin reinstalar. Luego viene esta
+    // rama (respaldo en espejo) y por último main.
     private val CATALOG_URLS = listOf(
-        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a06729-iptv/app/src/main/res/raw/cine_catalog.m3u",
         "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a04133-iptv/app/src/main/res/raw/cine_catalog.m3u",
+        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a06729-iptv/app/src/main/res/raw/cine_catalog.m3u",
         "https://raw.githubusercontent.com/SamuelPart/iptv/main/app/src/main/res/raw/cine_catalog.m3u"
     )
 
