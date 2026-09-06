@@ -70,7 +70,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             "nupload", "niramirus", "hgcloud", "dr0pstream", "dood",
             "streamtape", "voe", "filemoon", "mixdrop", "upstream",
             "vidmoly", "uqload", "fembed", "luluvdo", "wolfstream",
-            "streamwish", "filelions", "gscdn", "hanerix"
+            "streamwish", "filelions", "gscdn", "hanerix", "vibuxer",
+            "embedsito", "streamlare", "vidplay"
         )
 
         // DOM & players junk
@@ -233,11 +234,22 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             val host = Uri.parse(url).host?.lowercase() ?: return false
             return EMBED_HOSTS.any { host.contains(it) }
         }
+
+        /** True si la URL parece un reproductor/embed por su PATH (/e/, /v/,
+         *  embed, player, watch, /video, stream). Sirve para seguir
+         *  redirecciones a hosts de reproductor que no estan en la lista. */
+        private fun isPlayerLikePath(url: String): Boolean {
+            val path = (Uri.parse(url).path ?: "").lowercase()
+            return path.contains("/e/") || path.contains("/v/") || path.contains("embed") ||
+                    path.contains("player") || path.contains("watch") ||
+                    path.contains("/video") || path.contains("stream")
+        }
     }
 
     private var isVideoRolling = false
     private var iframeHops = 0
     private var cinematicApplied = false
+    private var bootRevealed = false
 
 
 
@@ -349,9 +361,18 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     }
                 }
             } catch (_: Exception) { }
-            if (!isVideoRolling && (pageBroken || botTicks >= 28)) {
+            // RESCATE solo con error REAL de red (404/410...). Antes tambien se
+            // disparaba por tiempo (botTicks>=28) y un iframe que tarda o juega
+            // cross-origin terminaba en un falso "enlace caducado".
+            if (!isVideoRolling && pageBroken) {
                 triggerRescue()
                 return
+            }
+            // Si el BOT no pudo confirmar el play (video en iframe cross-origin),
+            // destapa el reproductor igual para que se vea y el usuario controle:
+            // el BOT sigue limpiando anuncios e intentando play() por lo bajo.
+            if (!isVideoRolling && botTicks >= 16) {
+                revealBootLayer()
             }
             val delay = if (isVideoRolling) 3000L else 900L
             val limit = if (isVideoRolling) 6000 else 200
@@ -411,9 +432,16 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 val host = Uri.parse(url).host?.lowercase() ?: ""
                 // Iframes internos (servers/embeds que el portal invoca): SÍ cargan
                 if (request?.isForMainFrame == false) return false
-                // Nada de salirse a Google/anuncios: solo host original (o esquemas base)
-                return !(host == originalHost || host.endsWith(".$originalHost") ||
-                    url.startsWith("about:") || url.startsWith("data:"))
+                // Esquemas base siempre permitidos
+                if (url.startsWith("about:") || url.startsWith("data:")) return false
+                // Host original y sus subdominios: permitidos
+                if (host == originalHost || host.endsWith(".$originalHost")) return false
+                // REDIRECT legitimo a otro host de reproductor/iframe (hgcloud
+                // redirige a vibuxer/hanerix/streamwish...): el video vive ahi,
+                // hay que seguirlo. NO es anuncio.
+                if (isEmbedUrl(url) || isPlayerLikePath(url)) return false
+                // Todo lo demas (anuncios, popups, portales ajenos): bloqueado
+                return true
             }
 
             override fun shouldInterceptRequest(
@@ -551,17 +579,25 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 val ok = res != null && res.contains("ok")
                 if (ok && !cinematicApplied) {
                     cinematicApplied = true
-                    binding.layerWebBoot.animate()
-                        .alpha(0f)
-                        .setDuration(450)
-                        .withEndAction {
-                            binding.layerWebBoot.visibility = View.GONE
-                            binding.layerWebBoot.alpha = 1f
-                        }
-                        .start()
+                    revealBootLayer()
                 }
             }
         } catch (_: Exception) { }
+    }
+
+    /** Destapa la capa de carga (idempotente). La usa tanto el modo cinematico
+     *  como el fallback cuando el video corre en un iframe cross-origin. */
+    private fun revealBootLayer() {
+        if (bootRevealed || isFinishing || isDestroyed) return
+        bootRevealed = true
+        binding.layerWebBoot.animate()
+            .alpha(0f)
+            .setDuration(450)
+            .withEndAction {
+                binding.layerWebBoot.visibility = View.GONE
+                binding.layerWebBoot.alpha = 1f
+            }
+            .start()
     }
 
     private val CAST_PERMISSION_REQUEST_CODE = 4201
