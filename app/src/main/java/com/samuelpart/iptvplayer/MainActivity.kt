@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
     private var isGridView = true
 
     // Cine & Series states
-    private lateinit var cineAdapter: CineMediaAdapter
+    private lateinit var cineAdapter: CineSearchResultAdapter
     private lateinit var favoriteAdapter: FavoriteAdapter
     private lateinit var continueWatchingAdapter: ContinueWatchingAdapter
 
@@ -281,7 +281,7 @@ class MainActivity : AppCompatActivity() {
 
         // 3. Setup Cine Grid in Cine tab (2 columns for high-end poster aspect ratio)
         binding.rvCineGrid.layoutManager = GridLayoutManager(this, 2)
-        cineAdapter = CineMediaAdapter(
+        cineAdapter = CineSearchResultAdapter(
             emptyList(),
             onMediaClick = { media -> openCineDetail(media) },
             isFavorite = { FavoritesManager.isFavorite(this, it.url) },

@@ -104,7 +104,7 @@ class CinePopularAllActivity : AppCompatActivity() {
                     .sortedBy { Math.abs(it.title.hashCode()) }
             }
 
-            binding.rvPopularAll.adapter = CineMediaAdapter(list, onMediaClick = { m ->
+            binding.rvPopularAll.adapter = CineSearchResultAdapter(list, onMediaClick = { m ->
                 val real = if (kind == "alerts") catalog.find { it.title == m.title } ?: m else m
                 startActivity(
                     Intent(

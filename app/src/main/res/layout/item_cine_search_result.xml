@@ -1,31 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Item de RESULTADO DE BUSQUEDA: poster arriba y titulo DEBAJO -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Item de cuadricula de posters: poster arriba (2:3) y titulo DEBAJO.
+     Uso: buscador, "See all / Ver todo", cuadricula principal de Cine. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    android:orientation="vertical">
+    android:layout_margin="6dp">
 
     <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:id="@+id/cardPoster"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="12dp"
         app:cardElevation="0dp"
-        app:cardPreventCornerOverlap="true">
+        app:cardPreventCornerOverlap="true"
+        app:layout_constraintDimensionRatio="2:3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/imgPoster"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
+            android:layout_height="match_parent"
             android:scaleType="centerCrop"
             android:contentDescription="Poster" />
     </androidx.cardview.widget.CardView>
 
+    <!-- Estrella de favorito (solo visible en la cuadricula principal de Cine) -->
+    <ImageView
+        android:id="@+id/imgFav"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_margin="6dp"
+        android:background="@drawable/bg_circle_glass"
+        android:contentDescription="Favorito"
+        android:padding="6dp"
+        android:src="@drawable/ic_ios_star"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/cardPoster"
+        app:layout_constraintTop_toTopOf="@id/cardPoster"
+        app:tint="#E6FFFFFF" />
+
     <TextView
         android:id="@+id/txtTitle"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="7dp"
         android:ellipsize="end"
@@ -34,11 +54,14 @@
         android:text="Título de la película"
         android:textColor="#F2F2F4"
         android:textSize="12.5sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardPoster" />
 
     <TextView
         android:id="@+id/txtSubtitle"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:ellipsize="end"
@@ -46,5 +69,8 @@
         android:maxLines="1"
         android:text="Película · 2026"
         android:textColor="#8A8A93"
-        android:textSize="10.5sp" />
-</LinearLayout>
+        android:textSize="10.5sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtTitle" />
+</androidx.constraintlayout.widget.ConstraintLayout>
