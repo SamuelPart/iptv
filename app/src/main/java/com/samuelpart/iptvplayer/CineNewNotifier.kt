@@ -2,9 +2,12 @@ package com.samuelpart.iptvplayer
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -21,17 +24,32 @@ import kotlinx.coroutines.launch
  */
 object CineNewNotifier {
 
-    private const val CHANNEL_ID = "lumen_cine_nuevo"
+    private const val CHANNEL_ID = "lumen_cine_nuevo_sound"
+    private const val LEGACY_CHANNEL_ID = "lumen_cine_nuevo"
     private const val PREFS = "cine_latest_state"
     private const val KEY_SEEN = "seen_titles_v1"
+
+    /** URI del sonido unico de estreno (campanilla propia de la app). */
+    private fun cineSoundUri(context: Context): Uri =
+        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${R.raw.cine_new_sound}")
 
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            // Borra el canal viejo (sin sonido propio) para que el nuevo con
+            // sonido unico aplique de inmediato en instalaciones existentes.
+            try { nm.deleteNotificationChannel(LEGACY_CHANNEL_ID) } catch (_: Exception) { }
             if (nm.getNotificationChannel(CHANNEL_ID) == null) {
+                val attrs = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
                 nm.createNotificationChannel(
-                    NotificationChannel(CHANNEL_ID, "Estrenos de Lumen", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    NotificationChannel(CHANNEL_ID, "Estrenos de Lumen", NotificationManager.IMPORTANCE_HIGH).apply {
                         description = "Avísanos cuando una película o serie nueva llega al catálogo"
+                        setSound(cineSoundUri(context), attrs)
+                        enableVibration(true)
+                        vibrationPattern = longArrayOf(0, 220, 140, 220)
                     }
                 )
             }
@@ -77,7 +95,11 @@ object CineNewNotifier {
                 .setContentTitle("✨ Estreno en Lumen")
                 .setContentText("${media.title} · $genre")
                 .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                // Sonido unico de estreno (en Android 7- el canal no existe,
+                // asi que se fija aqui directamente)
+                .setSound(cineSoundUri(context), android.media.AudioManager.STREAM_NOTIFICATION)
+                .setVibrate(longArrayOf(0, 220, 140, 220))
             if (bmp != null) {
                 builder.setStyle(NotificationCompat.BigPictureStyle().bigPicture(bmp).setSummaryText(genre))
             }
