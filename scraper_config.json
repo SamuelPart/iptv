@@ -6,14 +6,17 @@
     { "name": "RePelis24 Oficial", "baseUrl": "https://repelis24-oficial.site", "searchPath": "/?s={query}", "enabled": true }
   ],
   "extraWebPageDomains": [
-    "repelis24.ing"
+    "repelis24.ing", "pelisflix1.fans", "pelisflix", "nupload.top",
+    "nupload", "cuevana8.plus", "cuevana8", "cuevana", "hanerix.com",
+    "hanerix", "hgcloud.to", "hgcloud"
   ],
   "hosterDomains": [
     "dr0pstream.com", "doodstream", "dood.", "streamtape", "voe.sx",
     "filemoon", "mixdrop", "upstream", "vidmoly", "uqload", "fembed",
     "luluvdo", "wolfstream", "streamwish", "filelions", "earnvids",
     "streamlare", "hydrax", "yourupload", "supervideo", "dropload",
-    "embedsito", "ok.ru", "rumble.com", "sendvid.com", "niramirus"
+    "embedsito", "ok.ru", "rumble.com", "sendvid.com", "nupload",
+    "gscdn.cam", "niramirus"
   ],
   "adDomains": [
     "doubleclick.net", "googlesyndication.com", "google-analytics.com",
