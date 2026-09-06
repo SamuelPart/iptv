@@ -304,6 +304,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
                 Intent(this, PlayerActivity::class.java).apply {
                     putExtra("channelName", title)
                     putExtra("channelUrl", url)
+                    putStringArrayListExtra("allSources", media.urls)
                     putExtra("cineMedia", media)
                 }
             )

@@ -850,6 +850,125 @@ object CineRepository {
         }
     }
 
+    /** Ficha tecnica completa de una pelicula desde TMDb /movie/{id} con
+     *  append_to_response=credits,release_dates. Devuelve null si no hay
+     *  tmdbId o la red falla. */
+    suspend fun fetchMovieDetails(media: CineMedia): MovieDetails? = withContext(Dispatchers.IO) {
+        try {
+            if (media.tmdbId == null) fetchTmdMetadata(media)
+            val id = media.tmdbId ?: return@withContext null
+
+            val urlString = "https://api.themoviedb.org/3/movie/$id" +
+                "?api_key=$TMDB_API_KEY&language=es&append_to_response=credits,release_dates"
+            val conn = URL(urlString).openConnection() as HttpURLConnection
+            conn.connectTimeout = 8000
+            conn.readTimeout = 8000
+            if (conn.responseCode != 200) return@withContext null
+            val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+
+            val d = MovieDetails()
+            d.localTitle = json.optString("title").ifBlank { null }
+            d.originalTitle = json.optString("original_title").ifBlank { null }
+            d.releaseDate = json.optString("release_date").ifBlank { null }
+            d.runtime = json.optInt("runtime", 0).takeIf { it > 0 }
+            d.overview = json.optString("overview").ifBlank { null }
+            d.rating = json.optDouble("vote_average", 0.0).takeIf { it > 0.0 }
+
+            json.optJSONArray("genres")?.let { a ->
+                d.genres = (0 until a.length()).mapNotNull { i ->
+                    a.optJSONObject(i)?.optString("name")?.ifBlank { null }
+                }
+            }
+            json.optJSONArray("production_countries")?.let { a ->
+                d.originCountries = (0 until a.length()).mapNotNull { i ->
+                    countryName(a.optJSONObject(i)?.optString("iso_3166_1") ?: "")
+                }
+            }
+            d.originalLanguage = languageName(json.optString("original_language"))
+
+            json.optJSONArray("production_companies")?.let { a ->
+                d.productionCompanies = (0 until a.length()).mapNotNull { i ->
+                    a.optJSONObject(i)?.optString("name")?.ifBlank { null }
+                }
+            }
+
+            val poster = json.optString("poster_path")
+            if (poster.isNotBlank() && poster != "null") d.posterUrl = "https://image.tmdb.org/t/p/w500$poster"
+            val backdrop = json.optString("backdrop_path")
+            if (backdrop.isNotBlank() && backdrop != "null") d.backdropUrl = "https://image.tmdb.org/t/p/w780$backdrop"
+
+            // --- credits ---
+            val credits = json.optJSONObject("credits")
+            val castArray = credits?.optJSONArray("cast")
+            if (castArray != null && castArray.length() > 0) {
+                val list = mutableListOf<CastMember>()
+                val max = minOf(castArray.length(), 10)
+                for (i in 0 until max) {
+                    val m = castArray.getJSONObject(i)
+                    val name = m.optString("name")
+                    val character = m.optString("character")
+                    val pp = m.optString("profile_path")
+                    val profile = if (pp.isNotBlank() && pp != "null") "https://image.tmdb.org/t/p/w185$pp" else null
+                    list.add(CastMember(name, character, profile))
+                }
+                d.cast = list
+            }
+
+            val crewArray = credits?.optJSONArray("crew")
+            if (crewArray != null) {
+                val writers = mutableListOf<String>()
+                for (i in 0 until crewArray.length()) {
+                    val c = crewArray.getJSONObject(i)
+                    val job = c.optString("job").lowercase()
+                    val name = c.optString("name")
+                    if (name.isBlank()) continue
+                    when {
+                        d.director == null && job.contains("director") -> d.director = name
+                        d.musicComposer == null && (job.contains("music") || job.contains("composer")) -> d.musicComposer = name
+                        d.cinematographer == null && (job.contains("photography") || job.contains("cinematography")) -> d.cinematographer = name
+                        (job.contains("writer") || job.contains("screenplay") || job.contains("story")) -> {
+                            if (writers.size < 6 && writers.none { it == name }) writers.add(name)
+                        }
+                    }
+                }
+                d.writers = writers
+            }
+
+            // --- release dates (calificacion por edad) ---
+            val rdResults = json.optJSONObject("release_dates")?.optJSONArray("results")
+            if (rdResults != null && rdResults.length() > 0) {
+                val preferred = listOf("US", "ES", "PE", "MX", "GB")
+                var pick: String? = null
+                for (code in preferred) {
+                    for (i in 0 until rdResults.length()) {
+                        val region = rdResults.getJSONObject(i)
+                        if (region.optString("iso_3166_1") == code) {
+                            val dates = region.optJSONArray("release_dates")
+                            if (dates != null && dates.length() > 0) {
+                                pick = dates.getJSONObject(0).optString("certification")
+                            }
+                            break
+                        }
+                    }
+                    if (!pick.isNullOrBlank()) break
+                }
+                if (pick.isNullOrBlank()) {
+                    val dates = rdResults.getJSONObject(0).optJSONArray("release_dates")
+                    if (dates != null && dates.length() > 0) pick = dates.getJSONObject(0).optString("certification")
+                }
+                if (!pick.isNullOrBlank()) {
+                    d.ageRating = pick
+                    d.advisories = advisoriesFor(pick)
+                }
+            }
+
+            d
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     private fun getTrailerKeyFromJson(urlString: String): String? {
         try {
             val url = URL(urlString)

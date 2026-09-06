@@ -77,3 +77,30 @@ data class TvDetails(
     var backdropUrl: String? = null,
     var rating: Double? = null
 ) : Serializable
+
+/**
+ * Ficha técnica completa de una PELÍCULA (TMDb /movie/{id}), espejo de
+ * [TvDetails] para que la pantalla de detalle de películas muestre los mismos
+ * bloques profesionales: datos básicos, equipo, datos generales y contenido.
+ */
+data class MovieDetails(
+    var originalTitle: String? = null,
+    var localTitle: String? = null,
+    var releaseDate: String? = null,
+    var runtime: Int? = null,
+    var genres: List<String> = emptyList(),
+    var originCountries: List<String> = emptyList(),
+    var originalLanguage: String? = null,
+    var overview: String? = null,
+    var productionCompanies: List<String> = emptyList(),
+    var cast: List<CastMember> = emptyList(),
+    var director: String? = null,
+    var writers: List<String> = emptyList(),
+    var musicComposer: String? = null,
+    var cinematographer: String? = null,
+    var ageRating: String? = null,
+    var advisories: List<String> = emptyList(),
+    var posterUrl: String? = null,
+    var backdropUrl: String? = null,
+    var rating: Double? = null
+) : Serializable
