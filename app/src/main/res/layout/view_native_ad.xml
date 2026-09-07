@@ -62,6 +62,14 @@
             android:layout_marginTop="10dp"
             android:scaleType="fitCenter" />
 
+        <ImageView
+            android:id="@+id/global_ad_image"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="10dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="Imagen del anuncio" />
+
         <!-- Texto del anuncio -->
         <TextView
             android:id="@+id/global_ad_body"
