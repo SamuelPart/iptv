@@ -164,10 +164,6 @@ class MainActivity : AppCompatActivity() {
 
         // Load the TMDb integrated Cine & Series Catalog!
         loadCineCatalog()
-
-        // PlayStation-style ambient glow drifting behind the UI
-        UiMotion.startGlowDrift(binding.imgGlowBlue, dx = 46f, dy = 64f, baseAlpha = 0.85f, duration = 7000)
-        UiMotion.startGlowDrift(binding.imgGlowViolet, dx = -56f, dy = -48f, baseAlpha = 0.7f, duration = 9000)
     }
 
     private fun setupBottomNavigation() {
