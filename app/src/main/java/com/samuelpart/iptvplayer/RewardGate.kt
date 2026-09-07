@@ -22,7 +22,7 @@ import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoa
  */
 object RewardGate {
 
-    private const val REWARDED_ID = "ca-app-pub-8124327134735952/7417379028"
+    private const val REWARDED_ID = "ca-app-pub-8124327134735952/6307893594"
     private const val REWARDED_INTERSTITIAL_ID = "ca-app-pub-8124327134735952/1699160240"
 
     private var rewardedAd: RewardedAd? = null
