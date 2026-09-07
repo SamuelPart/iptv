@@ -207,17 +207,9 @@ class MainActivity : AppCompatActivity() {
         showTabAnimated(binding.containerBrowser, browserVis)
         showTabAnimated(binding.containerSearch, searchVis)
 
-        // Randomly choose between displaying Banner Ad or Native Advanced Ad for the current tab (50/50 chance).
-        // If Native Ad hasn't loaded yet, default to Banner Ad so we never miss impressions!
-        val showNative = (Math.random() < 0.5) && (nativeAd != null)
-        
-        if (showNative) {
-            binding.cardGlobalNativeAd.visibility = View.VISIBLE
-            binding.adView.visibility = View.GONE
-        } else {
-            binding.cardGlobalNativeAd.visibility = View.GONE
-            binding.adView.visibility = View.VISIBLE
-        }
+        // El anuncio nativo va ahora insertado dentro del contenido de Inicio
+        // (se muestra solo cuando ya cargó), y el banner queda fijo abajo.
+        binding.adView.visibility = View.VISIBLE
     }
 
 
@@ -2519,15 +2511,27 @@ class MainActivity : AppCompatActivity() {
     private var nativeAd: com.google.android.gms.ads.nativead.NativeAd? = null
 
     private fun loadNativeAd() {
-        val adLoader = com.google.android.gms.ads.AdLoader.Builder(this, "ca-app-pub-8124327134735952/9832680995")
+        // Unidad de producción (Nativo avanzado). Si falla o aún no está
+        // activa, caemos al anuncio nativo de PRUEBA de Google para que la
+        // tarjeta siempre se vea. Quitar el fallback en producción final.
+        loadNativeAdWith("ca-app-pub-8124327134735952/9832680995") {
+            loadNativeAdWith("ca-app-pub-3940256099942544/2247696110") {
+                binding.cardGlobalNativeAd.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun loadNativeAdWith(unitId: String, onFailed: () -> Unit) {
+        val adLoader = com.google.android.gms.ads.AdLoader.Builder(this, unitId)
             .forNativeAd { ad : com.google.android.gms.ads.nativead.NativeAd ->
                 nativeAd?.destroy()
                 nativeAd = ad
+                binding.cardGlobalNativeAd.visibility = View.VISIBLE
                 populateNativeAdView(ad)
             }
             .withAdListener(object : com.google.android.gms.ads.AdListener() {
                 override fun onAdFailedToLoad(loadAdError: com.google.android.gms.ads.LoadAdError) {
-                    binding.cardGlobalNativeAd.visibility = View.GONE
+                    onFailed()
                 }
             })
             .build()
@@ -2537,15 +2541,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun populateNativeAdView(nativeAd: com.google.android.gms.ads.nativead.NativeAd) {
         val adView = binding.globalNativeAdView
-        
+
         val headlineView = adView.findViewById<android.widget.TextView>(R.id.global_ad_headline)
         val bodyView = adView.findViewById<android.widget.TextView>(R.id.global_ad_body)
         val iconView = adView.findViewById<android.widget.ImageView>(R.id.global_ad_app_icon)
         val ctaButton = adView.findViewById<android.widget.Button>(R.id.global_ad_call_to_action)
-        
+        val mediaView = adView.findViewById<com.google.android.gms.ads.nativead.MediaView>(R.id.global_ad_media)
+
         headlineView.text = nativeAd.headline
         adView.headlineView = headlineView
-        
+
         if (nativeAd.body != null) {
             bodyView.visibility = View.VISIBLE
             bodyView.text = nativeAd.body
@@ -2553,7 +2558,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             bodyView.visibility = View.GONE
         }
-        
+
         if (nativeAd.icon != null) {
             iconView.visibility = View.VISIBLE
             iconView.setImageDrawable(nativeAd.icon?.drawable)
@@ -2561,7 +2566,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             iconView.visibility = View.GONE
         }
-        
+
         if (nativeAd.callToAction != null) {
             ctaButton.visibility = View.VISIBLE
             ctaButton.text = nativeAd.callToAction
@@ -2569,7 +2574,15 @@ class MainActivity : AppCompatActivity() {
         } else {
             ctaButton.visibility = View.GONE
         }
-        
+
+        if (nativeAd.mediaContent != null) {
+            mediaView.visibility = View.VISIBLE
+            mediaView.setMediaContent(nativeAd.mediaContent)
+            adView.mediaView = mediaView
+        } else {
+            mediaView.visibility = View.GONE
+        }
+
         adView.setNativeAd(nativeAd)
     }
 

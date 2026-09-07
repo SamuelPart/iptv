@@ -148,94 +148,6 @@
             app:adSize="BANNER"
             app:adUnitId="ca-app-pub-8124327134735952/4141370615" />
 
-        <!-- Global Native Advanced Ad Container Card -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardGlobalNativeAd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:cardCornerRadius="20dp"
-            app:cardBackgroundColor="@color/ios_surface"
-            app:cardElevation="0dp"
-            android:visibility="gone">
-
-            <com.google.android.gms.ads.nativead.NativeAdView
-                android:id="@+id/globalNativeAdView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <ImageView
-                        android:id="@+id/global_ad_app_icon"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:contentDescription="Ad Icon" />
-
-                    <TextView
-                        android:id="@+id/global_ad_headline"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toStartOf="@id/global_ad_attribution"
-                        app:layout_constraintStart_toEndOf="@id/global_ad_app_icon"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/global_ad_attribution"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@color/ios_blue"
-                        android:paddingHorizontal="4dp"
-                        android:paddingVertical="1dp"
-                        android:text="Anuncio"
-                        android:textColor="#FFFFFF"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:id="@+id/global_ad_body"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="#CCCCCC"
-                        android:textSize="12sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="@id/global_ad_headline"
-                        app:layout_constraintTop_toBottomOf="@id/global_ad_headline" />
-
-                    <!-- Call to Action button -->
-                    <Button
-                        android:id="@+id/global_ad_call_to_action"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:layout_marginTop="8dp"
-                        android:backgroundTint="@color/ios_blue"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="0dp"
-                        android:text="Instalar"
-                        android:textColor="#FFFFFF"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/global_ad_body" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-            </com.google.android.gms.ads.nativead.NativeAdView>
-
-        </androidx.cardview.widget.CardView>
-
     </LinearLayout>
 
     <!-- Main Content Container -->
@@ -413,6 +325,108 @@
                         android:textColor="#7A7A7C"
                         android:textSize="13sp" />
                 </LinearLayout>
+
+                <!-- ===== ANUNCIO NATIVO AVANZADO (in-feed, admite vídeo) ===== -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardGlobalNativeAd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="#000000"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#1FFFFFFF"
+                    app:strokeWidth="1dp">
+
+                    <com.google.android.gms.ads.nativead.NativeAdView
+                        android:id="@+id/globalNativeAdView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <!-- Fila superior: icono del anunciante + titular + sello -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:id="@+id/global_ad_app_icon"
+                                    android:layout_width="44dp"
+                                    android:layout_height="44dp"
+                                    android:contentDescription="Icono del anunciante"
+                                    android:scaleType="centerCrop" />
+
+                                <TextView
+                                    android:id="@+id/global_ad_headline"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:layout_weight="1"
+                                    android:ellipsize="end"
+                                    android:maxLines="2"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/global_ad_attribution"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:background="@drawable/bg_chip_active"
+                                    android:paddingLeft="10dp"
+                                    android:paddingRight="10dp"
+                                    android:paddingTop="4dp"
+                                    android:paddingBottom="4dp"
+                                    android:text="ANUNCIO"
+                                    android:textColor="#1B1E24"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Vídeo / imagen del anuncio -->
+                            <com.google.android.gms.ads.nativead.MediaView
+                                android:id="@+id/global_ad_media"
+                                android:layout_width="match_parent"
+                                android:layout_height="180dp"
+                                android:layout_marginTop="12dp"
+                                android:scaleType="fitCenter" />
+
+                            <!-- Texto del anuncio -->
+                            <TextView
+                                android:id="@+id/global_ad_body"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:ellipsize="end"
+                                android:maxLines="2"
+                                android:textColor="#98989F"
+                                android:textSize="12.5sp" />
+
+                            <!-- Botón de llamada a la acción -->
+                            <Button
+                                android:id="@+id/global_ad_call_to_action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:layout_gravity="end"
+                                android:layout_marginTop="12dp"
+                                android:backgroundTint="@color/ios_blue"
+                                android:minWidth="120dp"
+                                android:text="Instalar"
+                                android:textColor="#1B1E24"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </com.google.android.gms.ads.nativead.NativeAdView>
+                </androidx.cardview.widget.CardView>
 
                 <!-- ============ CONTINUAR VIENDO ============ -->
                 <LinearLayout
