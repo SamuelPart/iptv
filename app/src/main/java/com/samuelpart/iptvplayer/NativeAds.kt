@@ -19,8 +19,6 @@ import com.google.android.gms.ads.nativead.NativeAdView
  * Anuncio NATIVO AVANZADO reutilizable para TODAS las pantallas.
  *
  * - [UNIT_ID]: unidad de producción.
- * - Si aún no sirve (unidades nuevas tardan ~1h), cae a la unidad de prueba
- *   para que el bloque siempre se vea.
  * - Dos variantes de bloque: [VARIANT_MEDIA] (tarjeta vertical con vídeo/imagen)
  *   y [VARIANT_COMPACT] (fila horizontal chica).
  * - [attach] infla el bloque en un contenedor, carga el anuncio y lo muestra
@@ -29,7 +27,6 @@ import com.google.android.gms.ads.nativead.NativeAdView
 object NativeAds {
 
     const val UNIT_ID = "ca-app-pub-8124327134735952/3120774272"
-    const val TEST_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
 
     const val VARIANT_MEDIA = 0
     const val VARIANT_COMPACT = 1
@@ -54,26 +51,14 @@ object NativeAds {
         return adView
     }
 
-    /** Carga un anuncio nativo y lo dibuja en [adView] (producción -> prueba). */
+    /** Carga un anuncio nativo de la unidad de producción y lo dibuja en [adView]. */
     fun load(
         activity: Activity,
         adView: NativeAdView,
         onLoaded: (() -> Unit)? = null,
         onFailed: (() -> Unit)? = null
     ) {
-        loadWith(activity, adView, UNIT_ID, onLoaded) {
-            loadWith(activity, adView, TEST_UNIT_ID, onLoaded, onFailed)
-        }
-    }
-
-    private fun loadWith(
-        activity: Activity,
-        adView: NativeAdView,
-        unitId: String,
-        onLoaded: (() -> Unit)?,
-        onFailed: (() -> Unit)?
-    ) {
-        val loader = AdLoader.Builder(activity, unitId)
+        val loader = AdLoader.Builder(activity, UNIT_ID)
             .forNativeAd { ad: NativeAd ->
                 populate(adView, ad)
                 onLoaded?.invoke()
