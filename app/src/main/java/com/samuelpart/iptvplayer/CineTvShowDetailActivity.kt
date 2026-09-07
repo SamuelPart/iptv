@@ -292,6 +292,11 @@ class CineTvShowDetailActivity : AppCompatActivity() {
     }
 
     private fun playUrl(url: String, title: String) {
+        // Anuncio recompensado obligatorio: solo reproduce si se ve completo.
+        RewardGate.requireAdThen(this) { launchPlayback(url, title) }
+    }
+
+    private fun launchPlayback(url: String, title: String) {
         if (CineRepository.isDirectStreamUrl(url)) {
             startActivity(
                 Intent(this, PlayerActivity::class.java).apply {

@@ -247,6 +247,11 @@ class CineMovieDetailActivity : AppCompatActivity() {
 
     private fun playNow() {
         val streamUrl = if (media.urls.isNotEmpty()) media.urls[0] else media.url
+        // Anuncio recompensado obligatorio: solo reproduce si se ve completo.
+        RewardGate.requireAdThen(this) { playStream(streamUrl) }
+    }
+
+    private fun playStream(streamUrl: String) {
         if (CineRepository.isDirectStreamUrl(streamUrl)) {
             openPlayer(streamUrl)
         } else {

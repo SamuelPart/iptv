@@ -114,11 +114,6 @@ class MainActivity : AppCompatActivity() {
     private var allCineMedia: List<CineMedia> = emptyList()
     private var selectedCineType: String = "all" // "all", "movie", "series"
 
-    // Google AdMob Rewarded Interstitial Ad reference
-    private var mRewardedInterstitialAd: com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd? = null
-    // Google AdMob Rewarded Ad reference
-    private var mRewardedAd: com.google.android.gms.ads.rewarded.RewardedAd? = null
-
     // Public test lists (legal & free streams)
     private val urlSpain = "https://iptv-org.github.io/iptv/countries/es.m3u"
     private val urlGlobal = "https://iptv-org.github.io/iptv/index.m3u"
@@ -152,8 +147,7 @@ class MainActivity : AppCompatActivity() {
         com.google.android.gms.ads.MobileAds.initialize(this) {}
         val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
         binding.adView.loadAd(adRequest)
-        loadRewardedInterstitialAd()
-        loadRewardedAd()
+        RewardGate.load(this)
         loadNativeAd()
         
         // Auto-restore last successfully loaded playlist on app startup!
@@ -385,12 +379,15 @@ class MainActivity : AppCompatActivity() {
         if (entry.isChannel) {
             openPlayer(Channel(name = entry.title, url = entry.url, logoUrl = entry.channelLogo))
         } else {
-            startActivity(Intent(this, PlayerActivity::class.java).apply {
-                putExtra("channelName", entry.title)
-                putExtra("channelUrl", entry.url)
-                putExtra("startPosition", entry.positionMs)
-                entry.media?.let { putExtra("cineMedia", it) }
-            })
+            // Película / serie reanudada: también requiere anuncio recompensado.
+            RewardGate.requireAdThen(this) {
+                startActivity(Intent(this, PlayerActivity::class.java).apply {
+                    putExtra("channelName", entry.title)
+                    putExtra("channelUrl", entry.url)
+                    putExtra("startPosition", entry.positionMs)
+                    entry.media?.let { putExtra("cineMedia", it) }
+                })
+            }
         }
     }
 
@@ -1844,77 +1841,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadRewardedInterstitialAd() {
-        val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
-        com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd.load(
-            this,
-            "ca-app-pub-8124327134735952/1699160240", // Your production Rewarded Interstitial ID!
-            adRequest,
-            object : com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback() {
-                override fun onAdLoaded(ad: com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd) {
-                    mRewardedInterstitialAd = ad
-                }
-
-                override fun onAdFailedToLoad(loadAdError: com.google.android.gms.ads.LoadAdError) {
-                    mRewardedInterstitialAd = null
-                }
-            }
-        )
-    }
-
-    private fun loadRewardedAd() {
-        val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
-        com.google.android.gms.ads.rewarded.RewardedAd.load(
-            this,
-            "ca-app-pub-8124327134735952/7417379028", // Your production Rewarded Ad ID!
-            adRequest,
-            object : com.google.android.gms.ads.rewarded.RewardedAdLoadCallback() {
-                override fun onAdLoaded(ad: com.google.android.gms.ads.rewarded.RewardedAd) {
-                    mRewardedAd = ad
-                }
-
-                override fun onAdFailedToLoad(loadAdError: com.google.android.gms.ads.LoadAdError) {
-                    mRewardedAd = null
-                }
-            }
-        )
-    }
-
     private fun openPlayer(channel: Channel) {
-        val rewardedInterstitial = mRewardedInterstitialAd
-        val rewarded = mRewardedAd
-        
-        if (rewardedInterstitial != null) {
-            rewardedInterstitial.fullScreenContentCallback = object : com.google.android.gms.ads.FullScreenContentCallback() {
-                override fun onAdDismissedFullScreenContent() {
-                    mRewardedInterstitialAd = null
-                    loadRewardedInterstitialAd() // Load next ad
-                    launchPlayerActivity(channel)
-                }
-
-                override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                    mRewardedInterstitialAd = null
-                    launchPlayerActivity(channel)
-                }
-            }
-            rewardedInterstitial.show(this) { rewardItem -> }
-        } else if (rewarded != null) {
-            rewarded.fullScreenContentCallback = object : com.google.android.gms.ads.FullScreenContentCallback() {
-                override fun onAdDismissedFullScreenContent() {
-                    mRewardedAd = null
-                    loadRewardedAd() // Load next ad
-                    launchPlayerActivity(channel)
-                }
-
-                override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                    mRewardedAd = null
-                    launchPlayerActivity(channel)
-                }
-            }
-            rewarded.show(this) { rewardItem -> }
-        } else {
-            launchPlayerActivity(channel)
-        }
+        // Anuncio recompensado obligatorio: solo se reproduce si se ve completo.
+        RewardGate.requireAdThen(this) { launchPlayerActivity(channel) }
     }
 
     private fun launchPlayerActivity(channel: Channel) {
