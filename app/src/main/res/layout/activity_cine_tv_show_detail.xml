@@ -190,6 +190,13 @@
                     android:textColor="#D6D6DB"
                     android:textSize="14sp" />
 
+                <!-- Anuncio nativo (con vídeo/imagen) -->
+                <FrameLayout
+                    android:id="@+id/adSlotNative"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp" />
+
                 <!-- ===== INFORMACIÓN GENERAL ===== -->
                 <TextView
                     android:layout_width="wrap_content"

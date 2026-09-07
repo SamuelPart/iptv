@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
         val adRequest = com.google.android.gms.ads.AdRequest.Builder().build()
         binding.adView.loadAd(adRequest)
         RewardGate.load(this)
-        loadNativeAd()
+        setupNativeAds()
         
         // Auto-restore last successfully loaded playlist on app startup!
         restoreSavedPlaylist()
@@ -2508,82 +2508,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private var nativeAd: com.google.android.gms.ads.nativead.NativeAd? = null
-
-    private fun loadNativeAd() {
-        // Unidad de producción (Nativo avanzado). Si falla o aún no está
-        // activa, caemos al anuncio nativo de PRUEBA de Google para que la
-        // tarjeta siempre se vea. Quitar el fallback en producción final.
-        loadNativeAdWith("ca-app-pub-8124327134735952/9832680995") {
-            loadNativeAdWith("ca-app-pub-3940256099942544/2247696110") {
-                binding.cardGlobalNativeAd.visibility = View.GONE
-            }
-        }
-    }
-
-    private fun loadNativeAdWith(unitId: String, onFailed: () -> Unit) {
-        val adLoader = com.google.android.gms.ads.AdLoader.Builder(this, unitId)
-            .forNativeAd { ad : com.google.android.gms.ads.nativead.NativeAd ->
-                nativeAd?.destroy()
-                nativeAd = ad
-                binding.cardGlobalNativeAd.visibility = View.VISIBLE
-                populateNativeAdView(ad)
-            }
-            .withAdListener(object : com.google.android.gms.ads.AdListener() {
-                override fun onAdFailedToLoad(loadAdError: com.google.android.gms.ads.LoadAdError) {
-                    onFailed()
-                }
-            })
-            .build()
-
-        adLoader.loadAd(com.google.android.gms.ads.AdRequest.Builder().build())
-    }
-
-    private fun populateNativeAdView(nativeAd: com.google.android.gms.ads.nativead.NativeAd) {
-        val adView = binding.globalNativeAdView
-
-        val headlineView = adView.findViewById<android.widget.TextView>(R.id.global_ad_headline)
-        val bodyView = adView.findViewById<android.widget.TextView>(R.id.global_ad_body)
-        val iconView = adView.findViewById<android.widget.ImageView>(R.id.global_ad_app_icon)
-        val ctaButton = adView.findViewById<android.widget.Button>(R.id.global_ad_call_to_action)
-        val mediaView = adView.findViewById<com.google.android.gms.ads.nativead.MediaView>(R.id.global_ad_media)
-
-        headlineView.text = nativeAd.headline
-        adView.headlineView = headlineView
-
-        if (nativeAd.body != null) {
-            bodyView.visibility = View.VISIBLE
-            bodyView.text = nativeAd.body
-            adView.bodyView = bodyView
-        } else {
-            bodyView.visibility = View.GONE
-        }
-
-        if (nativeAd.icon != null) {
-            iconView.visibility = View.VISIBLE
-            iconView.setImageDrawable(nativeAd.icon?.drawable)
-            adView.iconView = iconView
-        } else {
-            iconView.visibility = View.GONE
-        }
-
-        if (nativeAd.callToAction != null) {
-            ctaButton.visibility = View.VISIBLE
-            ctaButton.text = nativeAd.callToAction
-            adView.callToActionView = ctaButton
-        } else {
-            ctaButton.visibility = View.GONE
-        }
-
-        if (nativeAd.mediaContent != null) {
-            mediaView.visibility = View.VISIBLE
-            mediaView.setMediaContent(nativeAd.mediaContent)
-            adView.mediaView = mediaView
-        } else {
-            mediaView.visibility = View.GONE
-        }
-
-        adView.setNativeAd(nativeAd)
+    private fun setupNativeAds() {
+        // Inicio: tarjeta inline (ya está en el layout)
+        NativeAds.load(
+            this,
+            binding.globalNativeAdView,
+            onLoaded = { binding.cardGlobalNativeAd.visibility = View.VISIBLE },
+            onFailed = { binding.cardGlobalNativeAd.visibility = View.GONE }
+        )
+        // Canales y Buscador: bloque compacto
+        NativeAds.attach(this, binding.adSlotChannels, NativeAds.VARIANT_COMPACT)
+        NativeAds.attach(this, binding.adSlotSearch, NativeAds.VARIANT_COMPACT)
+        NativeAds.attach(this, binding.adSlotSettings, NativeAds.VARIANT_COMPACT)
+        // Cine: bloque con vídeo/imagen
+        NativeAds.attach(this, binding.adSlotCine, NativeAds.VARIANT_MEDIA)
     }
 
     private fun getSearchHistory(key: String): MutableList<String> {
@@ -2863,7 +2801,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        nativeAd?.destroy()
         super.onDestroy()
     }
 }

@@ -47,6 +47,8 @@ class CineMovieDetailActivity : AppCompatActivity() {
         binding.btnPlay.setOnClickListener { playNow() }
         binding.btnShare.setOnClickListener { showShareOptions() }
 
+        NativeAds.attach(this, binding.adSlotNative, NativeAds.VARIANT_MEDIA)
+
         renderFromMedia()
         paintFavorite()
 

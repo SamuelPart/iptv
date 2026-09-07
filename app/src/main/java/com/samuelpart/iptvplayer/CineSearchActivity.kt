@@ -39,6 +39,8 @@ class CineSearchActivity : AppCompatActivity() {
 
         binding.rvCineSearch.layoutManager = GridLayoutManager(this, 3)
 
+        NativeAds.attach(this, binding.adSlotNative, NativeAds.VARIANT_COMPACT)
+
         binding.btnCineSearchBack.setOnClickListener { finish() }
 
         binding.editCineQuery.doAfterTextChanged { t ->

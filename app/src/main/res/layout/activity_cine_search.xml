@@ -70,6 +70,16 @@
         </androidx.cardview.widget.CardView>
     </LinearLayout>
 
+    <!-- Anuncio nativo (compacto) -->
+    <FrameLayout
+        android:id="@+id/adSlotNative"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp" />
+
     <TextView
         android:id="@+id/txtCineSearchHint"
         android:layout_width="match_parent"

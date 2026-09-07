@@ -51,6 +51,8 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         binding.btnPlay.setOnClickListener { playFirst() }
         binding.btnShare.setOnClickListener { showShareOptions() }
 
+        NativeAds.attach(this, binding.adSlotNative, NativeAds.VARIANT_MEDIA)
+
         setupEpisodes()
         renderFromMedia()
 

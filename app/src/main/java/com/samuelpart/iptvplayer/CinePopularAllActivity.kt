@@ -32,6 +32,8 @@ class CinePopularAllActivity : AppCompatActivity() {
         binding.btnPopularBack.setOnClickListener { finish() }
         binding.rvPopularAll.layoutManager = GridLayoutManager(this, 3)
 
+        NativeAds.attach(this, binding.adSlotNative, NativeAds.VARIANT_COMPACT)
+
         lifecycleScope.launch {
             val catalog = CineRepository.getCineCatalog(this@CinePopularAllActivity)
 

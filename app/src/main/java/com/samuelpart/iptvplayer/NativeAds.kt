@@ -1,0 +1,146 @@
+package com.samuelpart.iptvplayer
+
+import android.app.Activity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.nativead.MediaView
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdView
+
+/**
+ * Anuncio NATIVO AVANZADO reutilizable para TODAS las pantallas.
+ *
+ * - [UNIT_ID]: unidad de producción.
+ * - Si aún no sirve (unidades nuevas tardan ~1h), cae a la unidad de prueba
+ *   para que el bloque siempre se vea.
+ * - Dos variantes de bloque: [VARIANT_MEDIA] (tarjeta vertical con vídeo/imagen)
+ *   y [VARIANT_COMPACT] (fila horizontal chica).
+ * - [attach] infla el bloque en un contenedor, carga el anuncio y lo muestra
+ *   solo cuando hay anuncio listo.
+ */
+object NativeAds {
+
+    const val UNIT_ID = "ca-app-pub-8124327134735952/3120774272"
+    const val TEST_UNIT_ID = "ca-app-pub-3940256099942544/2247696110"
+
+    const val VARIANT_MEDIA = 0
+    const val VARIANT_COMPACT = 1
+
+    /** Infla el bloque en [slot] y lo mantiene oculto hasta que carga el anuncio. */
+    fun attach(activity: Activity, slot: ViewGroup, variant: Int = VARIANT_MEDIA) {
+        slot.visibility = View.GONE
+        val adView = inflate(activity, slot, variant)
+        load(
+            activity,
+            adView,
+            onLoaded = { slot.visibility = View.VISIBLE },
+            onFailed = { slot.visibility = View.GONE }
+        )
+    }
+
+    fun inflate(activity: Activity, slot: ViewGroup, variant: Int = VARIANT_MEDIA): NativeAdView {
+        val layoutRes = if (variant == VARIANT_COMPACT) R.layout.view_native_ad_compact else R.layout.view_native_ad
+        val adView = LayoutInflater.from(activity).inflate(layoutRes, slot, false) as NativeAdView
+        slot.removeAllViews()
+        slot.addView(adView)
+        return adView
+    }
+
+    /** Carga un anuncio nativo y lo dibuja en [adView] (producción -> prueba). */
+    fun load(
+        activity: Activity,
+        adView: NativeAdView,
+        onLoaded: (() -> Unit)? = null,
+        onFailed: (() -> Unit)? = null
+    ) {
+        loadWith(activity, adView, UNIT_ID, onLoaded) {
+            loadWith(activity, adView, TEST_UNIT_ID, onLoaded, onFailed)
+        }
+    }
+
+    private fun loadWith(
+        activity: Activity,
+        adView: NativeAdView,
+        unitId: String,
+        onLoaded: (() -> Unit)?,
+        onFailed: (() -> Unit)?
+    ) {
+        val loader = AdLoader.Builder(activity, unitId)
+            .forNativeAd { ad: NativeAd ->
+                populate(adView, ad)
+                onLoaded?.invoke()
+            }
+            .withAdListener(object : AdListener() {
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    onFailed?.invoke()
+                }
+            })
+            .build()
+
+        loader.loadAd(AdRequest.Builder().build())
+    }
+
+    /** Rellena un NativeAdView con los ids estándar del bloque (null-safe). */
+    fun populate(adView: NativeAdView, ad: NativeAd) {
+        val headline = adView.findViewById<TextView>(R.id.global_ad_headline)
+        val body = adView.findViewById<TextView>(R.id.global_ad_body)
+        val icon = adView.findViewById<ImageView>(R.id.global_ad_app_icon)
+        val cta = adView.findViewById<Button>(R.id.global_ad_call_to_action)
+        val media = adView.findViewById<MediaView>(R.id.global_ad_media)
+
+        headline?.let {
+            it.text = ad.headline
+            adView.headlineView = it
+        }
+
+        body?.let {
+            if (ad.body != null) {
+                it.visibility = View.VISIBLE
+                it.text = ad.body
+                adView.bodyView = it
+            } else {
+                it.visibility = View.GONE
+            }
+        }
+
+        icon?.let {
+            if (ad.icon != null) {
+                it.visibility = View.VISIBLE
+                it.setImageDrawable(ad.icon?.drawable)
+                adView.iconView = it
+            } else {
+                it.visibility = View.GONE
+            }
+        }
+
+        cta?.let {
+            if (ad.callToAction != null) {
+                it.visibility = View.VISIBLE
+                it.text = ad.callToAction
+                adView.callToActionView = it
+            } else {
+                it.visibility = View.GONE
+            }
+        }
+
+        media?.let {
+            if (ad.mediaContent != null) {
+                it.visibility = View.VISIBLE
+                it.setMediaContent(ad.mediaContent)
+                adView.mediaView = it
+            } else {
+                it.visibility = View.GONE
+            }
+        }
+
+        adView.setNativeAd(ad)
+    }
+}
