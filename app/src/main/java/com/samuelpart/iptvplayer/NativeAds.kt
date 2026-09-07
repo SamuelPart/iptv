@@ -3,6 +3,7 @@ package com.samuelpart.iptvplayer
 import android.app.Activity
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,8 +28,9 @@ import com.google.android.gms.ads.nativead.NativeAdView
  *   y [VARIANT_COMPACT] (fila horizontal chica).
  * - [attach] infla el bloque en un contenedor, carga el anuncio y lo muestra
  *   solo cuando hay anuncio listo.
- * - Reintenta automáticamente si AdMob aún no tiene relleno (unidades nuevas
- *   pueden tardar en empezar a servir).
+ * - Reintenta automáticamente mientras AdMob no tenga relleno (una unidad nueva
+ *   puede tardar horas/días en empezar a servir); en cuanto llega, el bloque
+ *   aparece solo, sin necesidad de reiniciar la app.
  */
 object NativeAds {
 
@@ -37,7 +39,11 @@ object NativeAds {
     const val VARIANT_MEDIA = 0
     const val VARIANT_COMPACT = 1
 
+    private const val TAG = "NativeAds"
+
+    /** Reintentos con espaciado creciente: 3s, 10s, 30s, 60s... y luego cada 60s. */
     private val RETRY_DELAYS_MS = longArrayOf(3_000L, 10_000L, 30_000L, 60_000L)
+    private const val RETRY_FOREVER_DELAY_MS = 60_000L
 
     /** Infla el bloque en [slot] y lo mantiene oculto hasta que carga el anuncio. */
     fun attach(activity: Activity, slot: ViewGroup, variant: Int = VARIANT_MEDIA) {
@@ -59,7 +65,7 @@ object NativeAds {
         return adView
     }
 
-    /** Carga un anuncio nativo de la unidad de producción (con reintentos). */
+    /** Carga un anuncio nativo de la unidad de producción (reintenta hasta conseguirlo). */
     fun load(
         activity: Activity,
         adView: NativeAdView,
@@ -88,19 +94,23 @@ object NativeAds {
 
         val loader = AdLoader.Builder(activity, UNIT_ID)
             .forNativeAd { ad: NativeAd ->
+                Log.d(TAG, "OK: anuncio nativo cargado (intento ${attempt + 1})")
                 populate(adView, ad)
                 onLoaded?.invoke()
             }
             .withNativeAdOptions(options)
             .withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                    if (attempt < RETRY_DELAYS_MS.size) {
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            loadWithRetry(activity, adView, onLoaded, onFailed, attempt + 1)
-                        }, RETRY_DELAYS_MS[attempt])
-                    } else {
-                        onFailed?.invoke()
-                    }
+                    Log.d(
+                        TAG,
+                        "FALLO (intento ${attempt + 1}): code=${loadAdError.code} " +
+                            "msg=${loadAdError.message} domain=${loadAdError.domain} " +
+                            "mediation=${loadAdError.responseInfo?.mediationAdapterClassName ?: "?"}"
+                    )
+                    val delay = if (attempt < RETRY_DELAYS_MS.size) RETRY_DELAYS_MS[attempt] else RETRY_FOREVER_DELAY_MS
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        loadWithRetry(activity, adView, onLoaded, onFailed, attempt + 1)
+                    }, delay)
                 }
             })
             .build()
