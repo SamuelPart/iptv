@@ -844,233 +844,477 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- ================= TAB 5: AJUSTES — LISTA AGRUPADA ESTILO iPHONE ================= -->
+        <!-- ================= TAB 5: AJUSTES — REDISEÑO COMPLETO ================= -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/containerBrowser"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone"
-            android:background="#000000">
+            android:background="#FF000000"
+            android:visibility="gone">
 
             <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:fadingEdgeLength="24dp"
-                android:overScrollMode="never"
-                android:requiresFadingEdge="vertical"
-                android:scrollbars="none">
+                android:fillViewport="true"
+                android:scrollbars="none"
+                android:clipToPadding="false"
+                android:paddingTop="20dp"
+                android:paddingBottom="32dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="16dp"
-                android:paddingBottom="110dp">
-
-                <!-- HERO AURORA -->
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="100dp"
-                    android:background="@drawable/bg_tile_violet"
-                    android:clipToOutline="true">
-
-                    <ImageView
-                        android:layout_width="76dp"
-                        android:layout_height="76dp"
-                        android:layout_gravity="end|center_vertical"
-                        android:layout_marginEnd="-14dp"
-                        android:alpha="0.22"
-                        android:src="@drawable/ic_ios_gear"
-                        app:tint="#FFFFFF" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start|center_vertical"
-                        android:layout_marginStart="20dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:letterSpacing="0.24"
-                            android:text="TU IPTV, TU MANERA"
-                            android:textAllCaps="true"
-                            android:textColor="@color/ios_cyan"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Ajustes"
-                            android:textAllCaps="false"
-                            android:textColor="#FFFFFF"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-                </FrameLayout>
-
-                <!-- Anuncio nativo (compacto) -->
-                <FrameLayout
-                    android:id="@+id/adSlotSettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="4dp"
-                    android:paddingRight="4dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="2dp" />
-
-                <!-- M3U connect block -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
                     android:orientation="vertical"
-                    android:background="@drawable/bg_card_ios"
-                    android:padding="18dp">
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="TU LISTA IPTV (M3U)"
-                        android:textColor="@color/ios_cyan"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.14" />
-
+                    <!-- ===== CABECERA ===== -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="20dp"
+                        android:background="@drawable/bg_settings_header">
 
-                        <EditText
-                            android:id="@+id/edtUrl"
+                        <ImageView
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:padding="11dp"
+                            android:src="@drawable/ic_gear_modern"
+                            android:contentDescription="Ajustes"
+                            android:background="@drawable/bg_settings_accent"
+                            android:backgroundTint="#24C9A96E"
+                            app:tint="#E6C9A96E" />
+
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_chip_ios"
-                            android:hint="https://ejemplo.com/lista.m3u"
-                            android:textColorHint="#66FFFFFF"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:padding="14dp"
-                            android:inputType="textUri"
-                            android:maxLines="1" />
+                            android:layout_marginStart="14dp"
+                            android:orientation="vertical">
 
-                        <ImageButton
-                            android:id="@+id/btnClear"
-                            android:layout_width="48dp"
-                            android:layout_height="match_parent"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip_ios"
-                            android:src="@drawable/ic_ios_xmark"
-                            android:contentDescription="Limpiar"
-                            app:tint="#CCFFFFFF" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Ajustes"
+                                android:textColor="#FFFFFF"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:includeFontPadding="false" />
 
-                        <ImageButton
-                            android:id="@+id/btnScanQr"
-                            android:layout_width="48dp"
-                            android:layout_height="match_parent"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip_ios"
-                            android:src="@drawable/ic_ios_qr"
-                            android:contentDescription="Escanear QR"
-                            app:tint="@color/ios_cyan" />
-
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:text="Configura tu reproductor"
+                                android:textColor="#8A8A8E"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
-                    <Button
-                        android:id="@+id/btnLoad"
-                        android:layout_width="match_parent"
-                        android:layout_height="54dp"
-                        android:layout_marginTop="14dp"
-                        android:background="@drawable/bg_button_primary"
-                        android:text="Conectar a mi lista"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="15sp" />
-
+                    <!-- ===== LISTAS DE REPRODUCCIÓN ===== -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:text="Listas publicas gratis:"
-                        android:textColor="@color/ios_gray"
-                        android:textSize="12sp" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/btnQuickSpain"
-                            style="?android:attr/buttonStyleSmall"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="6dp"
-                            android:backgroundTint="#295E5CE6"
-                            android:text="Espana"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp" />
-
-                        <Button
-                            android:id="@+id/btnQuickGlobal"
-                            style="?android:attr/buttonStyleSmall"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="6dp"
-                            android:backgroundTint="#295E5CE6"
-                            android:text="Global"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp" />
-
-                        <Button
-                            android:id="@+id/btnQuickNews"
-                            style="?android:attr/buttonStyleSmall"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:backgroundTint="#295E5CE6"
-                            android:text="Noticias"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Historial -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardHomeStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    app:cardBackgroundColor="@color/ios_surface"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="0dp">
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="26dp"
+                        android:layout_marginBottom="10dp"
+                        android:text="LISTAS DE REPRODUCCIÓN"
+                        android:textColor="#C9A96E"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.12" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="18dp">
+                        android:background="@drawable/bg_settings_card"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp">
 
+                        <!-- URL + Conectar -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:layout_marginBottom="12dp">
+                            android:paddingTop="16dp"
+                            android:paddingBottom="12dp">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_ios_globe"
+                                android:contentDescription="URL de lista"
+                                app:tint="#C9A96E" />
+
+                            <EditText
+                                android:id="@+id/edtUrl"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:background="@android:color/transparent"
+                                android:hint="https://ejemplo.com/lista.m3u"
+                                android:textColorHint="#5A5A5E"
+                                android:textColor="#FFFFFF"
+                                android:textSize="15sp"
+                                android:inputType="textUri"
+                                android:imeOptions="actionDone"
+                                android:maxLines="1" />
+
+                            <Button
+                                android:id="@+id/btnLoad"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:paddingStart="18dp"
+                                android:paddingEnd="18dp"
+                                android:background="@drawable/bg_button_primary"
+                                android:text="Conectar"
+                                android:textColor="#000000"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textAllCaps="false" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#14FFFFFF" />
+
+                        <!-- Limpiar / Escanear QR -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="16dp">
+
+                            <Button
+                                android:id="@+id/btnClear"
+                                android:layout_width="0dp"
+                                android:layout_height="44dp"
+                                android:layout_weight="1"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:background="@drawable/bg_button_secondary"
+                                android:text="Limpiar"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textAllCaps="false" />
+
+                            <Space
+                                android:layout_width="10dp"
+                                android:layout_height="1dp" />
+
+                            <Button
+                                android:id="@+id/btnScanQr"
+                                android:layout_width="0dp"
+                                android:layout_height="44dp"
+                                android:layout_weight="1"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:background="@drawable/bg_button_secondary"
+                                android:text="Escanear QR"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                android:textAllCaps="false" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#14FFFFFF" />
+
+                        <!-- Listas rápidas -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="Listas rápidas:"
+                            android:textColor="#8A8A8E"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="18dp">
+
+                            <Button
+                                android:id="@+id/btnQuickSpain"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:background="@drawable/bg_settings_accent"
+                                android:backgroundTint="#14C9A96E"
+                                android:text="España"
+                                android:textColor="#C9A96E"
+                                android:textSize="12sp"
+                                android:textAllCaps="false" />
+
+                            <Space
+                                android:layout_width="8dp"
+                                android:layout_height="1dp" />
+
+                            <Button
+                                android:id="@+id/btnQuickGlobal"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:background="@drawable/bg_settings_accent"
+                                android:backgroundTint="#14C9A96E"
+                                android:text="Global"
+                                android:textColor="#C9A96E"
+                                android:textSize="12sp"
+                                android:textAllCaps="false" />
+
+                            <Space
+                                android:layout_width="8dp"
+                                android:layout_height="1dp" />
+
+                            <Button
+                                android:id="@+id/btnQuickNews"
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_weight="1"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:background="@drawable/bg_settings_accent"
+                                android:backgroundTint="#14C9A96E"
+                                android:text="Noticias"
+                                android:textColor="#C9A96E"
+                                android:textSize="12sp"
+                                android:textAllCaps="false" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- ===== PREFERENCIAS ===== -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="26dp"
+                        android:layout_marginBottom="10dp"
+                        android:text="PREFERENCIAS"
+                        android:textColor="#C9A96E"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.12" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_settings_card"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp">
+
+                        <!-- Control parental -->
+                        <LinearLayout
+                            android:id="@+id/btnSettingsParental"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:minHeight="64dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_ios_shield"
+                                android:contentDescription="Control Parental"
+                                app:tint="#C9A96E" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="14dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Control Parental"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="15sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="PIN de bloqueo para ocultar canales"
+                                    android:textColor="#8A8A8E"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_ios_arrow_right"
+                                android:contentDescription="@null"
+                                app:tint="#5A5A5E" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#14FFFFFF" />
+
+                        <!-- Tema -->
+                        <LinearLayout
+                            android:id="@+id/btnSettingsTheme"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:minHeight="64dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_theme"
+                                android:contentDescription="Tema"
+                                app:tint="#C9A96E" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="14dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Tema de la aplicación"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="15sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Oscuro, claro o automático del sistema"
+                                    android:textColor="#8A8A8E"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_ios_arrow_right"
+                                android:contentDescription="@null"
+                                app:tint="#5A5A5E" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#14FFFFFF" />
+
+                        <!-- Color de acento -->
+                        <LinearLayout
+                            android:id="@+id/btnSettingsAccent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:minHeight="64dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <View
+                                android:id="@+id/viewAccentPreview"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:background="@drawable/bg_settings_accent" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="14dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Color de acento"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="15sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Tinta principal de la app entera"
+                                    android:textColor="#8A8A8E"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/txtSettingsAccentDesc"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:textColor="#C9A96E"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_ios_arrow_right"
+                                android:contentDescription="@null"
+                                app:tint="#5A5A5E" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- ===== HISTORIAL ===== -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="26dp"
+                        android:layout_marginBottom="10dp"
+                        android:text="HISTORIAL"
+                        android:textColor="#C9A96E"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.12" />
+
+                    <LinearLayout
+                        android:id="@+id/cardHomeStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_settings_card"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
 
                             <TextView
                                 android:id="@+id/txtHomeStatusTitle"
@@ -1086,493 +1330,139 @@
                                 android:id="@+id/btnHomeClearHistory"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:paddingTop="4dp"
+                                android:paddingBottom="4dp"
+                                android:background="?android:attr/selectableItemBackground"
                                 android:text="LIMPIAR"
                                 android:textColor="#FF6E6E"
                                 android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:paddingHorizontal="8dp"
-                                android:paddingVertical="4dp"
-                                android:background="?android:attr/selectableItemBackground" />
-
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rvHomePlaylistHistory"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
                             android:visibility="gone"
                             android:nestedScrollingEnabled="false" />
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-            
-                <!-- ======= SEGURIDAD ======= -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="22dp"
-                    android:layout_marginBottom="8dp"
-                    android:letterSpacing="0.14"
-                    android:text="SEGURIDAD"
-                    android:textColor="@color/ios_cyan"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card_ios"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/btnSettingsParental"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp"
-                        android:foreground="?android:attr/selectableItemBackground">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_glass">
-
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_ios_shield"
-                                app:tint="@color/ios_blue" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Control Parental"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:lineSpacingMultiplier="1.15"
-                                android:text="PIN de bloqueo para ocultar canales"
-                                android:textColor="@color/ios_gray"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_ios_arrow_right"
-                            app:tint="@color/ios_gray" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- ======= APARIENCIA ======= -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="18dp"
-                    android:layout_marginBottom="8dp"
-                    android:letterSpacing="0.14"
-                    android:text="APARIENCIA"
-                    android:textColor="@color/ios_cyan"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card_ios"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/btnSettingsTheme"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp"
-                        android:foreground="?android:attr/selectableItemBackground">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_glass">
-
-                            <ImageView
-                                android:id="@+id/imgSettingsThemeIcon"
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_theme"
-                                app:tint="@color/ios_violet" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Tema de la aplicación"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/txtSettingsThemeDesc"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:lineSpacingMultiplier="1.15"
-                                android:text="Oscuro, claro o automático del sistema"
-                                android:textColor="@color/ios_gray"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_ios_arrow_right"
-                            app:tint="@color/ios_gray" />
                     </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="68dp"
-                        android:background="#1FFFFFFF" />
-
-                    <LinearLayout
-                        android:id="@+id/btnSettingsAccent"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp"
-                        android:foreground="?android:attr/selectableItemBackground">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_glass">
-
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_ios_globe"
-                                app:tint="@color/ios_cyan" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Color de acento"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/txtSettingsAccentDesc"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:lineSpacingMultiplier="1.15"
-                                android:text="Tinta principal de la app entera"
-                                android:textColor="@color/ios_gray"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-
-                        <View
-                            android:id="@+id/viewAccentPreview"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_circle_aurora" />
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_ios_arrow_right"
-                            app:tint="@color/ios_gray" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- ======= RESTABLECER ======= -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="18dp"
-                    android:layout_marginBottom="8dp"
-                    android:letterSpacing="0.14"
-                    android:text="RESTABLECER"
-                    android:textColor="@color/ios_cyan"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card_ios"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/btnSettingsClearCache"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp"
-                        android:foreground="?android:attr/selectableItemBackground">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_glass">
-
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_ios_trash"
-                                app:tint="#FF6E6E" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Borrar caché de lista"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:lineSpacingMultiplier="1.15"
-                                android:text="Vaciar la playlist actual y empezar de cero"
-                                android:textColor="@color/ios_gray"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_ios_arrow_right"
-                            app:tint="@color/ios_gray" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- ============ MIS ESTADISTICAS ============ -->
-                <LinearLayout
-                    android:id="@+id/sectionStats"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:orientation="vertical">
-
+                    <!-- ===== SISTEMA ===== -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginTop="26dp"
                         android:layout_marginBottom="10dp"
-                        android:text="📊 TU SEMANA"
-                        android:textColor="@color/ios_cyan"
-                        android:textSize="13sp"
+                        android:text="SISTEMA"
+                        android:textColor="#C9A96E"
+                        android:textSize="12sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.14" />
+                        android:letterSpacing="0.12" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_card_ios"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:background="@drawable/bg_settings_card"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp">
 
-                        <TextView
-                            android:id="@+id/txtStatsBody"
+                        <!-- Borrar caché -->
+                        <LinearLayout
+                            android:id="@+id/btnSettingsClearCache"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:lineSpacingMultiplier="1.35"
-                            android:text="Cargando estadisticas..."
-                            android:textColor="#F2FFFFFF"
-                            android:textSize="13sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Conteo local de los últimos 7 dias"
-                            android:textColor="@color/ios_gray"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                
-                <!-- ======= INFORMACIÓN (2 filas con divisor) ======= -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="18dp"
-                    android:layout_marginBottom="8dp"
-                    android:letterSpacing="0.14"
-                    android:text="INFORMACIÓN"
-                    android:textColor="@color/ios_cyan"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card_ios"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_glass">
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:minHeight="64dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
 
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_ios_message"
-                                app:tint="@color/ios_cyan" />
-                        </FrameLayout>
+                                android:src="@drawable/ic_ios_trash"
+                                android:contentDescription="Borrar caché"
+                                app:tint="#FF453A" />
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="Monetización y soporte"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
+                                android:layout_weight="1"
+                                android:layout_marginStart="14dp"
+                                android:orientation="vertical">
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:lineSpacingMultiplier="1.15"
-                                android:text="Unidades AdMob activas: banner, intersticial y nativo"
-                                android:textColor="@color/ios_gray"
-                                android:textSize="12sp" />
-                        </LinearLayout>
-                    </LinearLayout>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Borrar caché"
+                                    android:textColor="#FF453A"
+                                    android:textSize="15sp" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="68dp"
-                        android:background="#1FFFFFFF" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="14dp">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_circle_glass">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Vaciar la playlist actual y empezar de cero"
+                                    android:textColor="#8A8A8E"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
 
                             <ImageView
-                                android:layout_width="26dp"
-                                android:layout_height="26dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_launcher_foreground" />
-                        </FrameLayout>
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_ios_arrow_right"
+                                android:contentDescription="@null"
+                                app:tint="#5A5A5E" />
+                        </LinearLayout>
 
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#14FFFFFF" />
+
+                        <!-- Estadísticas -->
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:paddingTop="16dp"
+                            android:paddingBottom="18dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Lumen"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
+                                android:text="📊 TU SEMANA"
+                                android:textColor="#8A8A8E"
+                                android:textSize="12sp"
                                 android:textStyle="bold" />
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:id="@+id/txtStatsBody"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:lineSpacingMultiplier="1.15"
-                                android:text="Versión 1.6 · Una sola luz, todo tu contenido"
-                                android:textColor="@color/ios_gray"
-                                android:textSize="12sp" />
+                                android:layout_marginTop="8dp"
+                                android:text="Cargando estadisticas..."
+                                android:textColor="#F2FFFFFF"
+                                android:textSize="13sp"
+                                android:lineSpacingExtra="4dp" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <!-- Anuncio nativo (compacto) -->
+                    <FrameLayout
+                        android:id="@+id/adSlotSettings"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" />
+
                 </LinearLayout>
-
-            </LinearLayout>
-
             </ScrollView>
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- ================= TAB 5: CINE & SERIES (PRODUCTION GRADE) ================= -->
