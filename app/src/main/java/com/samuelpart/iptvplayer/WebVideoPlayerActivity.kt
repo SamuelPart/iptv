@@ -280,6 +280,49 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         })();
     """.trimIndent()
 
+    /** Pinta de NEGRO la página del player (cuevana8 y similares salen con
+     *  fondo blanco). Fuerza html/body, los <video> y los contenedores grandes
+     *  con fondo blanco, y se mantiene con un MutationObserver. */
+    private val BLACK_BG_JS = """
+        (function(){
+            try {
+                function paint(el){ if(el){ el.style.setProperty('background','#000','important'); el.style.setProperty('background-color','#000','important'); } }
+                paint(document.documentElement);
+                paint(document.body);
+                if (!window.__blackbg) {
+                    window.__blackbg = 1;
+                    window.__paintBlack = function(){
+                        try {
+                            var vs = document.querySelectorAll('video');
+                            for (var i = 0; i < vs.length; i++) { try { paint(vs[i]); } catch (e1) {} }
+                            var els = document.querySelectorAll('div,section,article,main,aside,header,footer');
+                            for (var j = 0; j < els.length; j++) {
+                                var n = els[j];
+                                if (n.__bgDone) continue;
+                                try {
+                                    var bg = (window.getComputedStyle(n).backgroundColor || '') + '';
+                                    var isWhite = bg.indexOf('255, 255, 255') >= 0;
+                                    var big = (n.offsetWidth * n.offsetHeight) > (window.innerWidth * window.innerHeight * 0.45);
+                                    if (big && isWhite && !n.querySelector('video')) { paint(n); n.__bgDone = 1; }
+                                } catch (e2) {}
+                            }
+                        } catch (e3) {}
+                    };
+                    window.__paintBlack();
+                    try {
+                        var root = document.documentElement || document.body;
+                        if (root) {
+                            new MutationObserver(function(){ if (window.__paintBlack) window.__paintBlack(); })
+                                .observe(root, { childList: true, subtree: true });
+                        }
+                    } catch (e4) {}
+                } else if (window.__paintBlack) {
+                    window.__paintBlack();
+                }
+            } catch (e) {}
+        })();
+    """.trimIndent()
+
 
     private val botRunnable = object : Runnable {
         override fun run() {
@@ -292,6 +335,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                     // (play/pausa, barra, calidad, fullscreen...). Ya no se
                     // re-clava el video encima de todo.
                     binding.webFramePlayer.evaluateJavascript(AD_OVERLAY_JS, null)
+                    binding.webFramePlayer.evaluateJavascript(BLACK_BG_JS, null)
                     binding.webFramePlayer.evaluateJavascript(INTERACTIVE_JS, null)
                     revealBootLayer()
                 } else {
@@ -380,6 +424,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         }
 
         val web = binding.webFramePlayer
+        web.setBackgroundColor(0xFF000000.toInt())
         val ws = web.settings
         ws.javaScriptEnabled = true
         ws.domStorageEnabled = true
@@ -430,13 +475,17 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             }
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                try { view?.evaluateJavascript(AD_OVERLAY_JS, null) } catch (_: Exception) {}
+                try {
+                    view?.evaluateJavascript(AD_OVERLAY_JS, null)
+                    view?.evaluateJavascript(BLACK_BG_JS, null)
+                } catch (_: Exception) {}
                 binding.webPlayerProgress.visibility = View.VISIBLE
                 if (url != null) currentPageUrl = url
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 binding.webPlayerProgress.visibility = View.GONE
+                try { view?.evaluateJavascript(BLACK_BG_JS, null) } catch (_: Exception) {}
                 if (pageBroken) { triggerRescue(); return }
                 // Dispara el BOT por PRIMERA vez al terminarse la carga…
                 botHandler.removeCallbacks(botRunnable)
