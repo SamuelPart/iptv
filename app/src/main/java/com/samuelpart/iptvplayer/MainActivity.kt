@@ -14,7 +14,6 @@ import android.view.Gravity
 import android.graphics.Typeface
 import android.graphics.Color
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -22,7 +21,6 @@ import android.view.inputmethod.InputMethodManager
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.EditText
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -83,42 +81,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var favoriteAdapter: FavoriteAdapter
     private lateinit var continueWatchingAdapter: ContinueWatchingAdapter
 
-    // QR scan: importar lista M3U escaneando codigo
-    private val cameraPermissionLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
-            qrScanLauncher.launch(qrScanOptions())
-        } else {
-            Toast.makeText(this, "Permiso de cámara requerido para escanear QR", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private val qrScanLauncher = registerForActivityResult(
-        com.journeyapps.barcodescanner.ScanContract()
-    ) { result ->
-        val contents = result.contents
-        if (!contents.isNullOrEmpty()) {
-            binding.edtUrl.setText(contents)
-            loadIptvList(contents)
-        }
-    }
-
-    private fun qrScanOptions(): com.journeyapps.barcodescanner.ScanOptions =
-        com.journeyapps.barcodescanner.ScanOptions().apply {
-            setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE)
-            setPrompt("Apunta la camara al QR de tu lista")
-            setBeepEnabled(false)
-            setOrientationLocked(true)
-        }
     private var allCineMedia: List<CineMedia> = emptyList()
     private var selectedCineType: String = "all" // "all", "movie", "series"
 
     // Public test lists (legal & free streams)
-    private val urlSpain = "https://iptv-org.github.io/iptv/countries/es.m3u"
-    private val urlGlobal = "https://iptv-org.github.io/iptv/index.m3u"
-    private val urlNews = "https://iptv-org.github.io/iptv/categories/news.m3u"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -400,17 +366,32 @@ class MainActivity : AppCompatActivity() {
         refreshContinueWatching()
         refreshFavorites()
         applyAccentColor()
-        refreshStats()
+        handlePendingSettings()
+    }
+
+    /** Aplica lo que pidieron las pantallas de Ajustes (cargar lista, limpiar
+     *  o re-aplicar tema/acento/parental) al volver a MainActivity. */
+    private fun handlePendingSettings() {
+        SettingsSync.consumePendingLoad(this)?.let { url ->
+            loadIptvList(url)
+        }
+        if (SettingsSync.consumePendingClear(this)) {
+            clearPlaylist()
+        }
+        if (SettingsSync.consume(this)) {
+            applyAppTheme()
+            applyAccentColor()
+            applyFiltersAndSorting()
+            filterSearchTabUnified()
+        }
     }
 
     /** Repaints the Home favorites strip from the local store. */
-    /** Re-tints nav + cine segment + settings preview with the chosen accent. */
+    /** Re-tints nav + cine segment with the chosen accent. */
     private fun applyAccentColor() {
         val navTint = AccentManager.navTintList(this)
         binding.bottomNavigation.itemIconTintList = navTint
         binding.bottomNavigation.itemTextColor = navTint
-        binding.txtSettingsAccentDesc.text = AccentManager.getLabel(this)
-        AccentManager.applyPreviewTint(binding.viewAccentPreview, this)
         updateCineFilterButtons()
     }
 
@@ -418,22 +399,6 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
         prefs.edit().putInt("app_open_count", prefs.getInt("app_open_count", 0) + 1).apply()
     }
-
-    /** Local weekly stats rendered in the Home stats card. */
-    private fun refreshStats() {
-        val opens = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE).getInt("app_open_count", 0)
-        val weekMs = 7L * 24 * 60 * 60 * 1000
-        val now = System.currentTimeMillis()
-        val week = ContinueWatchingManager.getAll(this).filter { now - it.savedAt < weekMs }
-        val channels = week.count { it.isChannel }
-        val cine = week.filter { !it.isChannel }
-        val watchMin = cine.sumOf { it.positionMs / 60000 }
-        val favs = FavoritesManager.count(this)
-        binding.txtStatsBody.text =
-            "Esta semana: 📺 $channels canales · 🎬 ${cine.size} películas/series" +
-            "\n⏱ Tiempo en cine: $watchMin min    ⭐ Favoritos: $favs    📲 Aperturas: $opens"
-    }
-
 
     private fun refreshFavorites() {
         val favs = FavoritesManager.getAll(this)
@@ -560,52 +525,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        // Load button click
-        binding.btnScanQr.setOnClickListener {
-            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-        }
-        binding.btnScanQr.springPress()
-
-        binding.btnLoad.setOnClickListener {
-            val url = binding.edtUrl.text.toString().trim()
-            if (url.isNotEmpty()) {
-                loadIptvList(url)
-            } else {
-                Toast.makeText(this, "Por favor, ingresa una URL válida", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // Clear button clears text and deletes the saved URL from cache
-        binding.btnClear.setOnClickListener {
-            binding.edtUrl.setText("")
-            val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-            sharedPref.edit().remove("last_url").apply()
-            allChannels = emptyList()
-            categories = emptyList()
-            countries = emptyList()
-            languages = emptyList()
-            updateEmptyStates()
-            Toast.makeText(this, "Lista eliminada del historial", Toast.LENGTH_SHORT).show()
-        }
-
-        // Quick load Spain
-        binding.btnQuickSpain.setOnClickListener {
-            binding.edtUrl.setText(urlSpain)
-            loadIptvList(urlSpain)
-        }
-
-        // Quick load Global
-        binding.btnQuickGlobal.setOnClickListener {
-            binding.edtUrl.setText(urlGlobal)
-            loadIptvList(urlGlobal)
-        }
-
-        // Quick load News
-        binding.btnQuickNews.setOnClickListener {
-            binding.edtUrl.setText(urlNews)
-            loadIptvList(urlNews)
-        }
-
         // Search Tab Input Listener
         binding.edtSearchTab.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -650,79 +569,35 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Settings rows: iOS spring touch
+        // Settings: cada opción abre su propia pantalla
+        binding.btnSettingsIptv.springPress()
         binding.btnSettingsParental.springPress()
         binding.btnSettingsTheme.springPress()
-        binding.btnSettingsClearCache.springPress()
-
-        // Settings: Parental Control click listener
-        binding.btnSettingsParental.setOnClickListener {
-            showParentalSettingsDialog()
-        }
-
-        // Settings: App Theme (Claro / Oscuro / Sistema) Selector click listener
-        binding.btnSettingsAccent.setOnClickListener {
-            showIosOptionPopup(
-                "Color de acento",
-                "Elige el color principal de la app",
-                AccentManager.OPTIONS.map { R.drawable.ic_ios_globe to it.label }
-            ) { which ->
-                val opt = AccentManager.OPTIONS[which]
-                AccentManager.set(this, opt.key)
-                applyAccentColor()
-                Toast.makeText(this, "🎨 Acento: ${opt.label}", Toast.LENGTH_SHORT).show()
-            }
-        }
         binding.btnSettingsAccent.springPress()
+        binding.btnSettingsHistory.springPress()
+        binding.btnSettingsClearCache.springPress()
+        binding.btnSettingsStats.springPress()
 
-        binding.btnSettingsTheme.setOnClickListener {
-            val options = arrayOf("Por defecto del sistema ⚙️", "Modo Oscuro 🌙", "Modo Claro ☀️")
-            val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-            val currentTheme = sharedPref.getString("theme_pref", "system") ?: "system"
-            val checkedItem = when (currentTheme) {
-                "system" -> 0
-                "dark" -> 1
-                "light" -> 2
-                else -> 0
-            }
-
-            AlertDialog.Builder(this)
-                .setTitle("Seleccionar Tema de la App")
-                .setSingleChoiceItems(options, checkedItem) { dialog, which ->
-                    val selectedTheme = when (which) {
-                        0 -> "system"
-                        1 -> "dark"
-                        2 -> "light"
-                        else -> "system"
-                    }
-                    sharedPref.edit().putString("theme_pref", selectedTheme).apply()
-                    
-                    val isDark = if (selectedTheme == "system") {
-                        val currentNightMode = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-                        currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
-                    } else {
-                        selectedTheme == "dark"
-                    }
-                    
-                    updateAppThemeColors(isDark)
-                    dialog.dismiss()
-                    Toast.makeText(this, "Tema aplicado al instante ⚡", Toast.LENGTH_SHORT).show()
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
+        binding.btnSettingsIptv.setOnClickListener {
+            startActivity(Intent(this, IptvListActivity::class.java))
         }
-
-        // Settings: Clear Playlist Cache click listener
+        binding.btnSettingsParental.setOnClickListener {
+            startActivity(Intent(this, ParentalControlActivity::class.java))
+        }
+        binding.btnSettingsTheme.setOnClickListener {
+            startActivity(Intent(this, ThemeActivity::class.java))
+        }
+        binding.btnSettingsAccent.setOnClickListener {
+            startActivity(Intent(this, AccentColorActivity::class.java))
+        }
+        binding.btnSettingsHistory.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
         binding.btnSettingsClearCache.setOnClickListener {
-            binding.edtUrl.setText("")
-            val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-            sharedPref.edit().remove("last_url").apply()
-            allChannels = emptyList()
-            categories = emptyList()
-            countries = emptyList()
-            languages = emptyList()
-            updateEmptyStates()
-            Toast.makeText(this, "Lista eliminada del historial", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, StorageActivity::class.java))
+        }
+        binding.btnSettingsStats.setOnClickListener {
+            startActivity(Intent(this, StatsActivity::class.java))
         }
 
         // Filter button in Channels tab (Opens the requested multi-option menu!)
@@ -756,9 +631,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Open Settings Dialog click listener
+        // Abre la pestaña de Ajustes
         binding.btnOpenSettings.setOnClickListener {
-            showParentalSettingsDialog()
+            binding.bottomNavigation.selectedItemId = R.id.navigation_settings
         }
 
         // Toggle Cine Search History Click Listener
@@ -943,173 +818,6 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun showParentalSettingsDialog() {
-        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-        val isParentalActive = sharedPref.getBoolean("parental_active", false)
-        val savedPin = sharedPref.getString("parental_pin", null)
-
-        val statusText = if (isParentalActive) "ACTIVO 🔒" else "DESACTIVADO 🔓"
-        val pinStatus = if (savedPin.isNullOrEmpty()) "Sin configurar" else "Configurado"
-
-        val options = arrayOf(
-            "Control Parental: $statusText (Toca para cambiar)",
-            "Configurar/Cambiar PIN (Estado: $pinStatus) 🔑",
-            "Limpiar caché de lista IPTV 🧹",
-            "Ocultar categorías completas 📁"
-        )
-
-        AlertDialog.Builder(this)
-            .setTitle("⚙️ Ajustes de la App")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        toggleParentalControlState()
-                    }
-                    1 -> {
-                        configureOrChangePin()
-                    }
-                    2 -> {
-                        binding.btnClear.performClick()
-                    }
-                    3 -> {
-                        showHideCategoriesDialog()
-                    }
-                }
-            }
-            .setNegativeButton("Cerrar", null)
-            .show()
-    }
-
-    private fun toggleParentalControlState() {
-        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-        val isParentalActive = sharedPref.getBoolean("parental_active", false)
-        val savedPin = sharedPref.getString("parental_pin", null)
-
-        if (savedPin.isNullOrEmpty()) {
-            Toast.makeText(this, "Por favor, primero configura un PIN de seguridad.", Toast.LENGTH_LONG).show()
-            configureOrChangePin()
-            return
-        }
-
-        if (isParentalActive) {
-            // Turning it OFF requires PIN Verification!
-            val pinInput = EditText(this).apply {
-                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                maxLines = 1
-                hint = "Escribe tu PIN de 4 dígitos"
-                filters = arrayOf(android.text.InputFilter.LengthFilter(4))
-            }
-
-            AlertDialog.Builder(this)
-                .setTitle("🔒 Desactivar Control Parental")
-                .setMessage("Por favor, ingresa tu PIN de seguridad de 4 dígitos para desactivar el filtro de adultos:")
-                .setView(pinInput)
-                .setPositiveButton("Verificar") { _, _ ->
-                    val enteredPin = pinInput.text.toString().trim()
-                    if (enteredPin == savedPin) {
-                        sharedPref.edit().putBoolean("parental_active", false).apply()
-                        applyFiltersAndSorting()
-                        filterSearchTabUnified()
-                        Toast.makeText(this, "Control Parental Desactivado con éxito.", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "PIN Incorrecto. El control parental sigue activo.", Toast.LENGTH_LONG).show()
-                    }
-                }
-                .setNegativeButton("Cancelar", null)
-                .setCancelable(false)
-                .show()
-        } else {
-            // Turning it ON is immediate
-            sharedPref.edit().putBoolean("parental_active", true).apply()
-            applyFiltersAndSorting()
-            filterSearchTabUnified()
-            Toast.makeText(this, "Control Parental Activado. Canales de adultos bloqueados.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun configureOrChangePin() {
-        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-        val savedPin = sharedPref.getString("parental_pin", null)
-
-        if (savedPin.isNullOrEmpty()) {
-            // Setup PIN for the first time
-            val pinInput = EditText(this).apply {
-                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                maxLines = 1
-                hint = "Nuevo PIN de 4 dígitos"
-                filters = arrayOf(android.text.InputFilter.LengthFilter(4))
-            }
-
-            AlertDialog.Builder(this)
-                .setTitle("🔑 Configurar PIN de Seguridad")
-                .setMessage("Ingresa un PIN único de 4 dígitos para activar/desactivar el control parental:")
-                .setView(pinInput)
-                .setPositiveButton("Guardar") { _, _ ->
-                    val enteredPin = pinInput.text.toString().trim()
-                    if (enteredPin.length == 4) {
-                        sharedPref.edit().putString("parental_pin", enteredPin).apply()
-                        Toast.makeText(this, "¡PIN de seguridad configurado con éxito! 🔒", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "Error: El PIN debe tener exactamente 4 dígitos.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        } else {
-            // Change existing PIN (strictly requires old PIN to be verified first!)
-            val container = android.widget.LinearLayout(this).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
-                setPadding(40, 20, 40, 20)
-            }
-            
-            val currentPinInput = EditText(this).apply {
-                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                maxLines = 1
-                hint = "PIN Actual"
-                filters = arrayOf(android.text.InputFilter.LengthFilter(4))
-            }
-
-            val newPinInput = EditText(this).apply {
-                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-                maxLines = 1
-                hint = "Nuevo PIN"
-                filters = arrayOf(android.text.InputFilter.LengthFilter(4))
-                layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = 20
-                }
-            }
-
-            container.addView(currentPinInput)
-            container.addView(newPinInput)
-
-            AlertDialog.Builder(this)
-                .setTitle("🔑 Cambiar PIN de Seguridad")
-                .setMessage("Para cambiar el PIN, debes ingresar tu clave actual:")
-                .setView(container)
-                .setPositiveButton("Actualizar") { _, _ ->
-                    val currentPinEntered = currentPinInput.text.toString().trim()
-                    val newPinEntered = newPinInput.text.toString().trim()
-                    
-                    if (currentPinEntered == savedPin) {
-                        if (newPinEntered.length == 4) {
-                            sharedPref.edit().putString("parental_pin", newPinEntered).apply()
-                            Toast.makeText(this, "¡PIN actualizado con éxito! 🔒", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(this, "Error: El nuevo PIN debe tener exactamente 4 dígitos.", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        Toast.makeText(this, "Error: El PIN actual es incorrecto.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        }
-    }
-
-    /** Modern iPhone-style animated option popup: glass rows with icons + chevrons. */
     private fun showIosOptionPopup(title: String, subtitle: String, options: List<Pair<Int, String>>, onPick: (Int) -> Unit) {
         val density = resources.displayMetrics.density
         fun Int.dp(): Int = (this * density).roundToInt()
@@ -1340,29 +1048,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Parental control: select whole channel categories to hide when active. */
-    private fun showHideCategoriesDialog() {
-        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-        if (categories.isEmpty()) {
-            Toast.makeText(this, "Primero carga tu lista de canales", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val selected = sharedPref.getStringSet("parental_hidden_categories", emptySet())?.toMutableSet() ?: mutableSetOf()
-        val names = categories.toTypedArray()
-        val checked = BooleanArray(names.size) { selected.contains(names[it]) }
-        AlertDialog.Builder(this)
-            .setTitle("📁 Categorías ocultas (Parental)")
-            .setMultiChoiceItems(names, checked) { _, which, isChecked ->
-                if (isChecked) selected.add(names[which]) else selected.remove(names[which])
-            }
-            .setPositiveButton("Guardar") { _, _ ->
-                sharedPref.edit().putStringSet("parental_hidden_categories", selected).apply()
-                applyFiltersAndSorting()
-                Toast.makeText(this, "Categorías ocultas actualizadas 🔒", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-
     private fun showSearchFilterDialog() {
         showIosOptionPopup(
             "Opciones de busqueda",
@@ -1442,8 +1127,6 @@ class MainActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
         val lastUrl = sharedPref.getString("last_url", null)
         if (!lastUrl.isNullOrEmpty()) {
-            binding.edtUrl.setText(lastUrl)
-            
             // Premium Instant Loading Cache Optimization!
             val cacheFile = java.io.File(filesDir, "cached_playlist.m3u")
             if (cacheFile.exists()) {
@@ -1603,12 +1286,23 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "¡Recorrido completado! Que disfrutes de la aplicación. 🎉", Toast.LENGTH_LONG).show()
     }
 
+    /** Vacía la lista cargada (lo usa la pantalla de Almacenamiento / Limpiar). */
+    private fun clearPlaylist() {
+        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
+        sharedPref.edit().remove("last_url").apply()
+        allChannels = emptyList()
+        categories = emptyList()
+        countries = emptyList()
+        languages = emptyList()
+        updateEmptyStates()
+        Toast.makeText(this, "Lista eliminada del historial", Toast.LENGTH_SHORT).show()
+    }
+
     private fun loadIptvList(urlString: String, isAutoRestore: Boolean = false) {
         hideKeyboard()
 
-        // Show global progress, lock load button
+        // Show global progress
         binding.globalProgressBar.visibility = View.VISIBLE
-        binding.btnLoad.isEnabled = false
 
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -1616,7 +1310,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             binding.globalProgressBar.visibility = View.GONE
-            binding.btnLoad.isEnabled = true
 
             if (result != null) {
                 allChannels = result
@@ -1628,7 +1321,6 @@ class MainActivity : AppCompatActivity() {
 
                     // Add to URL load history!
                     addSearchQuery(PLAYLIST_HISTORY_KEY, urlString)
-                    updateHomeHistoryVisibility()
 
                     // 1. Parse and extract unique categories from list
                     val parsedCategories = mutableListOf("Todos")
@@ -1638,6 +1330,9 @@ class MainActivity : AppCompatActivity() {
                         .sorted()
                     parsedCategories.addAll(extractedGroups)
                     categories = parsedCategories
+
+                    // Guardar categorías para la pantalla de control parental.
+                    sharedPref.edit().putStringSet("categories_list", categories.toSet()).apply()
 
                     // 2. Parse and extract unique countries from list!
                     val parsedCountries = mutableListOf("Todos")
@@ -2551,7 +2246,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var channelsHistoryAdapter: SearchHistoryAdapter
     private lateinit var cineHistoryAdapter: SearchHistoryAdapter
-    private lateinit var playlistHistoryAdapter: SearchHistoryAdapter
     
     private val CHANNELS_HISTORY_KEY = "CHANNELS_SEARCH_HISTORY"
     private val CINE_HISTORY_KEY = "CINE_SEARCH_HISTORY"
@@ -2608,43 +2302,6 @@ class MainActivity : AppCompatActivity() {
             saveSearchHistory(CINE_HISTORY_KEY, emptyList())
             cineHistoryAdapter.updateList(emptyList())
             binding.layoutCineSearchHistory.visibility = View.GONE
-        }
-
-        // Playlist load history
-        binding.rvHomePlaylistHistory.layoutManager = LinearLayoutManager(this)
-        playlistHistoryAdapter = SearchHistoryAdapter(getSearchHistory(PLAYLIST_HISTORY_KEY),
-            onItemClick = { query ->
-                binding.edtUrl.setText(query)
-                loadIptvList(query)
-            },
-            onDeleteClick = { query ->
-                val current = getSearchHistory(PLAYLIST_HISTORY_KEY)
-                current.remove(query)
-                saveSearchHistory(PLAYLIST_HISTORY_KEY, current)
-                playlistHistoryAdapter.updateList(current)
-                updateHomeHistoryVisibility()
-            }
-        )
-        binding.rvHomePlaylistHistory.adapter = playlistHistoryAdapter
-
-        binding.btnHomeClearHistory.setOnClickListener {
-            saveSearchHistory(PLAYLIST_HISTORY_KEY, emptyList())
-            playlistHistoryAdapter.updateList(emptyList())
-            updateHomeHistoryVisibility()
-        }
-
-        // Initial check of history visibility
-        updateHomeHistoryVisibility()
-    }
-
-    private fun updateHomeHistoryVisibility() {
-        val current = getSearchHistory(PLAYLIST_HISTORY_KEY)
-        if (current.isNotEmpty()) {
-            binding.cardHomeStatus.visibility = View.VISIBLE
-            binding.rvHomePlaylistHistory.visibility = View.VISIBLE
-            playlistHistoryAdapter.updateList(current)
-        } else {
-            binding.cardHomeStatus.visibility = View.GONE
         }
     }
 

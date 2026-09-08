@@ -844,7 +844,7 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- ================= TAB 5: AJUSTES — REDISEÑO COMPLETO ================= -->
+        <!-- ================= TAB 5: AJUSTES — MENÚ DE PANTALLAS ================= -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/containerBrowser"
             android:layout_width="match_parent"
@@ -907,218 +907,76 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="3dp"
-                                android:text="Configura tu reproductor"
+                                android:text="Cada opción abre su propia pantalla"
                                 android:textColor="#8A8A8E"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- ===== LISTAS DE REPRODUCCIÓN ===== -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginTop="26dp"
-                        android:layout_marginBottom="10dp"
-                        android:text="LISTAS DE REPRODUCCIÓN"
-                        android:textColor="#C9A96E"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.12" />
-
+                    <!-- ===== MENÚ ===== -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
                         android:orientation="vertical"
                         android:background="@drawable/bg_settings_card"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp">
 
-                        <!-- URL + Conectar -->
+                        <!-- Mi lista IPTV -->
                         <LinearLayout
+                            android:id="@+id/btnSettingsIptv"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:paddingTop="16dp"
-                            android:paddingBottom="12dp">
+                            android:minHeight="64dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
 
                             <ImageView
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
-                                android:src="@drawable/ic_ios_globe"
-                                android:contentDescription="URL de lista"
+                                android:src="@drawable/ic_ios_tv"
+                                android:contentDescription="@null"
                                 app:tint="#C9A96E" />
 
-                            <EditText
-                                android:id="@+id/edtUrl"
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:layout_marginStart="12dp"
-                                android:background="@android:color/transparent"
-                                android:hint="https://ejemplo.com/lista.m3u"
-                                android:textColorHint="#5A5A5E"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:inputType="textUri"
-                                android:imeOptions="actionDone"
-                                android:maxLines="1" />
+                                android:layout_marginStart="14dp"
+                                android:orientation="vertical">
 
-                            <Button
-                                android:id="@+id/btnLoad"
-                                android:layout_width="wrap_content"
-                                android:layout_height="40dp"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:paddingStart="18dp"
-                                android:paddingEnd="18dp"
-                                android:background="@drawable/bg_button_primary"
-                                android:text="Conectar"
-                                android:textColor="#000000"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:textAllCaps="false" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Mi lista IPTV"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="15sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Añade o cambia tu lista M3U"
+                                    android:textColor="#8A8A8E"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_ios_arrow_right"
+                                android:contentDescription="@null"
+                                app:tint="#5A5A5E" />
                         </LinearLayout>
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:background="#14FFFFFF" />
-
-                        <!-- Limpiar / Escanear QR -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingTop="12dp"
-                            android:paddingBottom="16dp">
-
-                            <Button
-                                android:id="@+id/btnClear"
-                                android:layout_width="0dp"
-                                android:layout_height="44dp"
-                                android:layout_weight="1"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:background="@drawable/bg_button_secondary"
-                                android:text="Limpiar"
-                                android:textColor="#FFFFFF"
-                                android:textSize="13sp"
-                                android:textAllCaps="false" />
-
-                            <Space
-                                android:layout_width="10dp"
-                                android:layout_height="1dp" />
-
-                            <Button
-                                android:id="@+id/btnScanQr"
-                                android:layout_width="0dp"
-                                android:layout_height="44dp"
-                                android:layout_weight="1"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:background="@drawable/bg_button_secondary"
-                                android:text="Escanear QR"
-                                android:textColor="#FFFFFF"
-                                android:textSize="13sp"
-                                android:textAllCaps="false" />
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:background="#14FFFFFF" />
-
-                        <!-- Listas rápidas -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp"
-                            android:text="Listas rápidas:"
-                            android:textColor="#8A8A8E"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingTop="10dp"
-                            android:paddingBottom="18dp">
-
-                            <Button
-                                android:id="@+id/btnQuickSpain"
-                                android:layout_width="0dp"
-                                android:layout_height="36dp"
-                                android:layout_weight="1"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:background="@drawable/bg_settings_accent"
-                                android:backgroundTint="#14C9A96E"
-                                android:text="España"
-                                android:textColor="#C9A96E"
-                                android:textSize="12sp"
-                                android:textAllCaps="false" />
-
-                            <Space
-                                android:layout_width="8dp"
-                                android:layout_height="1dp" />
-
-                            <Button
-                                android:id="@+id/btnQuickGlobal"
-                                android:layout_width="0dp"
-                                android:layout_height="36dp"
-                                android:layout_weight="1"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:background="@drawable/bg_settings_accent"
-                                android:backgroundTint="#14C9A96E"
-                                android:text="Global"
-                                android:textColor="#C9A96E"
-                                android:textSize="12sp"
-                                android:textAllCaps="false" />
-
-                            <Space
-                                android:layout_width="8dp"
-                                android:layout_height="1dp" />
-
-                            <Button
-                                android:id="@+id/btnQuickNews"
-                                android:layout_width="0dp"
-                                android:layout_height="36dp"
-                                android:layout_weight="1"
-                                android:minWidth="0dp"
-                                android:minHeight="0dp"
-                                android:background="@drawable/bg_settings_accent"
-                                android:backgroundTint="#14C9A96E"
-                                android:text="Noticias"
-                                android:textColor="#C9A96E"
-                                android:textSize="12sp"
-                                android:textAllCaps="false" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- ===== PREFERENCIAS ===== -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginTop="26dp"
-                        android:layout_marginBottom="10dp"
-                        android:text="PREFERENCIAS"
-                        android:textColor="#C9A96E"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.12" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_settings_card"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp">
 
                         <!-- Control parental -->
                         <LinearLayout
@@ -1136,7 +994,7 @@
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
                                 android:src="@drawable/ic_ios_shield"
-                                android:contentDescription="Control Parental"
+                                android:contentDescription="@null"
                                 app:tint="#C9A96E" />
 
                             <LinearLayout
@@ -1149,7 +1007,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Control Parental"
+                                    android:text="Control parental"
                                     android:textColor="#FFFFFF"
                                     android:textSize="15sp" />
 
@@ -1157,7 +1015,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="PIN de bloqueo para ocultar canales"
+                                    android:text="PIN y canales bloqueados"
                                     android:textColor="#8A8A8E"
                                     android:textSize="12sp" />
                             </LinearLayout>
@@ -1191,7 +1049,7 @@
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
                                 android:src="@drawable/ic_theme"
-                                android:contentDescription="Tema"
+                                android:contentDescription="@null"
                                 app:tint="#C9A96E" />
 
                             <LinearLayout
@@ -1204,7 +1062,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Tema de la aplicación"
+                                    android:text="Tema"
                                     android:textColor="#FFFFFF"
                                     android:textSize="15sp" />
 
@@ -1212,7 +1070,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Oscuro, claro o automático del sistema"
+                                    android:text="Oscuro, claro o automático"
                                     android:textColor="#8A8A8E"
                                     android:textSize="12sp" />
                             </LinearLayout>
@@ -1243,10 +1101,10 @@
                             android:focusable="true">
 
                             <View
-                                android:id="@+id/viewAccentPreview"
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:background="@drawable/bg_settings_accent" />
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:background="@drawable/bg_settings_accent"
+                                android:backgroundTint="#C9A96E" />
 
                             <LinearLayout
                                 android:layout_width="0dp"
@@ -1266,19 +1124,10 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Tinta principal de la app entera"
+                                    android:text="Tinta principal de la app"
                                     android:textColor="#8A8A8E"
                                     android:textSize="12sp" />
                             </LinearLayout>
-
-                            <TextView
-                                android:id="@+id/txtSettingsAccentDesc"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="10dp"
-                                android:textColor="#C9A96E"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
 
                             <ImageView
                                 android:layout_width="18dp"
@@ -1287,91 +1136,68 @@
                                 android:contentDescription="@null"
                                 app:tint="#5A5A5E" />
                         </LinearLayout>
-                    </LinearLayout>
 
-                    <!-- ===== HISTORIAL ===== -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginTop="26dp"
-                        android:layout_marginBottom="10dp"
-                        android:text="HISTORIAL"
-                        android:textColor="#C9A96E"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.12" />
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#14FFFFFF" />
 
-                    <LinearLayout
-                        android:id="@+id/cardHomeStatus"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_settings_card"
-                        android:padding="16dp">
-
+                        <!-- Historial -->
                         <LinearLayout
+                            android:id="@+id/btnSettingsHistory"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:minHeight="64dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
 
-                            <TextView
-                                android:id="@+id/txtHomeStatusTitle"
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_ios_clock"
+                                android:contentDescription="@null"
+                                app:tint="#C9A96E" />
+
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Historial de listas"
-                                android:textColor="#FFFFFF"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
+                                android:layout_marginStart="14dp"
+                                android:orientation="vertical">
 
-                            <TextView
-                                android:id="@+id/btnHomeClearHistory"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"
-                                android:paddingTop="4dp"
-                                android:paddingBottom="4dp"
-                                android:background="?android:attr/selectableItemBackground"
-                                android:text="LIMPIAR"
-                                android:textColor="#FF6E6E"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Historial de listas"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="15sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Tus listas recientes"
+                                    android:textColor="#8A8A8E"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_ios_arrow_right"
+                                android:contentDescription="@null"
+                                app:tint="#5A5A5E" />
                         </LinearLayout>
 
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvHomePlaylistHistory"
+                        <View
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:visibility="gone"
-                            android:nestedScrollingEnabled="false" />
-                    </LinearLayout>
+                            android:layout_height="1dp"
+                            android:background="#14FFFFFF" />
 
-                    <!-- ===== SISTEMA ===== -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginTop="26dp"
-                        android:layout_marginBottom="10dp"
-                        android:text="SISTEMA"
-                        android:textColor="#C9A96E"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.12" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_settings_card"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp">
-
-                        <!-- Borrar caché -->
+                        <!-- Almacenamiento -->
                         <LinearLayout
                             android:id="@+id/btnSettingsClearCache"
                             android:layout_width="match_parent"
@@ -1387,7 +1213,7 @@
                                 android:layout_width="22dp"
                                 android:layout_height="22dp"
                                 android:src="@drawable/ic_ios_trash"
-                                android:contentDescription="Borrar caché"
+                                android:contentDescription="@null"
                                 app:tint="#FF453A" />
 
                             <LinearLayout
@@ -1400,15 +1226,15 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Borrar caché"
-                                    android:textColor="#FF453A"
+                                    android:text="Almacenamiento"
+                                    android:textColor="#FFFFFF"
                                     android:textSize="15sp" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Vaciar la playlist actual y empezar de cero"
+                                    android:text="Borrar caché de lista"
                                     android:textColor="#8A8A8E"
                                     android:textSize="12sp" />
                             </LinearLayout>
@@ -1428,29 +1254,52 @@
 
                         <!-- Estadísticas -->
                         <LinearLayout
+                            android:id="@+id/btnSettingsStats"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:paddingTop="16dp"
-                            android:paddingBottom="18dp">
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:minHeight="64dp"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true">
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="📊 TU SEMANA"
-                                android:textColor="#8A8A8E"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_ios_message"
+                                android:contentDescription="@null"
+                                app:tint="#C9A96E" />
 
-                            <TextView
-                                android:id="@+id/txtStatsBody"
-                                android:layout_width="match_parent"
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Cargando estadisticas..."
-                                android:textColor="#F2FFFFFF"
-                                android:textSize="13sp"
-                                android:lineSpacingExtra="4dp" />
+                                android:layout_weight="1"
+                                android:layout_marginStart="14dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Estadísticas"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="15sp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Tu semana en números"
+                                    android:textColor="#8A8A8E"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_ios_arrow_right"
+                                android:contentDescription="@null"
+                                app:tint="#5A5A5E" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -1459,7 +1308,7 @@
                         android:id="@+id/adSlotSettings"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp" />
+                        android:layout_marginTop="16dp" />
 
                 </LinearLayout>
             </ScrollView>

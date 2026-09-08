@@ -67,6 +67,36 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- Pantallas de Ajustes -->
+        <activity
+            android:name=".IptvListActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ParentalControlActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ThemeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".AccentColorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".StorageActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".StatsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <!-- Google Cast Options Provider for Native Chromecast Support -->
         <meta-data
             android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_FACTORY_CLASS"
