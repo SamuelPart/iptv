@@ -46,6 +46,11 @@ import java.io.ByteArrayInputStream
  *  4. Bloquea popups/redirects: la navegación solo puede salir si es un
  *     request del propio anfitrión; popup windows desactivados.
  *  5. Bloqueo de red contra la lista ScraperConfig.adDomains.
+ *
+ *  A diferencia de antes, el video NO se clava con position:fixed encima de
+ *  la página ni se fuerzan controles nativos: el reproductor/iframe queda
+ *  INTERACTIVO para que el usuario pueda tocar play/pausa, barra, calidad,
+ *  subtítulos, fullscreen, etc.
  */
 class WebVideoPlayerActivity : AppCompatActivity() {
 
@@ -248,64 +253,28 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
     private var isVideoRolling = false
     private var iframeHops = 0
-    private var cinematicApplied = false
     private var bootRevealed = false
 
 
 
-    private val CINEMATIC_JS = """
+    private val INTERACTIVE_JS = """
         (function(){
             try {
-                // Elige el <video> real (el mas grande / el que ya tiene fuente).
-                var vids = document.querySelectorAll('video');
-                var v = null;
-                for (var i = 0; i < vids.length; i++) {
-                    var c = vids[i];
-                    var area = (c.videoWidth || 0) * (c.videoHeight || 0);
-                    var best = v ? ((v.videoWidth || 0) * (v.videoHeight || 0)) : -1;
-                    if (area > best) v = c;
+                // Suelta el video para que el usuario pueda tocar el reproductor:
+                // NO se clava con position:fixed ni se fuerzan controles nativos.
+                if (!window.__softCinema) {
+                    window.__softCinema = 1;
+                    var vs = document.querySelectorAll('video');
+                    for (var i = 0; i < vs.length; i++) {
+                        var v = vs[i];
+                        try {
+                            v.muted = false;
+                            v.volume = 1;
+                            v.setAttribute('playsinline', '');
+                            v.setAttribute('webkit-playsinline', '');
+                        } catch (e1) {}
+                    }
                 }
-                if (!v) return '';
-                var w = window.innerWidth || document.documentElement.clientWidth || screen.width || 0;
-                var h = window.innerHeight || document.documentElement.clientHeight || screen.height || 0;
-                if (!w || !h) return '';
-                // Los ancestros con transform/filter/perspective crean un
-                // "containing block" y rompen position:fixed — se neutralizan
-                // para que el video quede clavado al viewport de verdad.
-                var n = v.parentElement;
-                while (n && n !== document.documentElement && n !== document.body) {
-                    try {
-                        var ns = n.style;
-                        ns.setProperty('transform', 'none', 'important');
-                        ns.setProperty('-webkit-transform', 'none', 'important');
-                        ns.setProperty('filter', 'none', 'important');
-                        ns.setProperty('perspective', 'none', 'important');
-                        ns.setProperty('contain', 'none', 'important');
-                        ns.setProperty('will-change', 'auto', 'important');
-                    } catch (e1) {}
-                    n = n.parentElement;
-                }
-                // Clava el VIDEO en si (no su contenedor) a TODA la pantalla.
-                var s = v.style;
-                s.setProperty('position', 'fixed', 'important');
-                s.setProperty('top', '0px', 'important');
-                s.setProperty('left', '0px', 'important');
-                s.setProperty('right', 'auto', 'important');
-                s.setProperty('bottom', 'auto', 'important');
-                s.setProperty('width', w + 'px', 'important');
-                s.setProperty('height', h + 'px', 'important');
-                s.setProperty('max-width', w + 'px', 'important');
-                s.setProperty('max-height', h + 'px', 'important');
-                s.setProperty('margin', '0px', 'important');
-                s.setProperty('padding', '0px', 'important');
-                s.setProperty('object-fit', 'contain', 'important');
-                s.setProperty('background', '#000', 'important');
-                s.setProperty('z-index', '2147483000', 'important');
-                s.setProperty('transform', 'none', 'important');
-                v.setAttribute('controls', '');
-                v.setAttribute('playsinline', '');
-                v.setAttribute('webkit-playsinline', '');
-                try { v.muted = false; v.volume = 1; } catch (e2) {}
                 return 'ok';
             } catch (e) { return ''; }
         })();
@@ -318,10 +287,13 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             botTicks++
             try {
                 if (isVideoRolling) {
-                    // CORRIENDO: limpia anuncios y RE-AFIRMA el video a
-                    // pantalla completa (si la pagina lo reubica, se re-clava)
+                    // CORRIENDO: limpia anuncios y suelta la pagina para que el
+                    // usuario pueda tocar los controles del reproductor/iframe
+                    // (play/pausa, barra, calidad, fullscreen...). Ya no se
+                    // re-clava el video encima de todo.
                     binding.webFramePlayer.evaluateJavascript(AD_OVERLAY_JS, null)
-                    showCinematic()
+                    binding.webFramePlayer.evaluateJavascript(INTERACTIVE_JS, null)
+                    revealBootLayer()
                 } else {
                     binding.webFramePlayer.evaluateJavascript(BOT_JS) { res ->
                         if (res == null) return@evaluateJavascript
@@ -356,7 +328,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                         }
                         if (res.contains("1") && !res.contains("IFRAME:")) {
                             isVideoRolling = true
-                            showCinematic()
+                            revealBootLayer()
                         }
                     }
                 }
@@ -570,22 +542,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         }
     }
 
-    /** El video empezo: la capa oscura se desvanece SOLO cuando el video ya
-     *  esta clavado a TODA la pantalla — el usuario jamas ve la pagina de
-     *  origen, ni un reproductor "a medias" corrido hacia abajo. */
-    private fun showCinematic() {
-        try {
-            binding.webFramePlayer.evaluateJavascript(CINEMATIC_JS) { res ->
-                val ok = res != null && res.contains("ok")
-                if (ok && !cinematicApplied) {
-                    cinematicApplied = true
-                    revealBootLayer()
-                }
-            }
-        } catch (_: Exception) { }
-    }
-
-    /** Destapa la capa de carga (idempotente). La usa tanto el modo cinematico
+    /** Destapa la capa de carga (idempotente). La usa tanto el modo normal
      *  como el fallback cuando el video corre en un iframe cross-origin. */
     private fun revealBootLayer() {
         if (bootRevealed || isFinishing || isDestroyed) return
