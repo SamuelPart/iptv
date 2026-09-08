@@ -262,6 +262,7 @@ class CineMovieDetailActivity : AppCompatActivity() {
                 Intent(this, WebVideoPlayerActivity::class.java).apply {
                     putExtra("channelName", media.title)
                     putExtra("channelUrl", streamUrl)
+                    putStringArrayListExtra("allSources", media.urls)
                 }
             )
         }

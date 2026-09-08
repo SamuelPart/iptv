@@ -313,6 +313,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
                 Intent(this, WebVideoPlayerActivity::class.java).apply {
                     putExtra("channelName", title)
                     putExtra("channelUrl", url)
+                    putStringArrayListExtra("allSources", media.urls)
                 }
             )
         }

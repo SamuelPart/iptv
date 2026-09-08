@@ -257,6 +257,9 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var iframeHops = 0
     private var bootRevealed = false
 
+    /** Servidores alternativos de la MISMA película (media.urls del catálogo). */
+    private var catalogSources: List<String> = emptyList()
+
 
 
     private val INTERACTIVE_JS = """
@@ -284,66 +287,6 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
     /** Extrae los SERVIDORES disponibles en la página del player (chips tipo
      *  voe/filemoon/mixdrop/latino/1080...). Devuelve un JSON de {n, h}. */
-    private val SERVERS_JS = """
-        (function(){
-          try {
-            var out = [];
-            var seen = {};
-            function isSrv(text, href){
-              var t = text.toLowerCase();
-              var h = href.toLowerCase();
-              if (/voe|dood|filemoon|mixdrop|streamtape|streamwish|upstream|uqload|vidplay|vidmoly|wolfstream|filelions|fembed|vidoza|gounlimited|gamovideo|mp4upload|dostream|vod|playtube|tube|mega|zippyshare|netu|waaw|ok\.ru|okru|gdrive/i.test(t)) return true;
-              if (/server|servidor|opcion|opción|latino|castellano|español|espanol|subtitulado|sub |1080|720|full hd|hd|calidad/i.test(t)) return true;
-              if (/voe|dood|filemoon|mixdrop|streamtape|upstream|uqload|vidplay|embed|player|watch|\.mp4|\.m3u8/i.test(h)) return true;
-              return false;
-            }
-            function add(el){
-              try {
-                if (el.querySelector && el.querySelector('video')) return;
-                var tag = el.tagName ? el.tagName.toUpperCase() : '';
-                var isChip = (tag === 'A' || tag === 'BUTTON' || tag === 'LI');
-                var isLeaf = el.children ? el.children.length === 0 : true;
-                if (!isChip && !isLeaf) return;
-                var text = (el.innerText || el.textContent || '').replace(/\s+/g,' ').trim();
-                var a = isChip && tag === 'A' ? el : (el.querySelector ? el.querySelector('a') : null);
-                var href = a ? (a.getAttribute('href') || '') : '';
-                if (!text && !href) return;
-                if (text.length > 40) return;
-                var key = text + '|' + href;
-                if (seen[key]) return;
-                if (!isSrv(text, href)) return;
-                seen[key] = 1;
-                el.setAttribute('data-srv-idx', String(out.length));
-                out.push({n: text.slice(0,40), h: href});
-              } catch(e){}
-            }
-            var list = document.querySelectorAll('a,button,li,[class*="server"],[class*="Server"],[class*="option"],[class*="Option"],[class*="tab"],[class*="source"]');
-            for (var i = 0; i < list.length; i++) add(list[i]);
-            return JSON.stringify(out);
-          } catch(e){ return '[]'; }
-        })();
-    """.trimIndent()
-
-    /** Pulsa el servidor marcado con data-srv-idx = __IDX__ y devuelve su href
-     *  si lo tiene (para poder navegar directo), o 'clicked' si solo se pulsó. */
-    private val CLICK_SERVER_JS = """
-        (function(){
-          var idx = '__IDX__';
-          var els = document.querySelectorAll('[data-srv-idx]');
-          for (var i = 0; i < els.length; i++){
-            if (els[i].getAttribute('data-srv-idx') === idx) {
-              var el = els[i];
-              var a = (el.tagName && el.tagName.toUpperCase() === 'A') ? el : el.querySelector('a');
-              var href = a ? (a.getAttribute('href') || '') : '';
-              try { el.click(); } catch(e){}
-              if (href) return href;
-              return 'clicked';
-            }
-          }
-          return 'miss';
-        })();
-    """.trimIndent()
-
     /** Pinta de NEGRO la página del player (cuevana8 y similares salen con
      *  fondo blanco). Fuerza html/body, los <video> y los contenedores grandes
      *  con fondo blanco, y se mantiene con un MutationObserver. */
@@ -480,6 +423,11 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         val pageUrl = intent.getStringExtra("channelUrl") ?: ""
         originalHost = Uri.parse(pageUrl).host?.lowercase() ?: ""
         binding.txtWebPlayerTitle.text = title
+
+        // Servidores de la ficha (mismos enlaces de la película, agrupados en el catálogo)
+        catalogSources = intent.getStringArrayListExtra("allSources")?.distinct() ?: emptyList()
+        // El botón solo tiene sentido si hay más de un servidor para elegir.
+        binding.btnWebServers.visibility = if (catalogSources.size > 1) View.VISIBLE else View.GONE
 
         binding.btnWebPlayerBack.setOnClickListener { finish() }
 
@@ -674,37 +622,15 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             .start()
     }
 
-    private data class ServerOption(val name: String, val href: String)
-
-    /** Lee los servidores del player y muestra el diálogo para elegir uno. */
+    /** Muestra el diálogo con los SERVIDORES DE LA FICHA (mismos enlaces de la
+     *  película guardados en el catálogo). El botón solo se ve si hay >1. */
     private fun showServersDialog() {
-        binding.webFramePlayer.evaluateJavascript(SERVERS_JS) { raw ->
-            val servers = parseServers(raw)
-            if (servers.isEmpty()) {
-                runOnUiThread {
-                    Toast.makeText(this, "No se encontraron servidores", Toast.LENGTH_SHORT).show()
-                }
-                return@evaluateJavascript
-            }
-            runOnUiThread { buildServersDialog(servers) }
+        if (catalogSources.size <= 1) {
+            Toast.makeText(this, "Solo hay un servidor disponible", Toast.LENGTH_SHORT).show()
+            return
         }
-    }
+        val current = currentPageUrl.ifBlank { catalogSources.first() }
 
-    private fun parseServers(raw: String?): List<ServerOption> {
-        if (raw.isNullOrBlank()) return emptyList()
-        return try {
-            val arr = org.json.JSONArray(raw)
-            val out = mutableListOf<ServerOption>()
-            for (i in 0 until arr.length()) {
-                val o = arr.optJSONObject(i) ?: continue
-                val name = o.optString("n", "").ifBlank { "Servidor ${i + 1}" }
-                out.add(ServerOption(name, o.optString("h", "")))
-            }
-            out
-        } catch (_: Exception) { emptyList() }
-    }
-
-    private fun buildServersDialog(servers: List<ServerOption>) {
         val view = layoutInflater.inflate(R.layout.dialog_servers, null)
         val scroll = view.findViewById<ScrollView>(R.id.scrollServers)
         val container = view.findViewById<LinearLayout>(R.id.containerServers)
@@ -716,18 +642,19 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
         btnClose.setOnClickListener { dialog.dismiss() }
 
-        servers.forEachIndexed { index, s ->
+        catalogSources.forEachIndexed { index, url ->
+            val isCurrent = url == current
             val row = layoutInflater.inflate(R.layout.item_server_option, container, false) as TextView
-            row.text = s.name
+            val label = serverLabel(index, url, isCurrent)
+            row.text = label
             row.setOnClickListener {
                 dialog.dismiss()
-                switchServer(index, s)
+                switchServer(url)
             }
             container.addView(row)
         }
 
-        // Si hay muchos servidores, limita la altura para que quepa en pantalla.
-        if (servers.size > 7) {
+        if (catalogSources.size > 7) {
             val h = (300 * resources.displayMetrics.density).toInt()
             scroll.layoutParams = scroll.layoutParams.apply { height = h }
         }
@@ -735,30 +662,29 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    /** Cambia al servidor elegido: lo pulsa (o navega a su href) y reinicia el
-     *  BOT para que le dé play solo a la nueva fuente. */
-    private fun switchServer(index: Int, server: ServerOption) {
-        val js = CLICK_SERVER_JS.replace("__IDX__", index.toString())
-        binding.webFramePlayer.evaluateJavascript(js) { res ->
-            val value = res?.removeSurrounding("\"")?.replace("\\/", "/") ?: ""
-            if (value.startsWith("http")) {
-                val parentHost = originalHost
-                botTicks = 0
-                isVideoRolling = false
-                botHandler.removeCallbacks(botRunnable)
-                binding.webFramePlayer.loadUrl(
-                    value, mapOf("Referer" to "https://$parentHost/")
-                )
-                botHandler.postDelayed(botRunnable, 600)
-            } else {
-                // El clic ya se lanzó (cambia el iframe interno); reinicia el BOT.
-                botTicks = 0
-                isVideoRolling = false
-                botHandler.removeCallbacks(botRunnable)
-                botHandler.postDelayed(botRunnable, 600)
-            }
+    /** Nombre legible: "Servidor N · host" y marca el que se está viendo. */
+    private fun serverLabel(index: Int, url: String, isCurrent: Boolean): String {
+        val host = Uri.parse(url).host?.removePrefix("www.")?.lowercase() ?: "servidor"
+        return buildString {
+            append("Servidor ${index + 1} · $host")
+            if (isCurrent) append("  (actual)")
         }
-        Toast.makeText(this, "Cambiando a ${server.name}…", Toast.LENGTH_SHORT).show()
+    }
+
+    /** Cambia al servidor elegido: recarga la página del nuevo enlace y reinicia
+     *  el BOT para que le dé play solo. */
+    private fun switchServer(url: String) {
+        if (url.isBlank()) return
+        originalHost = Uri.parse(url).host?.lowercase() ?: originalHost
+        pageBroken = false
+        rescueTried = false
+        isVideoRolling = false
+        iframeHops = 0
+        botTicks = 0
+        botHandler.removeCallbacks(botRunnable)
+        binding.webFramePlayer.loadUrl(url, mapOf("Referer" to "https://$originalHost/"))
+        botHandler.postDelayed(botRunnable, 600)
+        Toast.makeText(this, "Cambiando de servidor…", Toast.LENGTH_SHORT).show()
     }
 
     private val CAST_PERMISSION_REQUEST_CODE = 4201
