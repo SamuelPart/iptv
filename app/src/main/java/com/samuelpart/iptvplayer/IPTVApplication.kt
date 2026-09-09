@@ -46,6 +46,10 @@ class IPTVApplication : Application(), Application.ActivityLifecycleCallbacks, L
         CoroutineScope(Dispatchers.IO).launch {
             CineRepository.prefetchCatalog(this@IPTVApplication)
         }
+
+        // BOT: refresca el catálogo desde GitHub en segundo plano, a intervalos
+        // aleatorios, sin abrir la app y sin reinstalar.
+        CatalogBot.start(this)
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {

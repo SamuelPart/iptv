@@ -197,7 +197,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRecyclerViews() {
         // 1. Setup Channels — Sintonizador (1 col, fila con foco central) por defecto
-        binding.rvChannelsGrid.layoutManager = GridLayoutManager(this, 1)
+        val channelsGridLayout = GridLayoutManager(this, 1)
+        binding.rvChannelsGrid.layoutManager = channelsGridLayout
         channelsAdapter = ChannelAdapter(
             emptyList(),
             onChannelClick = { channel -> openPlayer(channel) },
@@ -209,12 +210,17 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvChannelsGrid.adapter = channelsAdapter
+        channelsGridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int =
+                if (channelsAdapter.isAdAt(position)) channelsGridLayout.spanCount else 1
+        }
         channelsAdapter.attachTuner(binding.rvChannelsGrid)
         channelsAdapter.tunerMode = true
         binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_list)
 
         // 2. Setup Search Grid in Buscador tab (3 columns)
-        binding.rvSearchGrid.layoutManager = GridLayoutManager(this, 3)
+        val searchGridLayout = GridLayoutManager(this, 3)
+        binding.rvSearchGrid.layoutManager = searchGridLayout
         searchAdapter = ChannelAdapter(
             emptyList(),
             onChannelClick = { channel -> openPlayer(channel) },
@@ -226,9 +232,14 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvSearchGrid.adapter = searchAdapter
+        searchGridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int =
+                if (searchAdapter.isAdAt(position)) searchGridLayout.spanCount else 1
+        }
 
         // 3. Setup Cine Grid in Cine tab (2 columns for high-end poster aspect ratio)
-        binding.rvCineGrid.layoutManager = GridLayoutManager(this, 2)
+        val cineGridLayout = GridLayoutManager(this, 2)
+        binding.rvCineGrid.layoutManager = cineGridLayout
         cineAdapter = CineSearchResultAdapter(
             emptyList(),
             onMediaClick = { media -> openCineDetail(media) },
@@ -240,6 +251,10 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvCineGrid.adapter = cineAdapter
+        cineGridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int =
+                if (cineAdapter.isAdAt(position)) cineGridLayout.spanCount else 1
+        }
 
         // Rail "Porque viste X" (Cine v2)
         cineRecoAdapter = CineRecoAdapter { media -> openCineDetail(media) }
@@ -367,6 +382,27 @@ class MainActivity : AppCompatActivity() {
         refreshFavorites()
         applyAccentColor()
         handlePendingSettings()
+        syncCineCatalogIfNeeded()
+    }
+
+    /** Si el BOT detectó cambios en GitHub (películas/series nuevas), refresca
+     *  el catálogo y repinta el Cine sin reinstalar. */
+    private fun syncCineCatalogIfNeeded() {
+        if (!CatalogBot.consumeChangedFlag(this)) return
+        lifecycleScope.launch {
+            val sync = withContext(Dispatchers.IO) { CineRepository.refreshCatalog(this@MainActivity) }
+            allCineMedia = sync.catalog
+            applyCineFilters()
+            refreshCoverData()
+            setupCineFeatured()
+            if (sync.addedTitles > 0) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "🎬 Catálogo actualizado: ${sync.addedTitles} ${if (sync.addedTitles == 1) "título nuevo" else "títulos nuevos"}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     /** Aplica lo que pidieron las pantallas de Ajustes (cargar lista, limpiar

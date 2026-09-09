@@ -94,9 +94,54 @@ object CineRepository {
         return lower.endsWith(".m3u") || lower.contains(".m3u?") || lower.contains("raw.githubusercontent.com") || lower.contains("archive.org/download") || lower.contains("github.com") || lower.endsWith(".txt") || lower.contains(".txt?")
     }
 
-    suspend fun getCineCatalog(context: Context): List<CineMedia> = withContext(Dispatchers.IO) {
-        if (cachedCatalog != null) return@withContext cachedCatalog!!
+    data class CatalogSync(val catalog: List<CineMedia>, val addedTitles: Int)
 
+    suspend fun getCineCatalog(context: Context): List<CineMedia> = withContext(Dispatchers.IO) {
+        cachedCatalog ?: loadCatalogInternal(context).also { cachedCatalog = it }
+    }
+
+    /** Fuerza una descarga/parseo FRESCO y actualiza la cache en memoria.
+     *  Devuelve el catálogo nuevo y cuántos títulos nuevos aparecieron. */
+    suspend fun refreshCatalog(context: Context): CatalogSync = withContext(Dispatchers.IO) {
+        val previous = cachedCatalog
+        val fresh = loadCatalogInternal(context)
+        cachedCatalog = fresh
+        val oldTitles = previous?.map { it.searchTitle.lowercase().trim() }?.toSet() ?: emptySet()
+        val added = fresh.count { it.searchTitle.lowercase().trim() !in oldTitles }
+        CatalogSync(fresh, added)
+    }
+
+    /** Resultado de la sincronización en segundo plano del bot. */
+    data class BotSync(val changed: Boolean, val addedTitles: Int)
+
+    /** Sincroniza SOLO el texto del catálogo (lo usa el bot en segundo plano).
+     *  Compara con la copia en disco y devuelve si cambió algo (nuevo o editado)
+     *  y cuántas entradas #EXTINF nuevas aparecieron. */
+    suspend fun syncCatalogFromGithub(context: Context): BotSync = withContext(Dispatchers.IO) {
+        val oldText = readCachedCatalog(context)
+        val newText = downloadRemoteCatalog(context) ?: return@withContext BotSync(false, 0)
+        if (oldText != null && oldText == newText) return@withContext BotSync(false, 0)
+        // Primera copia (baseline): no hay "cambio" que notificar al usuario.
+        if (oldText == null) return@withContext BotSync(false, 0)
+        val oldCount = countExtinf(oldText)
+        val newCount = countExtinf(newText)
+        val added = maxOf(0, newCount - oldCount)
+        BotSync(true, added)
+    }
+
+    private fun countExtinf(text: String): Int {
+        var count = 0
+        var idx = 0
+        while (true) {
+            idx = text.indexOf("#EXTINF", idx)
+            if (idx == -1) break
+            count++
+            idx += 7
+        }
+        return count
+    }
+
+    private suspend fun loadCatalogInternal(context: Context): List<CineMedia> {
         val movies = mutableListOf<CineMedia>()
         val episodes = mutableListOf<ParsedEpisode>()
         val tvShows = mutableListOf<CineMedia>()
@@ -217,12 +262,10 @@ object CineRepository {
 
         val fullCatalog = uniqueMovies + tvShows
 
-        cachedCatalog = fullCatalog
-
         // Start non-blocking background pre-fetching for TMDb metadata/images
         launchBackgroundPrefetch(fullCatalog)
 
-        return@withContext fullCatalog
+        return fullCatalog
     }
 
     /** Warms the catalog as soon as the app starts so the Cine tab opens instantly. */

@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import com.google.android.gms.ads.AdListener
@@ -34,7 +35,66 @@ object NativeAds {
     const val VARIANT_MEDIA = 0
     const val VARIANT_COMPACT = 1
 
+    /** Cada cuántas cards se intercala un anuncio nativo en las cuadrículas. */
+    const val GRID_AD_INTERVAL = 4
+
+    /** ViewType reservado para las posiciones de anuncio dentro de los adapters. */
+    const val GRID_AD_TYPE = 0x7E0000F7
+
     private const val TAG = "NativeAds"
+
+    // Marcador interno para las posiciones de anuncio en las listas intercaladas.
+    private val AD_MARKER = Any()
+
+    /** Intercala un marcador de anuncio cada [GRID_AD_INTERVAL] items reales. */
+    fun <T> interleaveWithAds(items: List<T>): List<Any?> {
+        if (items.isEmpty()) return emptyList()
+        val out = mutableListOf<Any?>()
+        items.forEachIndexed { index, item ->
+            out.add(item)
+            if ((index + 1) % GRID_AD_INTERVAL == 0) out.add(AD_MARKER)
+        }
+        return out
+    }
+
+    /** True si la posición de una lista intercalada es un anuncio. */
+    fun isAdMarker(item: Any?): Boolean = item === AD_MARKER
+
+    /**
+     * Crea el hueco de anuncio para un RecyclerView (cuadrícula). Arranca
+     * colapsado (altura 0) y, cuando AdMob sirve el anuncio, crece al tamaño
+     * del bloque. [onResult] se llama al cargar/fallar para que el adapter
+     * pida re-medir esa posición.
+     */
+    fun attachRecycler(
+        activity: Activity,
+        slot: FrameLayout,
+        variant: Int = VARIANT_COMPACT,
+        onResult: (Boolean) -> Unit = {}
+    ) {
+        slot.tag = "grid_ad"
+        slot.visibility = View.VISIBLE
+        slot.layoutParams = slot.layoutParams ?: ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        slot.layoutParams.height = 0
+        val adView = inflate(activity, slot, variant)
+        load(
+            activity,
+            adView,
+            onLoaded = {
+                slot.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                slot.visibility = View.VISIBLE
+                onResult(true)
+            },
+            onFailed = {
+                slot.layoutParams.height = 0
+                slot.visibility = View.VISIBLE
+                onResult(false)
+            }
+        )
+    }
 
     /** Infla el bloque en [slot] y lo mantiene oculto hasta que carga el anuncio. */
     fun attach(activity: Activity, slot: ViewGroup, variant: Int = VARIANT_MEDIA) {
@@ -46,6 +106,17 @@ object NativeAds {
             onLoaded = { slot.visibility = View.VISIBLE },
             onFailed = { slot.visibility = View.GONE }
         )
+    }
+
+    /** Crea el hueco (FrameLayout) para un anuncio dentro de una cuadrícula. */
+    fun createAdSlot(parent: ViewGroup): FrameLayout {
+        val slot = FrameLayout(parent.context)
+        slot.layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        slot.tag = "grid_ad"
+        return slot
     }
 
     fun inflate(activity: Activity, slot: ViewGroup, variant: Int = VARIANT_MEDIA): NativeAdView {

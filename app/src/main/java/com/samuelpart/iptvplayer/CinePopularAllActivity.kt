@@ -30,7 +30,14 @@ class CinePopularAllActivity : AppCompatActivity() {
 
         binding.txtPopularAllTitle.text = title
         binding.btnPopularBack.setOnClickListener { finish() }
-        binding.rvPopularAll.layoutManager = GridLayoutManager(this, 3)
+        val popularLayout = GridLayoutManager(this, 3)
+        binding.rvPopularAll.layoutManager = popularLayout
+        popularLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                val adapter = binding.rvPopularAll.adapter as? CineSearchResultAdapter
+                return if (adapter?.isAdAt(position) == true) popularLayout.spanCount else 1
+            }
+        }
 
         NativeAds.attach(this, binding.adSlotNative, NativeAds.VARIANT_COMPACT)
 

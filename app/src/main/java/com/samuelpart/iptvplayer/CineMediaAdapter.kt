@@ -1,5 +1,6 @@
 package com.samuelpart.iptvplayer
 
+import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,10 +18,35 @@ class CineMediaAdapter(
     private val onMediaClick: (CineMedia) -> Unit,
     private val isFavorite: ((CineMedia) -> Boolean)? = null,
     private val onFavoriteToggle: ((CineMedia) -> Unit)? = null
-) : RecyclerView.Adapter<CineMediaAdapter.CineMediaViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     /** Items already asked to TMDB this session (avoids refetch spam while scrolling). */
     private val tmdbRequested = mutableSetOf<String>()
+
+    /** Lista real + marcadores de anuncio. */
+    private var displayList: List<Any?> = emptyList()
+
+    init { rebuildDisplayList() }
+
+    private fun rebuildDisplayList() {
+        displayList = NativeAds.interleaveWithAds(mediaList)
+    }
+
+    fun isAdAt(position: Int): Boolean = NativeAds.isAdMarker(displayList.getOrNull(position))
+
+    inner class AdViewHolder(val slot: android.widget.FrameLayout) :
+        RecyclerView.ViewHolder(slot) {
+        private var loaded = false
+        fun ensureLoaded() {
+            if (loaded) return
+            loaded = true
+            val activity = slot.context as? Activity ?: return
+            NativeAds.attachRecycler(activity, slot, NativeAds.VARIANT_COMPACT) {
+                val p = bindingAdapterPosition
+                if (p != RecyclerView.NO_POSITION) notifyItemChanged(p)
+            }
+        }
+    }
 
     inner class CineMediaViewHolder(private val binding: ItemCineMediaBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -158,7 +184,15 @@ class CineMediaAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CineMediaViewHolder {
+    override fun getItemViewType(position: Int): Int {
+        if (NativeAds.isAdMarker(displayList.getOrNull(position))) return NativeAds.GRID_AD_TYPE
+        return 0
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        if (viewType == NativeAds.GRID_AD_TYPE) {
+            return AdViewHolder(NativeAds.createAdSlot(parent))
+        }
         val binding = ItemCineMediaBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -167,12 +201,24 @@ class CineMediaAdapter(
         return CineMediaViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: CineMediaViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is AdViewHolder) {
+            holder.ensureLoaded()
+            return
+        }
         animateEntrance(holder.itemView, position)
-        holder.bind(mediaList[position])
+        (holder as CineMediaViewHolder).bind(mediaList[contentIndexAt(position)])
     }
 
-    override fun getItemCount(): Int = mediaList.size
+    override fun getItemCount(): Int = displayList.size
+
+    private fun contentIndexAt(position: Int): Int {
+        var real = 0
+        for (i in 0 until position) {
+            if (!NativeAds.isAdMarker(displayList.getOrNull(i))) real++
+        }
+        return real
+    }
 
 
     /** iPhone/PS stagger: each new card rises + fades in as it gets scrolled into view. */
@@ -196,6 +242,7 @@ class CineMediaAdapter(
     fun updateList(newList: List<CineMedia>) {
         lastAnimatedPosition = -1
         mediaList = newList
+        rebuildDisplayList()
         notifyDataSetChanged()
     }
 }

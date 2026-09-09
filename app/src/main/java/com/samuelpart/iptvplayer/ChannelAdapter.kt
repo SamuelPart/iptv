@@ -1,5 +1,6 @@
 package com.samuelpart.iptvplayer
 
+import android.app.Activity
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.View
@@ -25,10 +26,21 @@ class ChannelAdapter(
 
     private var pulsingDot: View? = null
 
+    /** Lista real + marcadores de anuncio (null → no; objeto AD_MARKER → sí). */
+    private var displayList: List<Any?> = emptyList()
+
     companion object {
         private const val TYPE_CARD = 0
         private const val TYPE_TUNER = 1
     }
+
+    init { rebuildDisplayList() }
+
+    private fun rebuildDisplayList() {
+        displayList = NativeAds.interleaveWithAds(channels)
+    }
+
+    fun isAdAt(position: Int): Boolean = NativeAds.isAdMarker(displayList.getOrNull(position))
 
     // ================= VIEW HOLDERS =================
 
@@ -105,29 +117,60 @@ class ChannelAdapter(
         }
     }
 
+    inner class AdViewHolder(val slot: android.widget.FrameLayout) :
+        RecyclerView.ViewHolder(slot) {
+        private var loaded = false
+        fun ensureLoaded() {
+            if (loaded) return
+            loaded = true
+            val activity = slot.context as? Activity ?: return
+            NativeAds.attachRecycler(activity, slot, NativeAds.VARIANT_COMPACT) {
+                val p = bindingAdapterPosition
+                if (p != RecyclerView.NO_POSITION) notifyItemChanged(p)
+            }
+        }
+    }
+
     // ================= ADAPTER CORE =================
 
-    override fun getItemViewType(position: Int): Int =
-        if (tunerMode) TYPE_TUNER else TYPE_CARD
+    override fun getItemViewType(position: Int): Int {
+        if (NativeAds.isAdMarker(displayList.getOrNull(position))) return NativeAds.GRID_AD_TYPE
+        return if (tunerMode) TYPE_TUNER else TYPE_CARD
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inf = LayoutInflater.from(parent.context)
-        return if (viewType == TYPE_TUNER) {
-            TunerViewHolder(ItemChannelTunerBinding.inflate(inf, parent, false))
-        } else {
-            ChannelViewHolder(ItemChannelBinding.inflate(inf, parent, false))
+        return when (viewType) {
+            NativeAds.GRID_AD_TYPE -> AdViewHolder(NativeAds.createAdSlot(parent))
+            TYPE_TUNER -> TunerViewHolder(ItemChannelTunerBinding.inflate(inf, parent, false))
+            else -> ChannelViewHolder(ItemChannelBinding.inflate(inf, parent, false))
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is AdViewHolder) {
+            holder.ensureLoaded()
+            return
+        }
         animateEntrance(holder.itemView, position)
+        // Índice real del canal (saltando los anuncios intercalados).
+        val contentIndex = contentIndexAt(position)
         when (holder) {
-            is TunerViewHolder -> holder.bind(channels[position], position)
-            is ChannelViewHolder -> holder.bind(channels[position])
+            is TunerViewHolder -> holder.bind(channels[contentIndex], contentIndex)
+            is ChannelViewHolder -> holder.bind(channels[contentIndex])
         }
     }
 
-    override fun getItemCount(): Int = channels.size
+    override fun getItemCount(): Int = displayList.size
+
+    /** Posición real dentro de [channels] para una posición de la lista intercalada. */
+    private fun contentIndexAt(position: Int): Int {
+        var real = 0
+        for (i in 0 until position) {
+            if (!NativeAds.isAdMarker(displayList.getOrNull(i))) real++
+        }
+        return real
+    }
 
     /** iPhone/PS stagger: each new card rises + fades in as it gets scrolled into view. */
     private var lastAnimatedPosition = -1
@@ -150,6 +193,7 @@ class ChannelAdapter(
     fun updateList(newChannels: List<Channel>) {
         lastAnimatedPosition = -1
         channels = newChannels
+        rebuildDisplayList()
         notifyDataSetChanged()
     }
 
@@ -171,6 +215,7 @@ class ChannelAdapter(
         var bestT = 0f
         for (i in 0 until rv.childCount) {
             val v = rv.getChildAt(i)
+            if (v.tag == "grid_ad") continue // no tocar los anuncios nativos
             val vcy = v.top + v.height / 2f
             val t = (1f - kotlin.math.abs(vcy - cy) / radius).coerceIn(0f, 1f)
             val e = 1f - (1f - t) * (1f - t)
@@ -200,6 +245,7 @@ class ChannelAdapter(
     private fun resetTunerTransforms(rv: RecyclerView) {
         for (i in 0 until rv.childCount) {
             val v = rv.getChildAt(i)
+            if (v.tag == "grid_ad") continue // no tocar los anuncios nativos
             v.scaleX = 1f
             v.scaleY = 1f
             v.alpha = 1f

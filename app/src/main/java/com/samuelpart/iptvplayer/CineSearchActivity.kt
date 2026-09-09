@@ -37,7 +37,14 @@ class CineSearchActivity : AppCompatActivity() {
         WindowCompat.getInsetsController(window, window.decorView)
             .isAppearanceLightStatusBars = false
 
-        binding.rvCineSearch.layoutManager = GridLayoutManager(this, 3)
+        val searchLayout = GridLayoutManager(this, 3)
+        binding.rvCineSearch.layoutManager = searchLayout
+        searchLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                val adapter = binding.rvCineSearch.adapter as? CineSearchResultAdapter
+                return if (adapter?.isAdAt(position) == true) searchLayout.spanCount else 1
+            }
+        }
 
         NativeAds.attach(this, binding.adSlotNative, NativeAds.VARIANT_COMPACT)
 

@@ -72,6 +72,9 @@ dependencies {
 
     // Google AdMob SDK for monetization
     implementation("com.google.android.gms:play-services-ads:22.6.0")
+
+    // WorkManager: bot de actualización del catálogo en segundo plano
+    implementation("androidx.work:work-runtime-ktx:2.8.1")
     
     // Lifecycle Process for App Open Ads
     implementation("androidx.lifecycle:lifecycle-process:2.6.2")
