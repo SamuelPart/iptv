@@ -182,23 +182,37 @@ object CineRepository {
         }
 
         // Group duplicates into alternate servers!
-        val groupedMovies = movies.groupBy { it.searchTitle.lowercase().trim() }
+        // El AÑO forma parte de la identidad de la película: "Vaiana (2016)" y
+        // "Vaiana (2026)" son películas distintas (remakes/versiones), no
+        // servidores de la misma. En cambio "Moana 2" y "Moana 2 (2024)" (un
+        // solo año distinto) siguen juntas como servidores de la misma película.
+        val byTitle = movies.groupBy { it.searchTitle.lowercase().trim() }
         val uniqueMovies = mutableListOf<CineMedia>()
 
-        for ((_, movieGroup) in groupedMovies) {
-            val first = movieGroup.first()
-            val allUrls = movieGroup.map { it.url }.distinct()
-            
-            val uniqueMovie = CineMedia(
-                title = first.title,
-                searchTitle = first.searchTitle,
-                url = first.url,
-                rawLogo = first.rawLogo,
-                type = "movie",
-                group = first.group,
-                urls = ArrayList(allUrls)
-            )
-            uniqueMovies.add(uniqueMovie)
+        for ((_, group) in byTitle) {
+            val buckets = group.groupBy {
+                YEAR_IN_TITLE.find(it.title)?.groupValues?.getOrNull(1) ?: ""
+            }
+            val distinctYears = buckets.keys.filter { it.isNotEmpty() }.size
+            // Varios años distintos -> películas distintas -> separar.
+            val splits: List<List<CineMedia>> =
+                if (distinctYears > 1) buckets.entries.map { it.value } else listOf(group)
+
+            for (movieGroup in splits) {
+                val first = movieGroup.first()
+                val allUrls = movieGroup.map { it.url }.distinct()
+                
+                val uniqueMovie = CineMedia(
+                    title = first.title,
+                    searchTitle = first.searchTitle,
+                    url = first.url,
+                    rawLogo = first.rawLogo,
+                    type = "movie",
+                    group = first.group,
+                    urls = ArrayList(allUrls)
+                )
+                uniqueMovies.add(uniqueMovie)
+            }
         }
 
         val fullCatalog = uniqueMovies + tvShows
