@@ -26,10 +26,20 @@ class CineMediaAdapter(
     /** Lista real + marcadores de anuncio. */
     private var displayList: List<Any?> = emptyList()
 
+    /** Columnas de la cuadrícula: el anuncio se inserta cada [NativeAds.GRID_AD_ROWS] filas. */
+    var gridColumns: Int = 3
+        set(value) {
+            if (field != value) {
+                field = value
+                rebuildDisplayList()
+                notifyDataSetChanged()
+            }
+        }
+
     init { rebuildDisplayList() }
 
     private fun rebuildDisplayList() {
-        displayList = NativeAds.interleaveWithAds(mediaList)
+        displayList = NativeAds.interleaveWithAds(mediaList, gridColumns)
     }
 
     fun isAdAt(position: Int): Boolean = NativeAds.isAdMarker(displayList.getOrNull(position))

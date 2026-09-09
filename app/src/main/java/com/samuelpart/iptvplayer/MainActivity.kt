@@ -210,6 +210,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvChannelsGrid.adapter = channelsAdapter
+        channelsAdapter.gridColumns = 1 // sintonizador: 1 columna → anuncio cada 4 filas (4 canales)
         channelsGridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int =
                 if (channelsAdapter.isAdAt(position)) channelsGridLayout.spanCount else 1
@@ -232,6 +233,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvSearchGrid.adapter = searchAdapter
+        searchAdapter.gridColumns = 3 // 3 columnas → anuncio cada 4 filas (12 canales)
         searchGridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int =
                 if (searchAdapter.isAdAt(position)) searchGridLayout.spanCount else 1
@@ -251,6 +253,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
         binding.rvCineGrid.adapter = cineAdapter
+        cineAdapter.gridColumns = 2 // 2 columnas → anuncio cada 4 filas (8 títulos)
         cineGridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int =
                 if (cineAdapter.isAdAt(position)) cineGridLayout.spanCount else 1
@@ -833,6 +836,7 @@ class MainActivity : AppCompatActivity() {
             isGridView = true
             val layoutManager = binding.rvChannelsGrid.layoutManager as GridLayoutManager
             layoutManager.spanCount = 3
+            channelsAdapter.gridColumns = 3
             binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_grid)
             channelsAdapter.tunerMode = false
             layoutManager.requestLayout()
@@ -843,6 +847,7 @@ class MainActivity : AppCompatActivity() {
             isGridView = false
             val layoutManager = binding.rvChannelsGrid.layoutManager as GridLayoutManager
             layoutManager.spanCount = 1
+            channelsAdapter.gridColumns = 1
             binding.btnToggleLayout.setImageResource(R.drawable.ic_ios_list)
             channelsAdapter.tunerMode = true
             layoutManager.requestLayout()

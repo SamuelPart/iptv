@@ -29,6 +29,16 @@ class ChannelAdapter(
     /** Lista real + marcadores de anuncio (null → no; objeto AD_MARKER → sí). */
     private var displayList: List<Any?> = emptyList()
 
+    /** Columnas de la cuadrícula: el anuncio se inserta cada [NativeAds.GRID_AD_ROWS] filas. */
+    var gridColumns: Int = 3
+        set(value) {
+            if (field != value) {
+                field = value
+                rebuildDisplayList()
+                notifyDataSetChanged()
+            }
+        }
+
     companion object {
         private const val TYPE_CARD = 0
         private const val TYPE_TUNER = 1
@@ -37,7 +47,7 @@ class ChannelAdapter(
     init { rebuildDisplayList() }
 
     private fun rebuildDisplayList() {
-        displayList = NativeAds.interleaveWithAds(channels)
+        displayList = NativeAds.interleaveWithAds(channels, gridColumns)
     }
 
     fun isAdAt(position: Int): Boolean = NativeAds.isAdMarker(displayList.getOrNull(position))

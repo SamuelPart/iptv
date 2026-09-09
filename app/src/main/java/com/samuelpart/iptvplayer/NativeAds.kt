@@ -35,8 +35,8 @@ object NativeAds {
     const val VARIANT_MEDIA = 0
     const val VARIANT_COMPACT = 1
 
-    /** Cada cuántas cards se intercala un anuncio nativo en las cuadrículas. */
-    const val GRID_AD_INTERVAL = 4
+    /** Cada cuántas FILAS se intercala un anuncio nativo en las cuadrículas. */
+    const val GRID_AD_ROWS = 4
 
     /** ViewType reservado para las posiciones de anuncio dentro de los adapters. */
     const val GRID_AD_TYPE = 0x7E0000F7
@@ -46,13 +46,17 @@ object NativeAds {
     // Marcador interno para las posiciones de anuncio en las listas intercaladas.
     private val AD_MARKER = Any()
 
-    /** Intercala un marcador de anuncio cada [GRID_AD_INTERVAL] items reales. */
-    fun <T> interleaveWithAds(items: List<T>): List<Any?> {
+    /** Intercala un marcador de anuncio cada [GRID_AD_ROWS] filas COMPLETAS.
+     *  [columns] es el número de columnas de la cuadrícula: el anuncio cae al
+     *  final de cada 4ª fila (columns * 4 items) y ocupa todo el ancho, sin
+     *  partir la cuadrícula. */
+    fun <T> interleaveWithAds(items: List<T>, columns: Int): List<Any?> {
         if (items.isEmpty()) return emptyList()
+        val interval = columns.coerceAtLeast(1) * GRID_AD_ROWS
         val out = mutableListOf<Any?>()
         items.forEachIndexed { index, item ->
             out.add(item)
-            if ((index + 1) % GRID_AD_INTERVAL == 0) out.add(AD_MARKER)
+            if ((index + 1) % interval == 0) out.add(AD_MARKER)
         }
         return out
     }
