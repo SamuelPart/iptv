@@ -1,0 +1,799 @@
+package com.samuelpart.iptvplayer
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import android.os.Build
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import android.widget.Toast
+import kotlinx.coroutines.launch
+import com.samuelpart.iptvplayer.databinding.ActivityWebVideoPlayerBinding
+import java.io.ByteArrayInputStream
+
+/**
+ * Reproductor BOT: carga la página iframe del host y JUEGA SOLO —
+ * sin que el usuario tenga que pulsar nada. Hace el trabajo sucio:
+ *
+ *  1. Clicks automáticos en TODOS los botones de play conocidos
+ *     (video-js, jwplayer, plyr, overlay, poster, "continuar") cada 900ms.
+ *  2. Fuerza video.play() muted→unmuted dentro de cada iframe anidado.
+ *  3. BORRA los overlays de publicidad del DOM (fixeos, iframes de ads,
+ *     banners, pseudo-popups tipo layer/Kover).
+ *  4. Bloquea popups/redirects: la navegación solo puede salir si es un
+ *     request del propio anfitrión; popup windows desactivados.
+ *  5. Bloqueo de red contra la lista ScraperConfig.adDomains.
+ *
+ *  A diferencia de antes, el video NO se clava con position:fixed encima de
+ *  la página ni se fuerzan controles nativos: el reproductor/iframe queda
+ *  INTERACTIVO para que el usuario pueda tocar play/pausa, barra, calidad,
+ *  subtítulos, fullscreen, etc.
+ */
+class WebVideoPlayerActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityWebVideoPlayerBinding
+    private var customView: View? = null
+    private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+
+    private val botHandler = Handler(Looper.getMainLooper())
+    private var botTicks = 0
+    private var originalHost: String = ""
+    private var currentPageUrl: String = ""
+    private var currentUserAgent: String = ""
+    private var pageBroken = false
+    private var rescueTried = false
+
+    companion object {
+        // Hosts de iframe/embed conocidos: se usan para que el rescate
+        // anti-caidas NO los proponga como "fuente alternativa" (no son
+        // portales de busqueda). La clasificacion VLC vs BOT vive en
+        // CineRepository.playModeFor().
+        private val EMBED_HOSTS = listOf(
+            "nupload", "niramirus", "hgcloud", "dr0pstream", "dood",
+            "streamtape", "voe", "filemoon", "mixdrop", "upstream",
+            "vidmoly", "uqload", "fembed", "luluvdo", "wolfstream",
+            "streamwish", "filelions", "gscdn", "hanerix", "vibuxer",
+            "embedsito", "streamlare", "vidplay"
+        )
+
+        // DOM & players junk
+        private val AD_OVERLAY_JS = """
+            (function(){
+                if (window.__adkiller !== 1) {
+                    window.__adkiller = 1;
+                    try {
+                        window.open = function(){ return null; };
+                        window.alert = function(){};
+                        window.confirm = function(){ return false; };
+                        window.prompt = function(){ return ''; };
+                        window.onbeforeunload = null;
+                    } catch (e0) {}
+                    try {
+                        var root = document.documentElement || document.body;
+                        if (root) {
+                            new MutationObserver(function(list){
+                                var dirty = false;
+                                for (var i = 0; i < list.length; i++) {
+                                    if (list[i].addedNodes && list[i].addedNodes.length > 0) { dirty = true; break; }
+                                }
+                                if (dirty && window.__zapAds) window.__zapAds();
+                            }).observe(root, { childList: true, subtree: true });
+                        }
+                    } catch (e1) {}
+                }
+                window.__zapAds = function() {
+                    try {
+                        var host = (location.hostname || '') + '';
+                        var junk = [];
+                        [
+                            'div[class*="ad"]', 'div[id*="ad"]', 'span[class*="ad"]',
+                            '.adsbygoogle', '.a-ads', '.bn', '.banner', '.popup',
+                            '.popunder', '.overlay-ad', '.vjs-ads-overlay', '.jw-ad',
+                            '.advert', 'ins.adsbygoogle', '[id^="aswift"]'
+                        ].forEach(function(sel){
+                            document.querySelectorAll(sel).forEach(function(e){
+                                if (e && !e.querySelector('video')) junk.push(e);
+                            });
+                        });
+                        document.querySelectorAll('a[target="_blank"]').forEach(function(a){
+                            var href = (a.getAttribute('href') || '') + '';
+                            if (href.length > 8 && href.indexOf(host) < 0) junk.push(a);
+                            else a.removeAttribute('target');
+                        });
+                        document.querySelectorAll('iframe').forEach(function(f){
+                            var src = (f.src || '') + '';
+                            var blob = (f.className || '') + ' ' + (f.id || '') + ' ' + src;
+                            var looksAd = /zoom|bingo|ad|banner|promo|doubleclick|pop|bet|casino|dating|ads/i.test(blob);
+                            var looksPlayer = /play|video|stream|embed|player|voe|mixdrop|streamtape|dood|filemoon|upstream|uqload|vidplay|emprex|hgcloud|hanerix|filelions|lulustream|dsvplay/i.test(blob);
+                            var cross = src.length > 8 && src.indexOf(host) < 0;
+                            if (looksAd && !looksPlayer) junk.push(f);
+                            else if (cross && !looksPlayer) junk.push(f);
+                        });
+                        document.querySelectorAll('div').forEach(function(e){
+                            if (junk.indexOf(e) >= 0) return;
+                            try {
+                                var st = window.getComputedStyle(e);
+                                var z = parseInt(st.zIndex || '0');
+                                if ((st.position === 'fixed' || st.position === 'absolute') && z > 90
+                                    && e.offsetWidth > window.innerWidth * 0.6
+                                    && !e.querySelector('video')
+                                    && !e.closest('.vjs-video,.jwplayer,.plyr,.player,.video-container')) {
+                                    junk.push(e);
+                                }
+                            } catch (ex) {}
+                        });
+                        junk.forEach(function(e){ try { e.style.display = 'none'; e.remove(); } catch (ex) {} });
+                        document.documentElement.style.overflow = 'auto';
+                        if (document.body) document.body.style.overflow = 'auto';
+                    } catch (e3) {}
+                };
+                if (window.__clickGuard !== 1) {
+                    window.__clickGuard = 1;
+                    document.addEventListener('click', function(ev){
+                        try {
+                            var host = (location.hostname || '') + '';
+                            var t = ev.target;
+                            while (t && t !== document.body) {
+                                if (t.tagName === 'A') {
+                                    var h = (t.getAttribute('href') || '') + '';
+                                    if (h.length > 8 && h.indexOf(host) < 0 && h.charAt(0) !== '#') {
+                                        ev.preventDefault(); ev.stopPropagation();
+                                    }
+                                }
+                                t = t.parentElement;
+                            }
+                        } catch (e4) {}
+                    }, true);
+                }
+                window.__zapAds();
+            })();
+        """.trimIndent()
+
+        private val BOT_JS = """
+            (function(){
+                var playedNow = false;
+                function tryPlay(doc) {
+                    try {
+                        var vs = doc.querySelectorAll('video');
+                        for (var i = 0; i < vs.length; i++) {
+                            var v = vs[i];
+                            try {
+                                v.muted = true;
+                                v.volume = 1;
+                                if (v.paused) { var p = v.play(); if (p && p.catch) { p.catch(function(){}); } }
+                                if (!v.paused && v.currentSrc) { playedNow = true; }
+                            } catch (e1) {}
+                        }
+                        var sel = '.vjs-big-play-button,.vjs-poster,.jw-icon-playback,.jw-display-icon-container,.plyr__control--overlaid,.plyr__control--overlaid-play,button[aria-label="Play"],button[class*="play" i],.play-button,.play-btn,#play-button,.play.overlay,.overlay-play,.video-js,.jwplayer,.ps-player,.play-btn-large';
+                        doc.querySelectorAll(sel).forEach(function(b){ try { b.click(); } catch (e2) {} });
+                        // Botoncitos de continuar/aceptar gates
+                        doc.querySelectorAll('button,a').forEach(function(b){
+                            try {
+                                var t = (b.innerText||'').toLowerCase();
+                                if (t.includes('continuar') || t.includes('continue') || t.includes('ver video') || t.includes('play video')) b.click();
+                            } catch (e3) {}
+                        });
+                        // Chips de SERVIDOR (pelisflix/tioplus): voe, filemoon, latino...
+                        doc.querySelectorAll('a,button,li.option,.server-item,.server').forEach(function(b){
+                            try {
+                                var t2 = ((b.innerText||'') + ' ' + (b.title||'')).toLowerCase();
+                                if (t2 && t2.length < 30 &&
+                                    /voe|dood|filemoon|mixdrop|streamtape|upstream|vidplay|latino|espan|server|opcion|opción|hd/.test(t2)
+                                    && !b.querySelector('video')) {
+                                    b.click();
+                                }
+                            } catch (e9) {}
+                        });
+                    } catch (e4) {}
+                }
+                tryPlay(document);
+                try {
+                    document.querySelectorAll('iframe').forEach(function(f){
+                        try { if (f.contentDocument) tryPlay(f.contentDocument); } catch (e5) {}
+                    });
+                } catch (e6) {}
+                $AD_OVERLAY_JS
+                if (!playedNow) {
+                    try {
+                        var fr2 = document.querySelectorAll('iframe');
+                        for (var f2 = 0; f2 < fr2.length; f2++) {
+                            try {
+                                var s3 = fr2[f2].src || '';
+                                if (/^https?:/i.test(s3) &&
+                                    /voe|filemoon|dood|mixdrop|streamtape|upstream|luluvdo|vidmoly|nupload|vidplay|oka|hgcloud|hanerix|filelions|embed|play|video|server/i.test(s3) &&
+                                    s3 !== location.href) {
+                                    return 'IFRAME:' + s3;
+                                }
+                            } catch (e8) {}
+                        }
+                    } catch (e10) {}
+                }
+                return playedNow ? '1' : '0';
+            })();
+        """.trimIndent()
+
+        fun isEmbedUrl(url: String): Boolean {
+            val host = Uri.parse(url).host?.lowercase() ?: return false
+            return EMBED_HOSTS.any { host.contains(it) }
+        }
+
+        /** True si la URL parece un reproductor/embed por su PATH (/e/, /v/,
+         *  embed, player, watch, /video, stream). Sirve para seguir
+         *  redirecciones a hosts de reproductor que no estan en la lista. */
+        private fun isPlayerLikePath(url: String): Boolean {
+            val path = (Uri.parse(url).path ?: "").lowercase()
+            return path.contains("/e/") || path.contains("/v/") || path.contains("embed") ||
+                    path.contains("player") || path.contains("watch") ||
+                    path.contains("/video") || path.contains("stream")
+        }
+    }
+
+    private var isVideoRolling = false
+    private var iframeHops = 0
+    private var bootRevealed = false
+
+    /** Servidores alternativos de la MISMA película (media.urls del catálogo). */
+    private var catalogSources: List<String> = emptyList()
+
+
+
+    private val INTERACTIVE_JS = """
+        (function(){
+            try {
+                // Suelta el video para que el usuario pueda tocar el reproductor:
+                // NO se clava con position:fixed ni se fuerzan controles nativos.
+                if (!window.__softCinema) {
+                    window.__softCinema = 1;
+                    var vs = document.querySelectorAll('video');
+                    for (var i = 0; i < vs.length; i++) {
+                        var v = vs[i];
+                        try {
+                            v.muted = false;
+                            v.volume = 1;
+                            v.setAttribute('playsinline', '');
+                            v.setAttribute('webkit-playsinline', '');
+                        } catch (e1) {}
+                    }
+                }
+                return 'ok';
+            } catch (e) { return ''; }
+        })();
+    """.trimIndent()
+
+    /** Extrae los SERVIDORES disponibles en la página del player (chips tipo
+     *  voe/filemoon/mixdrop/latino/1080...). Devuelve un JSON de {n, h}. */
+    /** Pinta de NEGRO la página del player (cuevana8 y similares salen con
+     *  fondo blanco). Fuerza html/body, los <video> y los contenedores grandes
+     *  con fondo blanco, y se mantiene con un MutationObserver. */
+    private val BLACK_BG_JS = """
+        (function(){
+            try {
+                function paint(el){ if(el){ el.style.setProperty('background','#000','important'); el.style.setProperty('background-color','#000','important'); } }
+                paint(document.documentElement);
+                paint(document.body);
+                if (!window.__blackbg) {
+                    window.__blackbg = 1;
+                    window.__paintBlack = function(){
+                        try {
+                            var vs = document.querySelectorAll('video');
+                            for (var i = 0; i < vs.length; i++) { try { paint(vs[i]); } catch (e1) {} }
+                            var els = document.querySelectorAll('div,section,article,main,aside,header,footer');
+                            for (var j = 0; j < els.length; j++) {
+                                var n = els[j];
+                                if (n.__bgDone) continue;
+                                try {
+                                    var bg = (window.getComputedStyle(n).backgroundColor || '') + '';
+                                    var isWhite = bg.indexOf('255, 255, 255') >= 0;
+                                    var big = (n.offsetWidth * n.offsetHeight) > (window.innerWidth * window.innerHeight * 0.45);
+                                    if (big && isWhite && !n.querySelector('video')) { paint(n); n.__bgDone = 1; }
+                                } catch (e2) {}
+                            }
+                        } catch (e3) {}
+                    };
+                    window.__paintBlack();
+                    try {
+                        var root = document.documentElement || document.body;
+                        if (root) {
+                            new MutationObserver(function(){ if (window.__paintBlack) window.__paintBlack(); })
+                                .observe(root, { childList: true, subtree: true });
+                        }
+                    } catch (e4) {}
+                } else if (window.__paintBlack) {
+                    window.__paintBlack();
+                }
+            } catch (e) {}
+        })();
+    """.trimIndent()
+
+
+    private val botRunnable = object : Runnable {
+        override fun run() {
+            if (isFinishing || isDestroyed) return
+            botTicks++
+            try {
+                if (isVideoRolling) {
+                    // CORRIENDO: limpia anuncios y suelta la pagina para que el
+                    // usuario pueda tocar los controles del reproductor/iframe
+                    // (play/pausa, barra, calidad, fullscreen...). Ya no se
+                    // re-clava el video encima de todo.
+                    binding.webFramePlayer.evaluateJavascript(AD_OVERLAY_JS, null)
+                    binding.webFramePlayer.evaluateJavascript(BLACK_BG_JS, null)
+                    binding.webFramePlayer.evaluateJavascript(INTERACTIVE_JS, null)
+                    revealBootLayer()
+                } else {
+                    binding.webFramePlayer.evaluateJavascript(BOT_JS) { res ->
+                        if (res == null) return@evaluateJavascript
+                        // Salto a iframe cross-origin (voe/filemoon...): la pagina
+                        // ES el embed, y ahora si podemos pulsar su play.
+                        if (!isVideoRolling && res.contains("IFRAME:") && iframeHops < 3 && botTicks >= 5) {
+                            val raw = res.substringAfter("IFRAME:")
+                            val src = buildString {
+                                for (ci in 0 until raw.length) {
+                                    val ch = raw[ci]
+                                    if (ch.code != 92 && ch.code != 34) append(ch)
+                                }
+                            }
+                            if (src.startsWith("http")) {
+                                iframeHops++
+                                // EL SECRETO: el embed hgcloud solo vive con el
+                                // Referer del WRAPPER padre, no del host nuevo.
+                                val parentHost = Uri.parse(currentPageUrl).host?.lowercase()
+                                    ?: originalHost
+                                val embedHost = Uri.parse(src).host?.lowercase() ?: parentHost
+                                botTicks = 0
+                                Toast.makeText(
+                                    this@WebVideoPlayerActivity,
+                                    "Abriendo servidor…", Toast.LENGTH_SHORT
+                                ).show()
+                                binding.webFramePlayer.loadUrl(
+                                    src, mapOf("Referer" to "https://$parentHost/")
+                                )
+                                originalHost = embedHost
+                                return@evaluateJavascript
+                            }
+                        }
+                        if (res.contains("1") && !res.contains("IFRAME:")) {
+                            isVideoRolling = true
+                            revealBootLayer()
+                        }
+                    }
+                }
+            } catch (_: Exception) { }
+            // RESCATE solo con error REAL de red (404/410...). Antes tambien se
+            // disparaba por tiempo (botTicks>=28) y un iframe que tarda o juega
+            // cross-origin terminaba en un falso "enlace caducado".
+            if (!isVideoRolling && pageBroken) {
+                triggerRescue()
+                return
+            }
+            // Si el BOT no pudo confirmar el play (video en iframe cross-origin),
+            // destapa el reproductor igual para que se vea y el usuario controle:
+            // el BOT sigue limpiando anuncios e intentando play() por lo bajo.
+            if (!isVideoRolling && botTicks >= 16) {
+                revealBootLayer()
+            }
+            val delay = if (isVideoRolling) 3000L else 900L
+            val limit = if (isVideoRolling) 6000 else 200
+            if (botTicks < limit) botHandler.postDelayed(this, delay)
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Iframe SIEMPRE a lo grande: landscape + pantalla completa
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        // Barra de notificaciones OCULTA dentro del player (se desliza para verla)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.statusBars())
+        }
+        binding = ActivityWebVideoPlayerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        WindowCompat.getInsetsController(window, window.decorView)
+            .isAppearanceLightStatusBars = false
+
+        val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
+        val pageUrl = intent.getStringExtra("channelUrl") ?: ""
+        originalHost = Uri.parse(pageUrl).host?.lowercase() ?: ""
+        binding.txtWebPlayerTitle.text = title
+
+        // Servidores de la ficha (mismos enlaces de la película, agrupados en el catálogo)
+        catalogSources = intent.getStringArrayListExtra("allSources")?.distinct() ?: emptyList()
+        // El botón solo tiene sentido si hay más de un servidor para elegir.
+        binding.btnWebServers.visibility = if (catalogSources.size > 1) View.VISIBLE else View.GONE
+
+        binding.btnWebPlayerBack.setOnClickListener { finish() }
+
+        binding.btnWebCast.setOnClickListener {
+            checkCastPermissionsAndAsk()
+        }
+
+        binding.btnWebServers.setOnClickListener {
+            showServersDialog()
+        }
+
+        val web = binding.webFramePlayer
+        web.setBackgroundColor(0xFF000000.toInt())
+        val ws = web.settings
+        ws.javaScriptEnabled = true
+        ws.domStorageEnabled = true
+        ws.mediaPlaybackRequiresUserGesture = false
+        ws.useWideViewPort = true
+        ws.loadWithOverviewMode = true
+        ws.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        ws.setSupportMultipleWindows(false)                 // sin ventanas/publicidad nueva
+        ws.javaScriptCanOpenWindowsAutomatically = false
+        ws.userAgentString =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        currentUserAgent = ws.userAgentString
+
+        val emptyResponse = WebResourceResponse(
+            "text/plain", "utf-8", ByteArrayInputStream(ByteArray(0))
+        )
+
+        web.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: return true
+                val host = Uri.parse(url).host?.lowercase() ?: ""
+                // Iframes internos (servers/embeds que el portal invoca): SÍ cargan
+                if (request?.isForMainFrame == false) return false
+                // Esquemas base siempre permitidos
+                if (url.startsWith("about:") || url.startsWith("data:")) return false
+                // Host original y sus subdominios: permitidos
+                if (host == originalHost || host.endsWith(".$originalHost")) return false
+                // REDIRECT legitimo a otro host de reproductor/iframe (hgcloud
+                // redirige a vibuxer/hanerix/streamwish...): el video vive ahi,
+                // hay que seguirlo. NO es anuncio.
+                if (isEmbedUrl(url) || isPlayerLikePath(url)) return false
+                // Todo lo demas (anuncios, popups, portales ajenos): bloqueado
+                return true
+            }
+
+            override fun shouldInterceptRequest(
+                view: WebView, request: WebResourceRequest
+            ): WebResourceResponse? {
+                val url = request.url?.toString() ?: ""
+                val host = Uri.parse(url).host?.lowercase() ?: ""
+                if (ScraperConfig.adDomains.any { d ->
+                        host.contains(d.lowercase()) || url.lowercase().contains(d.lowercase())
+                    }) {
+                    return emptyResponse
+                }
+                return super.shouldInterceptRequest(view, request)
+            }
+
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                try {
+                    view?.evaluateJavascript(AD_OVERLAY_JS, null)
+                    view?.evaluateJavascript(BLACK_BG_JS, null)
+                } catch (_: Exception) {}
+                binding.webPlayerProgress.visibility = View.VISIBLE
+                if (url != null) currentPageUrl = url
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                binding.webPlayerProgress.visibility = View.GONE
+                try { view?.evaluateJavascript(BLACK_BG_JS, null) } catch (_: Exception) {}
+                if (pageBroken) { triggerRescue(); return }
+                // Dispara el BOT por PRIMERA vez al terminarse la carga…
+                botHandler.removeCallbacks(botRunnable)
+                botTicks = 0
+                botHandler.postDelayed(botRunnable, 400)
+            }
+
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: android.webkit.WebResourceResponse?) {
+                val code = errorResponse?.statusCode ?: 0
+                if ((request?.isForMainFrame == true) && code >= 400) {
+                    pageBroken = true
+                }
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                if (request?.isForMainFrame == true) pageBroken = true
+            }
+        }
+
+        web.webChromeClient = object : WebChromeClient() {
+            override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                customViewCallback?.onCustomViewHidden()
+                customView = view
+                customViewCallback = callback
+                binding.frameWebFullscreen.addView(view)
+                binding.frameWebFullscreen.visibility = View.VISIBLE
+            }
+
+            override fun onHideCustomView() {
+                binding.frameWebFullscreen.removeAllViews()
+                binding.frameWebFullscreen.visibility = View.GONE
+                customView = null
+                customViewCallback?.onCustomViewHidden()
+                customViewCallback = null
+            }
+        }
+
+        if (pageUrl.isNotBlank()) {
+            val headers = mutableMapOf(
+                "Referer" to "https://${originalHost}/",
+                "User-Agent" to ws.userAgentString
+            )
+            web.loadUrl(pageUrl, headers)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        botHandler.removeCallbacks(botRunnable)
+        binding.webFramePlayer.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.webFramePlayer.onResume()
+        botHandler.postDelayed(botRunnable, 400)
+    }
+
+    override fun onDestroy() {
+        botHandler.removeCallbacks(botRunnable)
+        binding.frameWebFullscreen.removeAllViews()
+        binding.webFramePlayer.destroy()
+        super.onDestroy()
+    }
+
+    /** Anti-caida SIN EXTRACCION: si el iframe murio, buscar el MISMO titulo
+     *  en los portales (TioPlus, RePelis24, RePelis24 Oficial, avcos
+     *  pelisflix1.fans si esta habilitado) y RECARGAR esa pagina aqui mismo —
+     *  el BOT se encargara de darle play a la nueva web/embed. Nada de VLC. */
+    private fun triggerRescue() {
+        if (rescueTried || isFinishing || isDestroyed) return
+        rescueTried = true
+        botHandler.removeCallbacks(botRunnable)
+        val title = binding.txtWebPlayerTitle.text?.toString()?.ifBlank { null } ?: "esa pelicula"
+        android.widget.Toast.makeText(this, "Enlace caducado — buscando otra fuente…", android.widget.Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            try {
+                val query = title.replace(Regex("[^A-Za-z0-9 ]"), " ").trim()
+                val results = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    try { CineScraper.searchPortalsHeadless(query) } catch (_: Exception) { emptyList() }
+                }
+                val alt = results.firstOrNull { m ->
+                    val h = Uri.parse(m.url).host?.lowercase() ?: ""
+                    h != originalHost && !h.endsWith(".$originalHost") && !isEmbedUrl(m.url)
+                } ?: results.firstOrNull { !isEmbedUrl(it.url) }
+                if (alt == null) {
+                    android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Sin alternativas por ahora: $title", android.widget.Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                android.widget.Toast.makeText(this@WebVideoPlayerActivity, "Nueva fuente: ${alt.title}…", android.widget.Toast.LENGTH_SHORT).show()
+                // Reinicia sobre la MISMA pantalla: nuevo host, nueva carcel, BOT de cero
+                originalHost = Uri.parse(alt.url).host?.lowercase() ?: originalHost
+                pageBroken = false
+                isVideoRolling = false
+                botTicks = 0
+                botHandler.removeCallbacks(botRunnable)
+                binding.webFramePlayer.loadUrl(
+                    alt.url, mapOf("Referer" to "https://$originalHost/")
+                )
+            } catch (_: Exception) {
+                android.widget.Toast.makeText(this@WebVideoPlayerActivity, "No se pudo reiniciar la reproduccion", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /** Destapa la capa de carga (idempotente). La usa tanto el modo normal
+     *  como el fallback cuando el video corre en un iframe cross-origin. */
+    private fun revealBootLayer() {
+        if (bootRevealed || isFinishing || isDestroyed) return
+        bootRevealed = true
+        binding.layerWebBoot.animate()
+            .alpha(0f)
+            .setDuration(450)
+            .withEndAction {
+                binding.layerWebBoot.visibility = View.GONE
+                binding.layerWebBoot.alpha = 1f
+            }
+            .start()
+    }
+
+    /** Muestra el diálogo con los SERVIDORES DE LA FICHA (mismos enlaces de la
+     *  película guardados en el catálogo). El botón solo se ve si hay >1. */
+    private fun showServersDialog() {
+        if (catalogSources.size <= 1) {
+            Toast.makeText(this, "Solo hay un servidor disponible", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val current = currentPageUrl.ifBlank { catalogSources.first() }
+
+        val view = layoutInflater.inflate(R.layout.dialog_servers, null)
+        val scroll = view.findViewById<ScrollView>(R.id.scrollServers)
+        val container = view.findViewById<LinearLayout>(R.id.containerServers)
+        val btnClose = view.findViewById<TextView>(R.id.btnServersClose)
+
+        val dialog = AlertDialog.Builder(
+            this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert
+        ).setView(view).create()
+
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        catalogSources.forEachIndexed { index, url ->
+            val isCurrent = url == current
+            val row = layoutInflater.inflate(R.layout.item_server_option, container, false) as TextView
+            val label = serverLabel(index, url, isCurrent)
+            row.text = label
+            row.setOnClickListener {
+                dialog.dismiss()
+                switchServer(url)
+            }
+            container.addView(row)
+        }
+
+        if (catalogSources.size > 7) {
+            val h = (300 * resources.displayMetrics.density).toInt()
+            scroll.layoutParams = scroll.layoutParams.apply { height = h }
+        }
+
+        dialog.show()
+    }
+
+    /** Nombre legible: "Servidor N · host" y marca el que se está viendo. */
+    private fun serverLabel(index: Int, url: String, isCurrent: Boolean): String {
+        val host = Uri.parse(url).host?.removePrefix("www.")?.lowercase() ?: "servidor"
+        return buildString {
+            append("Servidor ${index + 1} · $host")
+            if (isCurrent) append("  (actual)")
+        }
+    }
+
+    /** Cambia al servidor elegido: recarga la página del nuevo enlace y reinicia
+     *  el BOT para que le dé play solo. */
+    private fun switchServer(url: String) {
+        if (url.isBlank()) return
+        originalHost = Uri.parse(url).host?.lowercase() ?: originalHost
+        pageBroken = false
+        rescueTried = false
+        isVideoRolling = false
+        iframeHops = 0
+        botTicks = 0
+        botHandler.removeCallbacks(botRunnable)
+        binding.webFramePlayer.loadUrl(url, mapOf("Referer" to "https://$originalHost/"))
+        botHandler.postDelayed(botRunnable, 600)
+        Toast.makeText(this, "Cambiando de servidor…", Toast.LENGTH_SHORT).show()
+    }
+
+    private val CAST_PERMISSION_REQUEST_CODE = 4201
+
+    private fun checkCastPermissionsAndAsk() {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES)
+        } else {
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+        val missing = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) showWebCastDialog()
+        else ActivityCompat.requestPermissions(this, missing.toTypedArray(), CAST_PERMISSION_REQUEST_CODE)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAST_PERMISSION_REQUEST_CODE &&
+            grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+        ) {
+            showWebCastDialog()
+        }
+    }
+
+    private fun showWebCastDialog() {
+        val pageUrl = intent.getStringExtra("channelUrl") ?: return
+        val pageTitle = binding.txtWebPlayerTitle.text?.toString() ?: "Video"
+        val dialogView = layoutInflater.inflate(R.layout.dialog_cast_selector, null)
+        val layoutScanning = dialogView.findViewById<LinearLayout>(R.id.layoutCastScanning)
+        val rv = dialogView.findViewById<RecyclerView>(R.id.rvCastDevices)
+        val btnClose = dialogView.findViewById<Button>(R.id.btnCancelCast)
+        rv.layoutManager = LinearLayoutManager(this)
+
+        lateinit var adapter: CastDeviceAdapter
+        adapter = CastDeviceAdapter(emptyList()) { device ->
+            dialogView.clearFocus()
+            castTo(device.type, device, pageUrl, pageTitle)
+        }
+        rv.adapter = adapter
+
+        val dialog = AlertDialog.Builder(
+            this, androidx.appcompat.R.style.Theme_AppCompat_Dialog_Alert
+        ).setView(dialogView).create()
+        btnClose.setOnClickListener { dialog.dismiss() }
+
+        layoutScanning.visibility = android.view.View.VISIBLE
+        lifecycleScope.launch {
+            val devices = try {
+                UniversalCaster.discoverDevices(this@WebVideoPlayerActivity)
+            } catch (_: Exception) { emptyList() }
+            layoutScanning.visibility = android.view.View.GONE
+            val list = devices.toMutableList()
+            list.add(CastDevice("Transmitir con Smart View del Sistema", "system_cast", 0, "SystemCast"))
+            adapter.updateList(list)
+        }
+        dialog.show()
+    }
+
+    private fun castTo(type: String, device: CastDevice, pageUrl: String, title: String) {
+        when (type) {
+            "SystemCast" -> {
+                try {
+                    val castIntent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(Uri.parse(pageUrl), "video/*")
+                        putExtra("title", title)
+                        putExtra("android.intent.extra.Title", title)
+                    }
+                    startActivity(Intent.createChooser(castIntent, "Elige tu TV"))
+                } catch (e: Exception) { e.printStackTrace() }
+            }
+            "Roku", "DLNA" -> {
+                Toast.makeText(this, "Conectando con ${device.name}...", Toast.LENGTH_SHORT).show()
+                lifecycleScope.launch {
+                    val ok = try {
+                        if (type == "Roku") {
+                            UniversalCaster.castToRoku(device.ip, pageUrl, title)
+                        } else {
+                            val ctrl = device.controlUrl
+                                ?: "http://${device.ip}:1400/AVTransport/control"
+                            UniversalCaster.castToDlna(ctrl, pageUrl, title)
+                        }
+                    } catch (_: Exception) { false }
+                    Toast.makeText(
+                        this@WebVideoPlayerActivity,
+                        if (ok) "Enviado a ${device.name}" else "No respondio ${device.name}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            else -> Toast.makeText(this, "Dispositivo no soportado por embeds", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    @Deprecated("Back: navega el historial del iframe si puede")
+    override fun onBackPressed() {
+        if (customView != null) {
+            binding.frameWebFullscreen.removeAllViews()
+            binding.frameWebFullscreen.visibility = View.GONE
+            customViewCallback?.onCustomViewHidden()
+            customView = null
+            customViewCallback = null
+        } else if (binding.webFramePlayer.canGoBack()) {
+            binding.webFramePlayer.goBack()
+        } else {
+            super.onBackPressed()
+        }
+    }
+}

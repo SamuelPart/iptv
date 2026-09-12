@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circulo de gradiente aurora para el play grande del player -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:angle="45"
+        android:startColor="#C9A96E"
+        android:centerColor="#B08D57"
+        android:endColor="#8C7348"
+        android:type="linear" />
+</shape>

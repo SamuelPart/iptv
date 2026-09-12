@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:keepScreenOn="true">
+
+    <!-- VLC Video Layout - VLC plays directly here! -->
+    <org.videolan.libvlc.util.VLCVideoLayout
+        android:id="@+id/vlcVideoLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Night mode dimmer: oscurece el video pero NO los gestos -->
+    <View
+        android:id="@+id/viewNightDimmer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E0000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Clickable overlay to toggle controller visibility -->
+    <View
+        android:id="@+id/viewTouchTarget"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent" />
+
+    <!-- Custom Player Controls Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutPlayerControls"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:visibility="visible"
+        tools:visibility="visible">
+
+        <!-- Top Header Bar -->
+        <LinearLayout
+            android:id="@+id/layoutPlayerHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_player_dock"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:gravity="center_vertical"
+            android:elevation="10dp"
+            android:layout_margin="14dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+
+                android:scaleType="fitCenter"
+                android:background="@drawable/bg_circle_glass"
+                android:padding="10dp"
+                android:src="@drawable/ic_back_chevron"
+                android:contentDescription="Atrás"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/txtPlayingName"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Reproduciendo con VLC"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtLiveBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_live_badge"
+                android:paddingStart="9dp"
+                android:paddingEnd="9dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:text="EN VIVO"
+                android:textColor="#FFFFFF"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <!-- Night mode toggle -->
+            <ImageButton
+                android:id="@+id/btnNightMode"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_circle_glass"
+                android:padding="10dp"
+                android:contentDescription="Modo noche"
+                android:src="@drawable/ic_ios_moon"
+                app:tint="#E6FFFFFF" />
+
+            <!-- PiP / Floating Window Button -->
+            <ImageButton
+                android:id="@+id/btnPip"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_circle_glass"
+                android:padding="11dp"
+                android:src="@drawable/ic_pip"
+                android:contentDescription="Miniatura / Pantalla Flotante"
+                app:tint="@color/ios_cyan" />
+
+            <!-- Cast / Share to TV Button -->
+            <ImageButton
+                android:id="@+id/btnShareTv"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_circle_glass"
+                android:padding="11dp"
+                android:src="@drawable/ic_cast"
+                android:contentDescription="Transmitir a TV"
+                app:tint="@color/ios_cyan" />
+        </LinearLayout>
+
+        <!-- Center Controls: Play, Rewind, Fast Forward -->
+        <LinearLayout
+            android:id="@+id/layoutCenterControls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_player_dock"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:elevation="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <!-- Rewind 10s Button -->
+            <ImageButton
+                android:id="@+id/btnRewind"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/bg_circle_glass"
+                android:padding="9dp"
+                android:src="@drawable/ic_ios_rewind"
+                android:contentDescription="Retroceder 10s"
+                app:tint="@color/ios_cyan" />
+
+            <!-- Big Play/Pause Toggle -->
+            <ImageButton
+                android:id="@+id/btnPlayPause"
+                android:layout_width="66dp"
+                android:layout_height="66dp"
+                android:padding="15dp"
+                android:scaleType="fitCenter"
+                android:layout_marginHorizontal="22dp"
+                android:background="@drawable/bg_circle_aurora"
+                android:elevation="8dp"
+                android:src="@drawable/ic_ios_pause"
+                android:contentDescription="Reproducir/Pausar"
+                app:tint="#FFFFFF" />
+
+            <!-- Fast Forward 10s Button -->
+            <ImageButton
+                android:id="@+id/btnForward"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/bg_circle_glass"
+                android:padding="9dp"
+                android:src="@drawable/ic_ios_forward"
+                android:contentDescription="Adelantar 10s"
+                app:tint="@color/ios_cyan" />
+
+            <!-- Velocidad de reproduccion (cine) -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnPlaybackSpeed"
+                android:layout_width="52dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="14dp"
+                android:padding="0dp"
+                android:background="@drawable/bg_circle_glass"
+                android:text="1×"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <!-- Subtitulos externos (cine) -->
+            <ImageButton
+                android:id="@+id/btnSubtitles"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_circle_glass"
+                android:padding="9dp"
+                android:contentDescription="Subtitulos"
+                android:src="@drawable/ic_ios_captions"
+                app:tint="@color/ios_cyan"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <!-- Bottom Timeline Seekbar & Duration counter -->
+        <LinearLayout
+            android:id="@+id/layoutBottomTimeline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_player_dock"
+            android:orientation="horizontal"
+            android:padding="14dp"
+            android:gravity="center_vertical"
+            android:elevation="10dp"
+            android:layout_margin="14dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- Current Elapsed Time -->
+            <TextView
+                android:id="@+id/txtCurrentTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <!-- Progress Seekbar -->
+            <SeekBar
+                android:id="@+id/vlcSeekBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="12dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/ios_cyan"
+                android:thumbTint="@color/ios_cyan" />
+
+            <!-- Total Remaining Duration -->
+            <TextView
+                android:id="@+id/txtTotalTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Custom styled center Loading Buffering Indicator -->
+    <ProgressBar
+        android:id="@+id/playerProgress"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:indeterminateTint="@color/ios_cyan"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Source Selection Button (Bottom Right) -->
+    <ImageButton
+        android:id="@+id/btnSelectSource"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_circle_glass"
+        android:padding="14dp"
+        android:src="@android:drawable/ic_menu_slideshow"
+        android:contentDescription="Seleccionar Calidad/Servidor"
+        android:visibility="gone"
+        app:tint="@color/ios_blue"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ================= NATIVE CASTING CONTROLLER OVERLAY ================= -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutCastController"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/ios_surface"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/ic_cast"
+                app:tint="@color/ios_blue" />
+
+            <TextView
+                android:id="@+id/txtConnectedTv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Transmitiendo en Smart TV"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtCastPlayingTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Reproduciendo: Película"
+                android:textColor="#888888"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageButton
+                    android:id="@+id/btnCastPlayPause"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_ios_pause"
+                    android:contentDescription="Reproducir/Pausar en TV"
+                    app:tint="@color/ios_blue" />
+
+                <Button
+                    android:id="@+id/btnCastDisconnect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#FF6E6E"
+                    android:text="Detener Transmisión"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    app:cornerRadius="24dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Left Double Tap Indicator Overlay -->
+    <ImageView
+        android:id="@+id/imgDoubleTapLeft"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:src="@drawable/ic_ten_seconds_skip"
+        android:rotation="180"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:elevation="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/layoutCenterControls"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#FFFFFF" />
+
+    <!-- Gesture indicator: volumen / brillo al deslizar -->
+    <TextView
+        android:id="@+id/txtGestureIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="84dp"
+        android:background="@drawable/bg_player_dock"
+        android:elevation="30dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:text="🔊 60%"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Right Double Tap Indicator Overlay -->
+    <ImageView
+        android:id="@+id/imgDoubleTapRight"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:src="@drawable/ic_ten_seconds_skip"
+        android:padding="16dp"
+        android:visibility="gone"
+        android:elevation="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/layoutCenterControls"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#FFFFFF" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

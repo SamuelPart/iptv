@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cápsula de color de acento: el tinte se aplica en runtime con AccentManager -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#303030" />
+    <corners android:radius="16dp" />
+</shape>
