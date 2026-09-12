@@ -13,12 +13,14 @@ import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
 
 /**
- * Anuncio recompensado OBLIGATORIO antes de reproducir.
+ * Anuncio recompensado ANTES de reproducir (canales, películas y series).
  *
- * Regla estricta: el usuario solo puede ver el contenido si completa el
- * anuncio (onUserEarnedReward). Si lo cierra antes de terminar, NO se
- * reproduce y se le vuelve a ofrecer hasta que lo vea entero.
- * Aplica a canales de TV, películas y series.
+ * SIN REINTENTOS: cada unidad se carga UNA sola vez. Si hay anuncio listo,
+ * se muestra automáticamente al tocar reproducir; si no hay (sin fill), se
+ * reproduce directo. Nada de botones "Ver anuncio" que no muestran nada.
+ *
+ * Si el anuncio SÍ se mostró, hay que verlo completo (onUserEarnedReward)
+ * para reproducir; si se cierra antes, se vuelve a ofrecer hasta verlo entero.
  *
  * Usa TODAS las unidades de recompensa configuradas en AdMob y rota entre
  * ellas para que trabajen todas:
@@ -93,8 +95,8 @@ object RewardGate {
     }
 
     /**
-     * Bloquea la reproducción hasta que el usuario complete el anuncio.
-     * [onGranted] se invoca SOLO si el anuncio se vio completo.
+     * Si hay un anuncio listo, lo muestra. Si no lo hay (todavía no cargó o
+     * no hay fill), reproduce directo: "si hay que mostrar anuncio, se mostrará".
      */
     fun requireAdThen(activity: Activity, onGranted: () -> Unit) {
         val rwi = rewardedInterstitial
@@ -113,13 +115,8 @@ object RewardGate {
             return
         }
 
-        load(activity)
-        showBlockedDialog(
-            activity,
-            "El anuncio aún no está listo.\n\nPulsa \u201CVer anuncio\u201D para reintentar. " +
-                "No podrás reproducir hasta ver el anuncio completo.",
-            onGranted
-        )
+        // Sin anuncio listo: no bloquear al usuario con reintentos.
+        onGranted()
     }
 
     private fun showRewarded(activity: Activity, ad: RewardedAd, onGranted: () -> Unit) {
@@ -128,20 +125,13 @@ object RewardGate {
             override fun onAdDismissedFullScreenContent() {
                 load(activity)
                 if (earned) onGranted()
-                else showBlockedDialog(
-                    activity,
-                    "Cerraste el anuncio antes de terminarlo.\n\nDebes verlo completo para poder reproducir.",
-                    onGranted
-                )
+                else showMustFinishDialog(activity, onGranted)
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 load(activity)
-                showBlockedDialog(
-                    activity,
-                    "No se pudo mostrar el anuncio.\n\nReintenta para poder reproducir.",
-                    onGranted
-                )
+                // No se llegó a mostrar nada: no bloquear.
+                onGranted()
             }
         }
         ad.show(activity) { earned = true }
@@ -153,32 +143,30 @@ object RewardGate {
             override fun onAdDismissedFullScreenContent() {
                 load(activity)
                 if (earned) onGranted()
-                else showBlockedDialog(
-                    activity,
-                    "Cerraste el anuncio antes de terminarlo.\n\nDebes verlo completo para poder reproducir.",
-                    onGranted
-                )
+                else showMustFinishDialog(activity, onGranted)
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 load(activity)
-                showBlockedDialog(
-                    activity,
-                    "No se pudo mostrar el anuncio.\n\nReintenta para poder reproducir.",
-                    onGranted
-                )
+                // No se llegó a mostrar nada: no bloquear.
+                onGranted()
             }
         }
         ad.show(activity) { earned = true }
     }
 
-    private fun showBlockedDialog(activity: Activity, message: String, onGranted: () -> Unit) {
+    /**
+     * El anuncio SÍ se mostró pero se cerró antes de terminar: hay que verlo
+     * completo. Si ya hay otro anuncio cargado, se muestra al tocar; si no hay,
+     * reproduce directo (sin bucle infinito de reintentos).
+     */
+    private fun showMustFinishDialog(activity: Activity, onGranted: () -> Unit) {
         if (dialogVisible || activity.isFinishing || activity.isDestroyed) return
         dialogVisible = true
 
         AlertDialog.Builder(activity)
             .setTitle("Anuncio obligatorio")
-            .setMessage(message)
+            .setMessage("Cerraste el anuncio antes de terminarlo.\n\nDebes verlo completo para poder reproducir.")
             .setCancelable(false)
             .setPositiveButton("Ver anuncio") { _, _ ->
                 dialogVisible = false
