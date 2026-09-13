@@ -47,6 +47,7 @@
         <!-- Movie Details Activity -->
         <activity
             android:name=".WebVideoPlayerActivity"
+            android:supportsPictureInPicture="true"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize"
             android:hardwareAccelerated="true" />
         <activity

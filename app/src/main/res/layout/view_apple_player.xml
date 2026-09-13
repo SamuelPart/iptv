@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Reproductor estilo Apple TV (overlay nativo).
+    El usuario SOLO ve esto; el iframe/embed queda detras, mudo de controles,
+    gobernado por el BOT (puente JS -> nativo).
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Scrims suaves arriba/abajo para legibilidad -->
+    <View
+        android:id="@+id/appleScrimTop"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:background="@drawable/bg_apple_scrim_top"
+        android:layout_gravity="top" />
+
+    <View
+        android:id="@+id/appleScrimBottom"
+        android:layout_width="match_parent"
+        android:layout_height="190dp"
+        android:background="@drawable/bg_apple_scrim_bottom"
+        android:layout_gravity="bottom" />
+
+    <!-- ═══════════ BARRA SUPERIOR ═══════════ -->
+    <LinearLayout
+        android:id="@+id/appleTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp">
+
+        <FrameLayout
+            android:id="@+id/btnAppleClose"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@drawable/bg_apple_glass"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ios_xmark"
+                app:tint="#FFFFFF" />
+        </FrameLayout>
+
+        <!-- Grupo PiP / Cast / Compartir -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:layout_marginStart="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_apple_glass_pill"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp">
+
+            <FrameLayout
+                android:id="@+id/btnApplePip"
+                android:layout_width="44dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_pip"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btnAppleCast"
+                android:layout_width="44dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_cast"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btnAppleShare"
+                android:layout_width="44dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_apple_share"
+                    app:tint="#FFFFFF" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <!-- Volumen (slider del telefono) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_apple_glass_pill"
+            android:paddingStart="14dp"
+            android:paddingEnd="10dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_apple_volume"
+                app:tint="#FFFFFF" />
+
+            <SeekBar
+                android:id="@+id/sbAppleVolume"
+                android:layout_width="130dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:max="15"
+                android:progressDrawable="@drawable/apple_scrubber"
+                android:thumb="@drawable/apple_thumb"
+                android:thumbOffset="5dp"
+                android:minHeight="4dp"
+                android:maxHeight="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ═══════════ CONTROLES CENTRALES ═══════════ -->
+    <LinearLayout
+        android:id="@+id/appleCenterRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <FrameLayout
+            android:id="@+id/btnAppleRew"
+            android:layout_width="66dp"
+            android:layout_height="66dp"
+            android:background="@drawable/bg_apple_glass"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_apple_back10" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="1dp"
+                android:text="10"
+                android:textColor="#FFFFFF"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:translationY="7dp" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/btnApplePlay"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="26dp"
+            android:layout_marginEnd="26dp"
+            android:background="@drawable/bg_apple_glass"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/imgApplePlayPause"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ios_pause" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/btnAppleFwd"
+            android:layout_width="66dp"
+            android:layout_height="66dp"
+            android:background="@drawable/bg_apple_glass"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_apple_fwd10" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="1dp"
+                android:text="10"
+                android:textColor="#FFFFFF"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:translationY="7dp" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Burbujas ±10s del doble-tap -->
+    <TextView
+        android:id="@+id/txtAppleBubbleL"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="56dp"
+        android:background="@drawable/bg_apple_glass_pill"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="8dp"
+        android:text="−10s"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:alpha="0"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/txtAppleBubbleR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="56dp"
+        android:background="@drawable/bg_apple_glass_pill"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="8dp"
+        android:text="+10s"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:alpha="0"
+        android:visibility="gone" />
+
+    <!-- ═══════════ BLOQUE INFERIOR ═══════════ -->
+    <LinearLayout
+        android:id="@+id/appleBottomBlock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="14dp">
+
+        <!-- Titulo (relleno por el BOT) + CC/Audio/Velocidad -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:orientation="vertical"
+                android:layout_marginEnd="190dp">
+
+                <TextView
+                    android:id="@+id/txtAppleSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#C9C9CE"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/txtAppleTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="21sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:shadowColor="#80000000"
+                    android:shadowDx="0"
+                    android:shadowDy="1"
+                    android:shadowRadius="4" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_gravity="end|center_vertical"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_apple_glass_pill"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp">
+
+                <FrameLayout
+                    android:id="@+id/btnAppleCC"
+                    android:layout_width="44dp"
+                    android:layout_height="40dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="21dp"
+                        android:layout_height="21dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_ios_captions"
+                        app:tint="#FFFFFF" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/btnAppleAudio"
+                    android:layout_width="44dp"
+                    android:layout_height="40dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="19dp"
+                        android:layout_height="19dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_apple_wave"
+                        app:tint="#FFFFFF" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/btnAppleSpeed"
+                    android:layout_width="44dp"
+                    android:layout_height="40dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:id="@+id/txtAppleSpeed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="1x"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Scrubber -->
+        <SeekBar
+            android:id="@+id/sbAppleProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:progressDrawable="@drawable/apple_scrubber"
+            android:thumb="@drawable/apple_thumb"
+            android:thumbOffset="5dp"
+            android:minHeight="4dp"
+            android:maxHeight="4dp"
+            android:max="1000" />
+
+        <!-- Tiempos -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <TextView
+                android:id="@+id/txtAppleTimeLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0:00"
+                android:textColor="#E6E6EA"
+                android:textSize="11.5sp"
+                android:textStyle="bold" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/txtAppleTimeRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-0:00"
+                android:textColor="#B9B9BF"
+                android:textSize="11.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Pastillas: Info + Continue Watching -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/btnAppleInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:gravity="center"
+                android:background="@drawable/bg_apple_glass_pill"
+                android:paddingHorizontal="22dp"
+                android:text="Info"
+                android:textColor="#FFFFFF"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnAppleResume"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginStart="10dp"
+                android:gravity="center"
+                android:background="@drawable/bg_apple_glass_pill"
+                android:paddingHorizontal="22dp"
+                android:text="Continue Watching"
+                android:textColor="#FFFFFF"
+                android:textSize="13.5sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

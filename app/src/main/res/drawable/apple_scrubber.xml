@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Barra de progreso Apple: pista translucida, buffer gris claro, progreso blanco -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <inset android:insetTop="11dp" android:insetBottom="11dp">
+            <shape android:shape="rectangle">
+                <corners android:radius="2dp" />
+                <solid android:color="#40FFFFFF" />
+            </shape>
+        </inset>
+    </item>
+    <item android:id="@android:id/secondaryProgress">
+        <inset android:insetTop="11dp" android:insetBottom="11dp">
+            <shape android:shape="rectangle">
+                <corners android:radius="2dp" />
+                <solid android:color="#80FFFFFF" />
+            </shape>
+        </inset>
+    </item>
+    <item android:id="@android:id/progress">
+        <inset android:insetTop="11dp" android:insetBottom="11dp">
+            <shape android:shape="rectangle">
+                <corners android:radius="2dp" />
+                <solid android:color="#FFFFFF" />
+            </shape>
+        </inset>
+    </item>
+</layer-list>

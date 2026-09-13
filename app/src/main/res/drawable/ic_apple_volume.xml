@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Altavoz con ondas (volumen) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M3.5,9.2 L7,9.2 L11.4,5.1 C11.9,4.6 12.7,5 12.7,5.7 L12.7,18.3 C12.7,19 11.9,19.4 11.4,18.9 L7,14.8 L3.5,14.8 C2.9,14.8 2.5,14.4 2.5,13.8 L2.5,10.2 C2.5,9.6 2.9,9.2 3.5,9.2 Z" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.7" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M15.8,9.2 C16.7,10.1 17.2,11 17.2,12 C17.2,13 16.7,13.9 15.8,14.8" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="1.7" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M18.3,6.7 C19.9,8.1 20.9,10 20.9,12 C20.9,14 19.9,15.9 18.3,17.3" />
+</vector>

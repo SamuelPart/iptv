@@ -62,6 +62,7 @@ class PlayerActivity : AppCompatActivity() {
     private var channelLogo: String? = null
     private var cineMedia: CineMedia? = null
     private var currentSpeed: Float = 1f
+    private lateinit var appleOverlay: ApplePlayerOverlay
     private var nightModeActive = false
     private var subtitleFilePath: String? = null
     private val failedSources = mutableSetOf<String>()
@@ -252,6 +253,10 @@ class PlayerActivity : AppCompatActivity() {
         } else {
             binding.btnSelectSource.visibility = View.GONE
         }
+
+        // ══════════ Skin Apple para VLC (enlaces directos y canales) ══════════
+        // El overlay nativo reemplaza TODOS los controles de la era anterior.
+        mountAppleSkin()
 
         // Initialize Double-Tap Gesture Detector for 10s skip (disabled for Live TV)
         val gestureDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
@@ -1270,9 +1275,126 @@ class PlayerActivity : AppCompatActivity() {
         if (isInPictureInPictureMode) {
             // Hide all controls so only the video layout is visible in PIP
             binding.layoutPlayerControls.visibility = View.GONE
+            try { appleOverlay.visibility = View.GONE } catch (_: Exception) {}
         } else {
-            // Restore visibility of controls
-            binding.layoutPlayerControls.visibility = View.VISIBLE
+            // Con la skin Apple los controles viejos NO vuelven
+            binding.layoutPlayerControls.visibility = View.GONE
+            try { appleOverlay.visibility = View.VISIBLE } catch (_: Exception) {}
+        }
+    }
+
+    // ═══════════════════ SKIN APPLE (VLC): overlay + delegado ═══════════════════
+
+    /** Monta el reproductor estilo Apple sobre libVLC. Los controles viejos
+     *  quedan ocultos: el usuario solo ve y toca el overlay. */
+    private fun mountAppleSkin() {
+        try {
+            binding.layoutPlayerControls.visibility = View.GONE
+            binding.btnSelectSource.visibility = View.GONE
+        } catch (_: Exception) {}
+
+        appleOverlay = ApplePlayerOverlay(this).apply {
+            delegate = appleVlcDelegate
+            val info = ApplePlayerOverlay.splitTitleInfo(channelName)
+            val sub = info.second.ifBlank {
+                if (isLiveTv) "Canal en vivo" else "Película · reproducción directa"
+            }
+            setTitleInfo(info.first, sub)
+        }
+        binding.root.addView(
+            appleOverlay,
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams(
+                androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_PARENT,
+                androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+    }
+
+    private val appleVlcDelegate = object : ApplePlayerOverlay.Delegate {
+
+        override fun snapshot(): ApplePlayerOverlay.Snapshot {
+            val p = mediaPlayer
+            val dur = p?.length ?: 0L
+            val pos = p?.time ?: 0L
+            return ApplePlayerOverlay.Snapshot(
+                playing = p?.isPlaying == true,
+                positionMs = pos,
+                durationMs = dur,
+                bufferedMs = dur,
+                speed = currentSpeed
+            )
+        }
+
+        override fun isLive(): Boolean = isLiveTv || (mediaPlayer?.length ?: 0L) <= 0L
+
+        override fun onPlayPause() {
+            binding.btnPlayPause.performClick()
+            appleOverlay.notifyPlayingStateChanged()
+        }
+
+        override fun onSeekBy(deltaSec: Int) {
+            val p = mediaPlayer ?: return
+            if (isLiveTv) return
+            val target = (p.time + deltaSec * 1000L).coerceIn(0L, if (p.length > 0) p.length else Long.MAX_VALUE)
+            try { p.time = target } catch (_: Exception) {}
+        }
+
+        override fun onSeekTo(positionMs: Long) {
+            try { mediaPlayer?.time = positionMs } catch (_: Exception) {}
+        }
+
+        override fun onSpeedPicked(speed: Float) {
+            currentSpeed = speed
+            try { mediaPlayer?.rate = speed } catch (_: Exception) {}
+        }
+
+        // Subtitulos: como antes, archivo .srt local via picker. Audio: nativo del stream.
+        override fun subtitleTrackCount(): Int = if (isLiveTv) 0 else 1
+        override fun audioTrackCount(): Int = 0
+
+        override fun onSubtitlesPicked(index: Int) {
+            if (index >= 0) subtitlePicker.launch("*/*")
+        }
+
+        override fun onClose() = returnToSmallScreen()
+
+        override fun onPip() = enterPipMode()
+
+        override fun onCast() = checkCastPermissionsAndScan()
+
+        override fun onShare() {
+            try {
+                val i = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, "$channelName\n${channelUrl ?: ""}")
+                }
+                startActivity(Intent.createChooser(i, "Compartir"))
+            } catch (_: Exception) {}
+        }
+
+        override fun onInfo() {
+            if (!allSources.isNullOrEmpty()) showSourceSelectorDialog()
+            else Toast.makeText(this@PlayerActivity, channelName, Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onContinueWatching() {
+            try {
+                val p = mediaPlayer
+                val url = channelUrl ?: return
+                ContinueWatchingManager.save(
+                    this@PlayerActivity,
+                    ContinueWatchingManager.ResumeEntry(
+                        url = url,
+                        title = channelName,
+                        isChannel = isLiveTv,
+                        channelLogo = channelLogo,
+                        savedAt = System.currentTimeMillis(),
+                        positionMs = p?.time ?: 0L,
+                        durationMs = p?.length ?: 0L
+                    )
+                )
+                Toast.makeText(this@PlayerActivity, "Guardado en Continue Watching ✓", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
         }
     }
 

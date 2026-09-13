@@ -14,7 +14,9 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import android.widget.FrameLayout
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -67,6 +69,63 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     private var currentUserAgent: String = ""
     private var pageBroken = false
     private var rescueTried = false
+
+    // ══════════ Skin Apple ══════════
+    private lateinit var appleOverlay: ApplePlayerOverlay
+    private val appleUiHandler = Handler(Looper.getMainLooper())
+    private var bridgeSnap: BridgeSnap? = null
+    private var appleRevealed = false
+    private var resumePendingMs = 0L
+    private var resumeDone = false
+    private var mediaTitle = ""
+    private var pageUrl = ""
+
+    /** Fotografia del <video> que manda el puente JS (cualquier frame). */
+    private data class BridgeSnap(
+        val t: Long, val d: Long, val b: Long,
+        val p: Boolean, val r: Float, val cc: Int, val at: Int
+    )
+
+    /** Puente JS -> nativo. addJavascriptInterface llega a TODOS los frames,
+     *  incluidos iframes cross-origin: desde ahi reportamos el estado. */
+    private inner class AppleBridge {
+        @JavascriptInterface
+        fun report(json: String?) {
+            if (json == null) return
+            try {
+                val o = org.json.JSONObject(json)
+                val snap = BridgeSnap(
+                    t = o.optLong("t", 0), d = o.optLong("d", 0), b = o.optLong("b", 0),
+                    p = o.optInt("p", 0) == 1, r = o.optDouble("r", 1.0).toFloat(),
+                    cc = o.optInt("cc", 0), at = o.optInt("at", 0)
+                )
+                appleUiHandler.post {
+                    bridgeSnap = snap
+                    if (!appleRevealed && snap.p) {
+                        appleRevealed = true
+                        isVideoRolling = true
+                        revealBootLayer()
+                        try { appleOverlay.showControls() } catch (_: Exception) {}
+                    }
+                    if (!resumeDone && resumePendingMs > 0 && snap.d > 0 && snap.t < 30_000) {
+                        resumeDone = true
+                        sendCmd("seekTo", resumePendingMs / 1000.0)
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    /** Orden del overlay nativo -> video del embed (reparte a los iframes). */
+    private fun sendCmd(cmd: String, arg: Double? = null) {
+        val a = if (arg != null) ",arg:$arg" else ""
+        try {
+            binding.webFramePlayer.evaluateJavascript(
+                "(function(){ if (window.__appleDispatch) window.__appleDispatch({cmd:'$cmd'$a}); })()",
+                null
+            )
+        } catch (_: Exception) {}
+    }
 
     companion object {
         // Hosts de iframe/embed conocidos: se usan para que el rescate
@@ -331,19 +390,137 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     """.trimIndent()
 
 
+    // ══════════ SKIN APPLE: puente BOT (native -> iframe) ══════════
+    // Se inyecta en TODOS los frames (el principal via evaluateJavascript y los
+    // iframes cruzados via reescritura del HTML en shouldInterceptRequest).
+    //  - Reporta estado del <video> (posicion, duracion, buffer, play, pistas)
+    //    a la app via window.AppleBridge.
+    //  - Recibe ordenes (play/pause/seek/rate/cc/audio) por postMessage desde
+    //    el frame principal (__appleDispatch), asi el overlay NATIVO manda
+    //    sobre el embed aunque el video viva en un iframe de otro dominio.
+    //  - Oculta los controles del reproductor del host y clava el video a
+    //    pantalla completa una vez arranca: el usuario solo ve nuestra UI.
+    private val APPLE_INJECT_JS = """
+        (function(){
+            if (window.__appleV3) { try { report_(); } catch(e0){} return; }
+            window.__appleV3 = 1;
+            var CSS = [
+                'video::-webkit-media-controls{display:none!important}',
+                'video::-webkit-media-controls-enclosure{display:none!important}',
+                'html.__applePlaying .vjs-control-bar,html.__applePlaying .vjs-big-play-button,' +
+                'html.__applePlaying .jw-controls,html.__applePlaying .jw-display-icon-container,' +
+                'html.__applePlaying .plyr__controls,html.__applePlaying .plyr__control--overlaid,' +
+                'html.__applePlaying .shaka-controls-button-panel,html.__applePlaying [class*=control-bar],' +
+                'html.__applePlaying [class*=watermark],html.__applePlaying [class*=logo-badge],' +
+                'html.__applePlaying [class*=countdown],html.__applePlaying [class*=skip],' +
+                'html.__applePlaying [class*=next]{display:none!important}',
+                'html.__applePlaying video{position:fixed!important;top:0!important;left:0!important;' +
+                'width:100vw!important;height:100vh!important;object-fit:contain!important;' +
+                'background:#000!important;z-index:2147483000!important}',
+                'html.__applePlaying body{overflow:hidden!important;background:#000!important}'
+            ].join('');
+            try {
+                var st = document.createElement('style');
+                st.id = '__appleSkinCss';
+                st.textContent = CSS;
+                (document.head || document.documentElement).appendChild(st);
+            } catch (e1) {}
+            function hookIn(doc) {
+                try {
+                    var vs = doc.querySelectorAll('video');
+                    for (var i = 0; i < vs.length; i++) {
+                        (function(v){
+                            if (v.__appleHooked) return;
+                            v.__appleHooked = 1;
+                            var evs = ['timeupdate','progress','play','playing','pause','ended','ratechange','loadedmetadata','volumechange'];
+                            for (var j = 0; j < evs.length; j++) { try { v.addEventListener(evs[j], report_); } catch(e2){} }
+                        })(vs[i]);
+                    }
+                } catch (e3) {}
+            }
+            function pick() {
+                hookIn(document);
+                var vs = document.querySelectorAll('video');
+                var best = null;
+                for (var i = 0; i < vs.length; i++) {
+                    if (!vs[i].paused || vs[i].currentTime > 0) best = vs[i];
+                }
+                if (!best && vs.length) best = vs[0];
+                return best;
+            }
+            function report_() {
+                try {
+                    var v = pick();
+                    if (!v) return;
+                    if (window.__appleCls !== 1 && !v.paused) {
+                        window.__appleCls = 1;
+                        try { (document.documentElement || document.body).className += ' __applePlaying'; } catch(e4){}
+                    }
+                    var dur = 0; try { dur = (isFinite(v.duration) && v.duration > 0) ? Math.round(v.duration * 1000) : 0; } catch(e5){}
+                    var buf = 0; try { if (v.buffered && v.buffered.length) buf = Math.round(v.buffered.end(v.buffered.length - 1) * 1000); } catch(e6){}
+                    var cc = 0, at = 0;
+                    try { if (v.textTracks) cc = v.textTracks.length; } catch(e7){}
+                    try { if (window.hls && window.hls.audioTracks && window.hls.audioTracks.length) at = window.hls.audioTracks.length; } catch(e8){}
+                    if (window.AppleBridge && AppleBridge.report) {
+                        AppleBridge.report(JSON.stringify({
+                            t: Math.round((v.currentTime || 0) * 1000),
+                            d: dur, b: buf, p: v.paused ? 0 : 1,
+                            r: v.playbackRate || 1, cc: cc, at: at
+                        }));
+                    }
+                } catch (e9) {}
+            }
+            window.__appleReport = report_;
+            setInterval(report_, 500);
+            function apply(c) {
+                try {
+                    var v = pick(); if (!v) return;
+                    if (c.cmd === 'play') {
+                        v.muted = false;
+                        var p = v.play();
+                        if (p && p.catch) p.catch(function(){ v.muted = true; try { v.play().catch(function(){}); } catch(e10){} });
+                    }
+                    else if (c.cmd === 'pause') { v.pause(); }
+                    else if (c.cmd === 'seekBy') { v.currentTime = Math.max(0, (v.currentTime || 0) + (c.arg || 0)); }
+                    else if (c.cmd === 'seekTo') { v.currentTime = (c.arg || 0); }
+                    else if (c.cmd === 'rate') { try { v.playbackRate = c.arg; } catch(e11){} }
+                    else if (c.cmd === 'ccSet') {
+                        try {
+                            var ts = v.textTracks || [];
+                            for (var i = 0; i < ts.length; i++) { ts[i].mode = (i === c.arg) ? 'showing' : 'disabled'; }
+                        } catch(e12){}
+                    }
+                    else if (c.cmd === 'audioSet') { try { if (window.hls) window.hls.audioTrack = c.arg; } catch(e13){} }
+                    setTimeout(report_, 150);
+                } catch (e14) {}
+            }
+            window.addEventListener('message', function(ev){
+                try { var d = ev.data; if (d && d.__apple === 1) apply(d); } catch(e15){}
+            });
+            if (window.top === window) {
+                window.__appleDispatch = function(c){
+                    try {
+                        c.__apple = 1;
+                        var fr = document.querySelectorAll('iframe');
+                        for (var i = 0; i < fr.length; i++) { try { fr[i].contentWindow.postMessage(c, '*'); } catch(e16){} }
+                    } catch(e17){}
+                    apply(c);
+                };
+            }
+        })();
+    """.trimIndent()
+
     private val botRunnable = object : Runnable {
         override fun run() {
             if (isFinishing || isDestroyed) return
             botTicks++
             try {
                 if (isVideoRolling) {
-                    // CORRIENDO: limpia anuncios y suelta la pagina para que el
-                    // usuario pueda tocar los controles del reproductor/iframe
-                    // (play/pausa, barra, calidad, fullscreen...). Ya no se
-                    // re-clava el video encima de todo.
+                    // CORRIENDO: el usuario ya no toca el iframe — el overlay
+                    // Apple manda. Solo mantenemos el ADKILLER y el puente vivo.
                     binding.webFramePlayer.evaluateJavascript(AD_OVERLAY_JS, null)
                     binding.webFramePlayer.evaluateJavascript(BLACK_BG_JS, null)
-                    binding.webFramePlayer.evaluateJavascript(INTERACTIVE_JS, null)
+                    binding.webFramePlayer.evaluateJavascript(APPLE_INJECT_JS, null)
                     revealBootLayer()
                 } else {
                     binding.webFramePlayer.evaluateJavascript(BOT_JS) { res ->
@@ -423,6 +600,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         val pageUrl = intent.getStringExtra("channelUrl") ?: ""
         originalHost = Uri.parse(pageUrl).host?.lowercase() ?: ""
         binding.txtWebPlayerTitle.text = title
+        mediaTitle = title
 
         // Servidores de la ficha (mismos enlaces de la película, agrupados en el catálogo)
         catalogSources = intent.getStringArrayListExtra("allSources")?.distinct() ?: emptyList()
@@ -439,6 +617,32 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             showServersDialog()
         }
 
+        // ══════════ Skin Apple: el overlay nativo MANDA ══════════
+        // Los botones sueltos de la era anterior se retiran: todo vive en el
+        // overlay de vidrio (X, PiP, cast, compartir, volumen, -10/play/+10,
+        // titulo, CC/audio/velocidad, barra, Info y Continue Watching).
+        binding.btnWebPlayerBack.visibility = View.GONE
+        binding.txtWebPlayerTitle.visibility = View.GONE
+        binding.btnWebCast.visibility = View.GONE
+        binding.btnWebServers.visibility = View.GONE
+
+        // Reanudar desde Continue Watching si hay posicion guardada
+        resumePendingMs = ContinueWatchingManager.getl {
+                it.url == pageUrl && !it.isChannel &&
+                    it.positionMs > 15_000 &&
+                    (it.durationMs <= 0 || it.positionMs < it.durationMs - 30_000)
+            }?.positionMs ?: 0L
+
+        appleOverlay = ApplePlayerOverlay(this).apply {
+            delegate = appleDelegate
+            val info = ApplePlayerOverlay.splitTitleInfo(mediaTitle)
+            setTitleInfo(info.first, info.second.ifBlank { Uri.parse(pageUrl).host ?: "" })
+        }
+        binding.root.addView(
+            appleOverlay,
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        )
+
         val web = binding.webFramePlayer
         web.setBackgroundColor(0xFF000000.toInt())
         val ws = web.settings
@@ -454,6 +658,10 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                 "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         currentUserAgent = ws.userAgentString
+
+        // Puente del skin Apple: disponible en TODOS los frames (principal e
+        // iframes cruzados) para que el <video> reporte su estado.
+        web.addJavascriptInterface(AppleBridge(), "AppleBridge")
 
         val emptyResponse = WebResourceResponse(
             "text/plain", "utf-8", ByteArrayInputStream(ByteArray(0))
@@ -551,6 +759,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         botHandler.removeCallbacks(botRunnable)
+        saveContinueWatching()
         binding.webFramePlayer.onPause()
     }
 
@@ -793,7 +1002,160 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         } else if (binding.webFramePlayer.canGoBack()) {
             binding.webFramePlayer.goBack()
         } else {
+            saveContinueWatching()
             super.onBackPressed()
+        }
+    }
+
+    // ═══════════════════ SKIN APPLE: delegado y auxiliares ═══════════════════
+
+    private val appleDelegate = object : ApplePlayerOverlay.Delegate {
+
+        override fun snapshot(): ApplePlayerOverlay.Snapshot {
+            val s = bridgeSnap
+            return if (s == null)
+                ApplePlayerOverlay.Snapshot(playing = isVideoRolling, positionMs = 0, durationMs = 0)
+            else
+                ApplePlayerOverlay.Snapshot(s.p, s.t, s.d, s.b, s.r)
+        }
+
+        override fun isLive(): Boolean = bridgeSnap?.let { it.d <= 0 } ?: true
+
+        override fun onPlayPause() {
+            if (bridgeSnap?.p != false) sendCmd("pause") else sendCmd("play")
+            appleOverlay.notifyPlayingStateChanged()
+        }
+
+        override fun onSeekBy(deltaSec: Int) = sendCmd("seekBy", deltaSec.toDouble())
+
+        override fun onSeekTo(positionMs: Long) = sendCmd("seekTo", positionMs / 1000.0)
+
+        override fun onSpeedPicked(speed: Float) = sendCmd("rate", speed.toDouble())
+
+        override fun onSubtitlesPicked(index: Int) = sendCmd("ccSet", index.toDouble())
+
+        override fun onAudioPicked(index: Int) = sendCmd("audioSet", index.toDouble())
+
+        override fun subtitleTrackCount(): Int = bridgeSnap?.cc ?: 0
+
+        override fun audioTrackCount(): Int = bridgeSnap?.at ?: 0
+
+        override fun onClose() {
+            saveContinueWatching()
+            finish()
+        }
+
+        override fun onPip() = enterWebPip()
+
+        override fun onCast() = checkCastPermissionsAndAsk()
+
+        override fun onShare() {
+            try {
+                val i = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, mediaTitle)
+                    putExtra(Intent.EXTRA_TEXT, "$mediaTitle\n$pageUrl")
+                }
+                startActivity(Intent.createChooser(i, "Compartir"))
+            } catch (_: Exception) {}
+        }
+
+        override fun onInfo() {
+            val host = Uri.parse(currentPageUrl).host ?: originalHost
+            val msg = buildString {
+                append("Servidor: $host")
+                if (catalogSources.size > 1) append("\n${catalogSources.size} servidores disponibles")
+            }
+            AlertDialog.Builder(this@WebVideoPlayerActivity, R.style.Theme_AppCompat_Dialog)
+                .setTitle(mediaTitle)
+                .setMessage(msg)
+                .setPositiveButton("Cerrar", null)
+                .setNegativeButton("Cambiar servidor") { _, _ ->
+                    if (catalogSources.size > 1) showServersDialog()
+                }
+                .show()
+        }
+
+        override fun onContinueWatching() = saveContinueWatching(explicit = true)
+    }
+
+    /** Guarda la posicion actual para Continue Watching. */
+    private fun saveContinueWatching(explicit: Boolean = false) {
+        try {
+            val s = bridgeSnap
+            if (s == null || s.t <= 15_000) {
+                if (explicit) {
+                    Toast.makeText(this, "Todavía no hay avance que guardar", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+            ContinueWatchingManager.save(
+                this,
+                ContinueWatchingManager.ResumeEntry(
+                    url = pageUrl,
+                    title = mediaTitle,
+                    isChannel = false,
+                    savedAt = System.currentTimeMillis(),
+                    positionMs = s.t,
+                    durationMs = s.d
+                )
+            )
+            if (explicit) {
+                Toast.makeText(this, "Posición guardada ✓", Toast.LENGTH_SHORT).show()
+            }
+        } catch (_: Exception) {}
+    }
+
+    /** PiP nativo (el video del WebView sigue corriendo dentro). */
+    private fun enterWebPip() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                val params = android.app.PictureInPictureParams.Builder()
+                    .setAspectRatio(android.util.Rational(16, 9))
+                    .build()
+                enterPictureInPictureMode(params)
+            } catch (_: Exception) {}
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (appleRevealed && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) enterWebPip()
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        try {
+            appleOverlay.visibility = if (isInPictureInPictureMode) View.GONE else View.VISIBLE
+        } catch (_: Exception) {}
+    }
+
+    /** Inyecta el puente justo despues de <head> (o al inicio). */
+    private fun injectBridgeIntoHtml(html: String): String {
+        val script = "<script>$APPLE_INJECT_JS</script>"
+        return when {
+            html.contains("<head", ignoreCase = true) -> {
+                val idx = html.indexOf(">", html.indexOf("<head", ignoreCase = true)) + 1
+                if (idx > 0) html.substring(0, idx) + script + html.substring(idx) else script + html
+            }
+            html.contains("<body", ignoreCase = true) -> {
+                val idx = html.indexOf("<body", ignoreCase = true)
+                html.substring(0, idx) + script + html.substring(idx)
+            }
+            else -> script + html
+        }
+    }
+
+    private fun charsetOf(enc: String?, contentType: String): Charset? {
+        val fromCt = contentType.substringAfter("charset=", "").substringBefore(";").trim('"', ' ').uppercase()
+        return try {
+            when {
+                fromCt.isNotBlank() -> Charset.forName(fromCt)
+                !enc.isNullOrBlank() -> Charset.forName(enc.uppercase())
+                else -> null
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 }
