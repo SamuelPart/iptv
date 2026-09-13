@@ -30,7 +30,10 @@ object CineRepository {
     // la única que se puede editar desde el asistente. Tu rama queda de
     // respaldo y main al final. Para que tus cambios se vean sin reinstalar,
     // edita el cine_catalog.m3u de ESTA rama (o pídemelo).
+    // (10/09/2026) Todo el trabajo se centraliza en arena/01a09a92-iptv:
+    // el bot sincroniza PRIMERO desde esa rama; las viejas quedan de respaldo.
     private val CATALOG_URLS = listOf(
+        "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a09a92-iptv/app/src/main/res/raw/cine_catalog.m3u",
         "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a06729-iptv/app/src/main/res/raw/cine_catalog.m3u",
         "https://raw.githubusercontent.com/SamuelPart/iptv/arena/01a04133-iptv/app/src/main/res/raw/cine_catalog.m3u",
         "https://raw.githubusercontent.com/SamuelPart/iptv/main/app/src/main/res/raw/cine_catalog.m3u"
