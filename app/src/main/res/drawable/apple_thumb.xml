@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Knob blanco pequeño del scrubber -->
+<!-- Knob blanco visible (14dp) con anillo oscuro para contrastar sobre claro -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
     <solid android:color="#FFFFFF" />
-    <size android:width="10dp" android:height="10dp" />
+    <stroke android:width="2dp" android:color="#33000000" />
+    <size android:width="14dp" android:height="14dp" />
 </shape>

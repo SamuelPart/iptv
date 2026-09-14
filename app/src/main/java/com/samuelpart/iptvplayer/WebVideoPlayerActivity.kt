@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.MotionEvent
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -569,9 +570,11 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 triggerRescue()
                 return
             }
-            // Si el BOT no pudo confirmar el play (video en iframe cross-origin),
-            // destapa el reproductor igual para que se vea y el usuario controle:
-            // el BOT sigue limpiando anuncios e intentando play() por lo bajo.
+            // AUTO-TOQUE: si a los ~9s el video no arranco solo, el BOT da un
+            // toque fisico al centro del reproductor oculto (gates de play).
+            if (!isVideoRolling && botTicks == 10) botPlayFallback()
+            // Si aun asi no pudo confirmar el play (iframe cross-origin),
+            // destapa el reproductor: el overlay Apple ya manda sobre el video.
             if (!isVideoRolling && botTicks >= 16) {
                 revealBootLayer()
             }
@@ -996,6 +999,41 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
     // ═══════════════════ SKIN APPLE: delegado y auxiliares ═══════════════════
 
+    /** Pone un toque FISICO (MotionEvent) sobre el WebView oculto, en las
+     *  coordenadas indicadas. El iframe lo recibe como si fuera el dedo del
+     *  usuario: asi el BOT pulsa el play del embed cuando el puente JS no
+     *  alcanza al <video> (iframes cruzados que bloquean la inyeccion). */
+    private fun injectTap(x: Float, y: Float) {
+        try {
+            val v = binding.webFramePlayer
+            val now = android.os.SystemClock.uptimeMillis()
+            val down = MotionEvent.obtain(now, now, MotionEvent.ACTION_DOWN, x, y, 0)
+            v.dispatchTouchEvent(down)
+            down.recycle()
+            val up = MotionEvent.obtain(now, now + 80, MotionEvent.ACTION_UP, x, y, 0)
+            v.dispatchTouchEvent(up)
+            up.recycle()
+        } catch (_: Exception) {}
+    }
+
+    /** Plan B de PLAY: el BOT toca POR el usuario en el reproductor oculto.
+     *  1) re-ejecuta los clicks automaticos conocidos (BOT_JS)
+     *  2) toque fisico al centro (play grande de casi todos los embeds)
+     *  3) segundo toque un poco mas abajo (barra/poster) por si el primero
+     *     cayo en zona muerta. */
+    private fun botPlayFallback() {
+        try {
+            binding.webFramePlayer.evaluateJavascript(BOT_JS, null)
+            val v = binding.webFramePlayer
+            if (v.width > 0 && v.height > 0) {
+                injectTap(v.width * 0.5f, v.height * 0.5f)
+                appleUiHandler.postDelayed({
+                    if (!isFinishing && !isDestroyed) injectTap(v.width * 0.5f, v.height * 0.62f)
+                }, 650)
+            }
+        } catch (_: Exception) {}
+    }
+
     private val appleDelegate = object : ApplePlayerOverlay.Delegate {
 
         override fun snapshot(): ApplePlayerOverlay.Snapshot {
@@ -1009,13 +1047,26 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         override fun isLive(): Boolean = bridgeSnap?.let { it.d <= 0 } ?: true
 
         override fun onPlayPause() {
-            if (bridgeSnap?.p != false) sendCmd("pause") else sendCmd("play")
+            val s = bridgeSnap
+            if (s == null) {
+                // El puente todavia no ve el <video>: el BOT toca por el usuario.
+                botPlayFallback()
+                sendCmd("play") // por si el puente aparece a medio camino
+            } else if (s.p) {
+                sendCmd("pause")
+            } else {
+                sendCmd("play")
+            }
             appleOverlay.notifyPlayingStateChanged()
         }
 
-        override fun onSeekBy(deltaSec: Int) = sendCmd("seekBy", deltaSec.toDouble())
+        override fun onSeekBy(deltaSec: Int) {
+            if (bridgeSnap != null) sendCmd("seekBy", deltaSec.toDouble())
+        }
 
-        override fun onSeekTo(positionMs: Long) = sendCmd("seekTo", positionMs / 1000.0)
+        override fun onSeekTo(positionMs: Long) {
+            if (bridgeSnap != null) sendCmd("seekTo", positionMs / 1000.0)
+        }
 
         override fun onSpeedPicked(speed: Float) = sendCmd("rate", speed.toDouble())
 

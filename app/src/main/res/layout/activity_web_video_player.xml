@@ -45,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="88dp"
-            android:text="Reproductor Apple · v5"
+            android:text="Reproductor Apple · v6"
             android:textColor="#8A8A93"
             android:textSize="12.5sp"
             android:textStyle="bold" />

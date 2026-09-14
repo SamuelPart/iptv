@@ -138,9 +138,9 @@
                 android:max="15"
                 android:progressDrawable="@drawable/apple_scrubber"
                 android:thumb="@drawable/apple_thumb"
-                android:thumbOffset="5dp"
-                android:minHeight="4dp"
-                android:maxHeight="4dp" />
+                android:thumbOffset="7dp"
+                android:minHeight="6dp"
+                android:maxHeight="6dp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -373,9 +373,9 @@
             android:layout_marginTop="10dp"
             android:progressDrawable="@drawable/apple_scrubber"
             android:thumb="@drawable/apple_thumb"
-            android:thumbOffset="5dp"
-            android:minHeight="4dp"
-            android:maxHeight="4dp"
+            android:thumbOffset="7dp"
+            android:minHeight="6dp"
+            android:maxHeight="6dp"
             android:max="1000" />
 
         <!-- Tiempos -->
