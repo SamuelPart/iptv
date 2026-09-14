@@ -37,6 +37,7 @@ import android.widget.Toast
 import kotlinx.coroutines.launch
 import com.samuelpart.iptvplayer.databinding.ActivityWebVideoPlayerBinding
 import java.io.ByteArrayInputStream
+import java.nio.charset.Charset
 
 /**
  * Reproductor BOT: carga la página iframe del host y JUEGA SOLO —
