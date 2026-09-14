@@ -42,12 +42,12 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Left Double Tap Indicator Overlay -->
-    <ImageView android:id="@+id/imgDoubleTapLeft" android:layout_width="72dp" android:layout_height="72dp" android:src="@drawable/ic_ten_seconds_skip" android:rotation="180" android:padding="16dp" android:visibility="gone" android:elevation="20dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toStartOf="@id/layoutCenterControls" app:layout_constraintTop_toTopOf="parent" app:tint="#FFFFFF"/>
+    <ImageView android:id="@+id/imgDoubleTapLeft" android:layout_width="72dp" android:layout_height="72dp" android:src="@drawable/ic_ten_seconds_skip" android:rotation="180" android:padding="16dp" android:visibility="gone" android:elevation="20dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" app:tint="#FFFFFF"/>
 
     <!-- Gesture indicator: volumen / brillo al deslizar -->
     <TextView android:id="@+id/txtGestureIndicator" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="84dp" android:background="@drawable/bg_player_dock" android:elevation="30dp" android:paddingStart="16dp" android:paddingEnd="16dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:text="🔊 60%" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:visibility="gone" tools:visibility="visible" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
 
     <!-- Right Double Tap Indicator Overlay -->
-    <ImageView android:id="@+id/imgDoubleTapRight" android:layout_width="72dp" android:layout_height="72dp" android:src="@drawable/ic_ten_seconds_skip" android:padding="16dp" android:visibility="gone" android:elevation="20dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@id/layoutCenterControls" app:layout_constraintTop_toTopOf="parent" app:tint="#FFFFFF"/>
+    <ImageView android:id="@+id/imgDoubleTapRight" android:layout_width="72dp" android:layout_height="72dp" android:src="@drawable/ic_ten_seconds_skip" android:padding="16dp" android:visibility="gone" android:elevation="20dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" app:tint="#FFFFFF"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
