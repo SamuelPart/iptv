@@ -1,6 +1,6 @@
 package com.samuelpart.iptvplayer
 
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.content.Context
 import android.media.AudioManager
 import android.util.AttributeSet
@@ -151,18 +151,18 @@ class ApplePlayerOverlay @JvmOverloads constructor(
             btnCC, btnAudio, btnSpeed
         ).forEach { it.springPress() }
 
-        findViewById(R.id.btnAppleClose).setOnClickListener { delegate?.onClose() }
-        findViewById(R.id.btnApplePip).setOnClickListener { delegate?.onPip() }
-        findViewById(R.id.btnAppleCast).setOnClickListener { delegate?.onCast() }
-        findViewById(R.id.btnAppleShare).setOnClickListener { delegate?.onShare() }
-        findViewById(R.id.btnAppleInfo).setOnClickListener { showControls(); delegate?.onInfo() }
-        findViewById(R.id.btnAppleResume).setOnClickListener { showControls(); delegate?.onContinueWatching() }
+        findViewById<View>(R.id.btnAppleClose).setOnClickListener { delegate?.onClose() }
+        findViewById<View>(R.id.btnApplePip).setOnClickListener { delegate?.onPip() }
+        findViewById<View>(R.id.btnAppleCast).setOnClickListener { delegate?.onCast() }
+        findViewById<View>(R.id.btnAppleShare).setOnClickListener { delegate?.onShare() }
+        findViewById<View>(R.id.btnAppleInfo).setOnClickListener { showControls(); delegate?.onInfo() }
+        findViewById<View>(R.id.btnAppleResume).setOnClickListener { showControls(); delegate?.onContinueWatching() }
         btnCC.setOnClickListener { showControls(); showSubtitlesMenu() }
         btnAudio.setOnClickListener { showControls(); showAudioMenu() }
         btnSpeed.setOnClickListener { showControls(); showSpeedMenu() }
         btnRew.setOnClickListener { delegate?.onSeekBy(-10); flashBubble(false) }
         btnFwd.setOnClickListener { delegate?.onSeekBy(10); flashBubble(true) }
-        findViewById(R.id.btnApplePlay).setOnClickListener { delegate?.onPlayPause() }
+        findViewById<View>(R.id.btnApplePlay).setOnClickListener { delegate?.onPlayPause() }
 
         setupVolumeBar()
         setupProgressScrubber()
@@ -397,7 +397,7 @@ class ApplePlayerOverlay @JvmOverloads constructor(
     private fun showSpeedMenu() {
         val labels = SPEEDS.map { if (it == 1f) "Normal (1x)" else "${formatSpeed(it)}x" }.toTypedArray()
         val checked = SPEEDS.indices.minByOrNull { kotlin.math.abs(SPEEDS[it] - lastSpeed) } ?: 2
-        AlertDialog.Builder(context, R.style.Theme_AppCompat_Dialog).apply {
+        AlertDialog.Builder(context, androidx.appcompat.R.style.Theme_AppCompat_Dialog).apply {
             title = "Velocidad"
             setSingleChoiceItems(labels, checked) { dlg, which ->
                 delegate?.onSpeedPicked(SPEEDS[which])
@@ -414,7 +414,7 @@ class ApplePlayerOverlay @JvmOverloads constructor(
             return
         }
         val labels = (listOf("Desactivados") + (1..n).map { "Pista $it" }).toTypedArray()
-        AlertDialog.Builder(context, R.style.Theme_AppCompat_Dialog).apply {
+        AlertDialog.Builder(context, androidx.appcompat.R.style.Theme_AppCompat_Dialog).apply {
             title = "Subtítulos"
             setSingleChoiceItems(labels, -1) { dlg, which ->
                 delegate?.onSubtitlesPicked(which - 1) // -1 = apagar
@@ -431,7 +431,7 @@ class ApplePlayerOverlay @JvmOverloads constructor(
             return
         }
         val labels = (1..n).map { "Pista de audio $it" }.toTypedArray()
-        AlertDialog.Builder(context, R.style.Theme_AppCompat_Dialog).apply {
+        AlertDialog.Builder(context, androidx.appcompat.R.style.Theme_AppCompat_Dialog).apply {
             title = "Audio"
             setSingleChoiceItems(labels, -1) { dlg, which ->
                 delegate?.onAudioPicked(which)

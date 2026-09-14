@@ -733,8 +733,6 @@ class PlayerActivity : AppCompatActivity() {
     private fun releasePlayer() {
         timelineJob?.cancel()
         timelineJob = null
-        hideControlsJob?.cancel()
-        hideControlsJob = null
         
         mediaPlayer?.let {
             val currentMs = it.time

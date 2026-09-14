@@ -611,7 +611,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         // -10/play/+10, titulo, CC/audio/velocidad, barra, Info y Continue).
 
         // Reanudar desde Continue Watching si hay posicion guardada
-        resumePendingMs = ContinueWatchingManager.getl {
+        resumePendingMs = ContinueWatchingManager.getAll(this)
+            .firstOrNull {
                 it.url == pageUrl && !it.isChannel &&
                     it.positionMs > 15_000 &&
                     (it.durationMs <= 0 || it.positionMs < it.durationMs - 30_000)
@@ -1052,7 +1053,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 append("Servidor: $host")
                 if (catalogSources.size > 1) append("\n${catalogSources.size} servidores disponibles")
             }
-            AlertDialog.Builder(this@WebVideoPlayerActivity, R.style.Theme_AppCompat_Dialog)
+            AlertDialog.Builder(this@WebVideoPlayerActivity, androidx.appcompat.R.style.Theme_AppCompat_Dialog)
                 .setTitle(mediaTitle)
                 .setMessage(msg)
                 .setPositiveButton("Cerrar", null)
