@@ -398,7 +398,7 @@ class ApplePlayerOverlay @JvmOverloads constructor(
         val labels = SPEEDS.map { if (it == 1f) "Normal (1x)" else "${formatSpeed(it)}x" }.toTypedArray()
         val checked = SPEEDS.indices.minByOrNull { kotlin.math.abs(SPEEDS[it] - lastSpeed) } ?: 2
         AlertDialog.Builder(context, androidx.appcompat.R.style.Theme_AppCompat_Dialog).apply {
-            title = "Velocidad"
+            setTitle("Velocidad")
             setSingleChoiceItems(labels, checked) { dlg, which ->
                 delegate?.onSpeedPicked(SPEEDS[which])
                 dlg.dismiss()
@@ -415,7 +415,7 @@ class ApplePlayerOverlay @JvmOverloads constructor(
         }
         val labels = (listOf("Desactivados") + (1..n).map { "Pista $it" }).toTypedArray()
         AlertDialog.Builder(context, androidx.appcompat.R.style.Theme_AppCompat_Dialog).apply {
-            title = "Subtítulos"
+            setTitle("Subtítulos")
             setSingleChoiceItems(labels, -1) { dlg, which ->
                 delegate?.onSubtitlesPicked(which - 1) // -1 = apagar
                 dlg.dismiss()
@@ -432,7 +432,7 @@ class ApplePlayerOverlay @JvmOverloads constructor(
         }
         val labels = (1..n).map { "Pista de audio $it" }.toTypedArray()
         AlertDialog.Builder(context, androidx.appcompat.R.style.Theme_AppCompat_Dialog).apply {
-            title = "Audio"
+            setTitle("Audio")
             setSingleChoiceItems(labels, -1) { dlg, which ->
                 delegate?.onAudioPicked(which)
                 dlg.dismiss()
