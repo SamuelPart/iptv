@@ -63,7 +63,6 @@ class PlayerActivity : AppCompatActivity() {
     private var cineMedia: CineMedia? = null
     private var currentSpeed: Float = 1f
     private lateinit var appleOverlay: ApplePlayerOverlay
-    private var nightModeActive = false
     private var subtitleFilePath: String? = null
     private val failedSources = mutableSetOf<String>()
     private var volumeGestureAccum = 0f
@@ -188,74 +187,9 @@ class PlayerActivity : AppCompatActivity() {
             return
         }
 
-        binding.txtPlayingName.text = channelName
-        
-        if (isLiveTv) {
-            // Hide rewind/forward and timeline for TV channels as requested
-            binding.btnRewind.visibility = View.GONE
-            binding.btnForward.visibility = View.GONE
-            binding.layoutBottomTimeline.visibility = View.GONE
-            // LIVE look: red pulsing badge in the floating header pill
-            binding.txtLiveBadge.visibility = View.VISIBLE
-            android.animation.ObjectAnimator.ofFloat(binding.txtLiveBadge, "alpha", 0.35f).apply {
-                duration = 850
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                repeatMode = android.animation.ValueAnimator.REVERSE
-                start()
-            }
-        }
-        
-        // iOS spring touch on the player controls
-        binding.btnPlayPause.springPress()
-        binding.btnRewind.springPress()
-        binding.btnForward.springPress()
-        binding.btnBack.springPress()
-        binding.btnPip.springPress()
-        binding.btnShareTv.springPress()
-
-        // Speed + subtitles solo para contenido bajo demanda (no live TV)
-        if (isLiveTv) {
-            binding.btnPlaybackSpeed.visibility = View.GONE
-            binding.btnSubtitles.visibility = View.GONE
-        } else {
-            binding.btnPlaybackSpeed.visibility = View.VISIBLE
-            binding.btnSubtitles.visibility = View.VISIBLE
-        }
-        binding.btnPlaybackSpeed.setOnClickListener { cyclePlaybackSpeed() }
-        binding.btnSubtitles.setOnClickListener { subtitlePicker.launch("*/*") }
-        binding.btnNightMode.setOnClickListener { toggleNightMode() }
-        binding.btnNightMode.springPress()
-        binding.btnPlaybackSpeed.springPress()
-        binding.btnSubtitles.springPress()
-        applyAccentColor()
-
-        // Clicking back button should close player and return to preceding screen (inline player) with exact time!
-        binding.btnBack.setOnClickListener {
-            returnToSmallScreen()
-        }
-
-        // Cast / Share to TV button click listener (Checks permissions first!)
-        binding.btnShareTv.setOnClickListener {
-            checkCastPermissionsAndScan()
-        }
-
-        // PiP / Floating Window button click listener
-        binding.btnPip.setOnClickListener {
-            enterPipMode()
-        }
-
-        // Initialize source selector button visibility based on availability of options
-        if (!allSources.isNullOrEmpty()) {
-            binding.btnSelectSource.visibility = View.VISIBLE
-            binding.btnSelectSource.setOnClickListener {
-                showSourceSelectorDialog()
-            }
-        } else {
-            binding.btnSelectSource.visibility = View.GONE
-        }
-
         // ══════════ Skin Apple para VLC (enlaces directos y canales) ══════════
-        // El overlay nativo reemplaza TODOS los controles de la era anterior.
+        // UNICA interfaz: el overlay de vidrio estilo Apple TV. El diseño de la
+        // era anterior fue eliminado por completo (lienzo limpio).
         mountAppleSkin()
 
         // Initialize Double-Tap Gesture Detector for 10s skip (disabled for Live TV)
@@ -288,14 +222,7 @@ class PlayerActivity : AppCompatActivity() {
             }
 
             override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean {
-                val isVisible = binding.layoutPlayerControls.visibility == View.VISIBLE
-                if (isVisible) {
-                    binding.layoutPlayerControls.visibility = View.GONE
-                    hideSystemUI()
-                } else {
-                    binding.layoutPlayerControls.visibility = View.VISIBLE
-                    startAutoHideControlsTimer()
-                }
+                appleOverlay.showControls()
                 return true
             }
 
@@ -354,49 +281,6 @@ class PlayerActivity : AppCompatActivity() {
             stopCastingAndRestoreLocalPlay()
         }
 
-        // Local Play/Pause button click listener
-        binding.btnPlayPause.setOnClickListener {
-            togglePlayPauseInternal()
-        }
-
-        // Rewind and Forward 10s button listeners
-        binding.btnRewind.setOnClickListener {
-            mediaPlayer?.let {
-                val target = (it.time - 10000).coerceAtLeast(0)
-                it.time = target
-                Toast.makeText(this, "-10s", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        binding.btnForward.setOnClickListener {
-            mediaPlayer?.let {
-                val total = it.length
-                val target = (it.time + 10000)
-                if (total > 0) {
-                    it.time = target.coerceAtMost(total)
-                } else {
-                    it.time = target
-                }
-                Toast.makeText(this, "+10s", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // Seekbar progress user tracking
-        binding.vlcSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    mediaPlayer?.let {
-                        val totalMs = it.length
-                        if (totalMs > 0) {
-                            val seekTarget = (progress * totalMs) / 100
-                            it.time = seekTarget
-                        }
-                    }
-                }
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
 
         // Safely initialize Google Cast Context
         try {
@@ -410,7 +294,6 @@ class PlayerActivity : AppCompatActivity() {
         mediaRouter = MediaRouter.getInstance(this)
 
         initializePlayer()
-        startAutoHideControlsTimer()
     }
 
     private fun initializePlayer() {
@@ -476,7 +359,7 @@ class PlayerActivity : AppCompatActivity() {
                         }
                         MediaPlayer.Event.Playing -> {
                             binding.playerProgress.visibility = View.GONE
-                            updatePlayPauseButtonIcon(true)
+                            appleOverlay.notifyPlayingStateChanged()
                             
                             if (pendingSeekPosition > 0L) {
                                 val len = mediaPlayer?.length ?: 0L
@@ -493,7 +376,7 @@ class PlayerActivity : AppCompatActivity() {
                             startTimelineUpdates()
                         }
                         MediaPlayer.Event.Paused -> {
-                            updatePlayPauseButtonIcon(false)
+                            appleOverlay.notifyPlayingStateChanged()
                         }
                         MediaPlayer.Event.Stopped -> {
                             binding.playerProgress.visibility = View.GONE
@@ -556,22 +439,12 @@ class PlayerActivity : AppCompatActivity() {
                 if (player.isPlaying) {
                     val currentMs = player.time
                     val totalMs = player.length
-                    
                     if (totalMs > 0) {
-                        binding.vlcSeekBar.progress = ((currentMs * 100) / totalMs).toInt()
-                        binding.txtCurrentTime.text = formatTime(currentMs)
-                        binding.txtTotalTime.text = formatTime(totalMs)
-                        
                         // Save playback progress to resume later if user exits!
                         getSharedPreferences("iptv_pref", android.content.Context.MODE_PRIVATE)
                             .edit()
                             .putLong("pos_$channelName", currentMs)
                             .apply()
-                    } else {
-                        // Live IPTV Streams
-                        binding.vlcSeekBar.progress = 100
-                        binding.txtCurrentTime.text = "LIVE"
-                        binding.txtTotalTime.text = "LIVE"
                     }
                 }
                 kotlinx.coroutines.delay(1000)
@@ -591,52 +464,9 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private var hideControlsJob: kotlinx.coroutines.Job? = null
-    private fun startAutoHideControlsTimer() {
-        hideControlsJob?.cancel()
-        hideControlsJob = lifecycleScope.launch {
-            kotlinx.coroutines.delay(5000)
-            binding.layoutPlayerControls.visibility = View.GONE
-            hideSystemUI()
-        }
-    }
 
-    private fun togglePlayPauseInternal() {
-        val player = mediaPlayer ?: return
-        if (player.isPlaying) {
-            player.pause()
-            updatePlayPauseButtonIcon(false)
-        } else {
-            player.play()
-            updatePlayPauseButtonIcon(true)
-        }
-    }
 
-    private fun updatePlayPauseButtonIcon(isPlaying: Boolean) {
-        if (isPlaying) {
-            binding.btnPlayPause.setImageResource(R.drawable.ic_ios_pause)
-        } else {
-            binding.btnPlayPause.setImageResource(R.drawable.ic_ios_play)
-        }
-    }
 
-    private fun cyclePlaybackSpeed() {
-        val speeds = listOf(0.75f, 1f, 1.5f, 2f)
-        val nextIndex = (speeds.indexOf(currentSpeed) + 1) % speeds.size
-        currentSpeed = speeds[nextIndex]
-        try {
-            mediaPlayer?.rate = currentSpeed
-        } catch (_: Exception) { }
-        binding.btnPlaybackSpeed.text = if (currentSpeed == 1f) "1x" else "${currentSpeed}x"
-        Toast.makeText(this, "Velocidad: ${currentSpeed}x", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun toggleNightMode() {
-        nightModeActive = !nightModeActive
-        binding.viewNightDimmer.visibility = if (nightModeActive) View.VISIBLE else View.GONE
-        binding.layoutPlayerControls.alpha = if (nightModeActive) 0.35f else 1.0f
-        Toast.makeText(this, if (nightModeActive) "Modo noche activado" else "Modo noche desactivado", Toast.LENGTH_SHORT).show()
-    }
 
     private fun applyExternalSubtitle(uri: android.net.Uri) {
         try {
@@ -675,15 +505,6 @@ class PlayerActivity : AppCompatActivity() {
     /** Re-tints the player dock with the user-chosen accent color. */
     private fun applyAccentColor() {
         val list = AccentManager.list(this)
-        binding.btnPip.imageTintList = list
-        binding.btnShareTv.imageTintList = list
-        binding.btnSubtitles.imageTintList = list
-        binding.btnNightMode.imageTintList = list
-        binding.btnSelectSource.imageTintList = list
-        binding.btnRewind.imageTintList = list
-        binding.btnForward.imageTintList = list
-        binding.vlcSeekBar.progressTintList = list
-        binding.vlcSeekBar.thumbTintList = list
         binding.playerProgress.indeterminateTintList = list
     }
 
@@ -730,7 +551,6 @@ class PlayerActivity : AppCompatActivity() {
         streamUserAgent = null
         pageResolveAttempted = false
         if (channelName.startsWith("Video Web")) channelName = "Video Web: " + getDomainName(newUrl)
-        binding.txtPlayingName.text = channelName
         
         releasePlayer()
         initializePlayer()
@@ -1273,12 +1093,8 @@ class PlayerActivity : AppCompatActivity() {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         if (isInPictureInPictureMode) {
-            // Hide all controls so only the video layout is visible in PIP
-            binding.layoutPlayerControls.visibility = View.GONE
             try { appleOverlay.visibility = View.GONE } catch (_: Exception) {}
         } else {
-            // Con la skin Apple los controles viejos NO vuelven
-            binding.layoutPlayerControls.visibility = View.GONE
             try { appleOverlay.visibility = View.VISIBLE } catch (_: Exception) {}
         }
     }
@@ -1288,11 +1104,6 @@ class PlayerActivity : AppCompatActivity() {
     /** Monta el reproductor estilo Apple sobre libVLC. Los controles viejos
      *  quedan ocultos: el usuario solo ve y toca el overlay. */
     private fun mountAppleSkin() {
-        try {
-            binding.layoutPlayerControls.visibility = View.GONE
-            binding.btnSelectSource.visibility = View.GONE
-        } catch (_: Exception) {}
-
         appleOverlay = ApplePlayerOverlay(this).apply {
             delegate = appleVlcDelegate
             val info = ApplePlayerOverlay.splitTitleInfo(channelName)
@@ -1308,6 +1119,8 @@ class PlayerActivity : AppCompatActivity() {
                 androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_PARENT
             )
         )
+        // Se ve desde el primer segundo: el cambio es inconfundible.
+        appleOverlay.showControls()
     }
 
     private val appleVlcDelegate = object : ApplePlayerOverlay.Delegate {
@@ -1328,7 +1141,8 @@ class PlayerActivity : AppCompatActivity() {
         override fun isLive(): Boolean = isLiveTv || (mediaPlayer?.length ?: 0L) <= 0L
 
         override fun onPlayPause() {
-            binding.btnPlayPause.performClick()
+            val p = mediaPlayer ?: return
+            if (p.isPlaying) p.pause() else p.play()
             appleOverlay.notifyPlayingStateChanged()
         }
 

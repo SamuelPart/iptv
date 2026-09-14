@@ -600,32 +600,15 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         val title = intent.getStringExtra("channelName") ?: "Reproduciendo"
         val pageUrl = intent.getStringExtra("channelUrl") ?: ""
         originalHost = Uri.parse(pageUrl).host?.lowercase() ?: ""
-        binding.txtWebPlayerTitle.text = title
         mediaTitle = title
 
         // Servidores de la ficha (mismos enlaces de la película, agrupados en el catálogo)
         catalogSources = intent.getStringArrayListExtra("allSources")?.distinct() ?: emptyList()
-        // El botón solo tiene sentido si hay más de un servidor para elegir.
-        binding.btnWebServers.visibility = if (catalogSources.size > 1) View.VISIBLE else View.GONE
 
-        binding.btnWebPlayerBack.setOnClickListener { finish() }
-
-        binding.btnWebCast.setOnClickListener {
-            checkCastPermissionsAndAsk()
-        }
-
-        binding.btnWebServers.setOnClickListener {
-            showServersDialog()
-        }
-
-        // ══════════ Skin Apple: el overlay nativo MANDA ══════════
-        // Los botones sueltos de la era anterior se retiran: todo vive en el
-        // overlay de vidrio (X, PiP, cast, compartir, volumen, -10/play/+10,
-        // titulo, CC/audio/velocidad, barra, Info y Continue Watching).
-        binding.btnWebPlayerBack.visibility = View.GONE
-        binding.txtWebPlayerTitle.visibility = View.GONE
-        binding.btnWebCast.visibility = View.GONE
-        binding.btnWebServers.visibility = View.GONE
+        // ══════════ Skin Apple: UNICA interfaz ══════════
+        // Los botones sueltos de la era anterior fueron ELIMINADOS del layout:
+        // todo vive en el overlay de vidrio (X, PiP, cast, compartir, volumen,
+        // -10/play/+10, titulo, CC/audio/velocidad, barra, Info y Continue).
 
         // Reanudar desde Continue Watching si hay posicion guardada
         resumePendingMs = ContinueWatchingManager.getl {
@@ -643,6 +626,8 @@ class WebVideoPlayerActivity : AppCompatActivity() {
             appleOverlay,
             FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
         )
+        // Visible desde el primer segundo, mientras el BOT prepara el video.
+        appleOverlay.showControls()
 
         val web = binding.webFramePlayer
         web.setBackgroundColor(0xFF000000.toInt())
@@ -785,7 +770,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
         if (rescueTried || isFinishing || isDestroyed) return
         rescueTried = true
         botHandler.removeCallbacks(botRunnable)
-        val title = binding.txtWebPlayerTitle.text?.toString()?.ifBlank { null } ?: "esa pelicula"
+        val title = mediaTitle.ifBlank { "esa pelicula" }
         android.widget.Toast.makeText(this, "Enlace caducado — buscando otra fuente…", android.widget.Toast.LENGTH_SHORT).show()
         lifecycleScope.launch {
             try {
@@ -925,7 +910,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
     private fun showWebCastDialog() {
         val pageUrl = intent.getStringExtra("channelUrl") ?: return
-        val pageTitle = binding.txtWebPlayerTitle.text?.toString() ?: "Video"
+        val pageTitle = mediaTitle.ifBlank { "Video" }
         val dialogView = layoutInflater.inflate(R.layout.dialog_cast_selector, null)
         val layoutScanning = dialogView.findViewById<LinearLayout>(R.id.layoutCastScanning)
         val rv = dialogView.findViewById<RecyclerView>(R.id.rvCastDevices)
