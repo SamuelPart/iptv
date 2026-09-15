@@ -36,6 +36,22 @@
             </intent-filter>
         </activity>
 
+        <!-- Deep links compartidos (lumen://ver?d=...): abren la app directo
+             en el titulo compartido. AutoVerify no aplica a esquemas custom;
+             BROWSABLE permite que el enlace funcione desde WhatsApp/Teléfono. -->
+        <activity
+            android:name=".DeepLinkActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="lumen" android:host="ver" />
+            </intent-filter>
+        </activity>
+
         <!-- Player Activity: Built-in ExoPlayer stream viewer -->
         <activity
             android:name=".PlayerActivity"

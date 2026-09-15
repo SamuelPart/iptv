@@ -123,6 +123,10 @@ class MainActivity : AppCompatActivity() {
         // Load the TMDb integrated Cine & Series Catalog!
         loadCineCatalog()
 
+        // ¿Llegamos desde un enlace compartido (lumen://ver?d=...)? Entra
+        // directo al Cine; en cuanto el catalogo cargue, se abre la ficha.
+        pendingDeepLink = DeepLink.fromIntent(intent)
+
         // Tip contextual de bienvenida (solo la primera vez que se abre la app)
         binding.root.postDelayed({
             if (!isFinishing) SmartTips.showOnce(this, "home",
@@ -1520,6 +1524,8 @@ class MainActivity : AppCompatActivity() {
         return keywords.any { name.contains(it) || group.contains(it) }
     }
 
+    private var pendingDeepLink: String? = null
+
     private fun loadCineCatalog() {
         lifecycleScope.launch {
             binding.layoutCineLoading.visibility = View.VISIBLE
@@ -1547,6 +1553,7 @@ class MainActivity : AppCompatActivity() {
             refreshCoverData()
             setupCineFeatured()
             CineNewNotifier.onCatalogLoaded(this@MainActivity, catalog)
+            consumePendingDeepLink()
             
             binding.layoutCineLoading.visibility = View.GONE
             binding.rvCineGrid.visibility = View.VISIBLE
@@ -1841,6 +1848,37 @@ class MainActivity : AppCompatActivity() {
 
     private var deckTracker: android.view.VelocityTracker? = null
     private var coverflowSnap: androidx.recyclerview.widget.LinearSnapHelper? = null
+
+    /** Abre la ficha del titulo compartido (deep link) una vez que el
+     *  catalogo esta en memoria; luego limpia el intent para que el
+     *  deep link no se re-dispare al rotar o volver del background. */
+    private fun consumePendingDeepLink() {
+        val t = pendingDeepLink ?: return
+        pendingDeepLink = null
+        try {
+            intent.removeExtra("deeplink_title")
+            intent.data = null
+        } catch (_: Exception) {}
+        if (t.isBlank()) return
+        val media = allCineMedia.firstOrNull {
+            it.title.equals(t, ignoreCase = true) || it.searchTitle.equals(t, ignoreCase = true)
+        } ?: run {
+            // Busqueda tolerante: contiene
+            allCineMedia.firstOrNull {
+                it.title.contains(t, ignoreCase = true) || it.searchTitle.contains(t, ignoreCase = true)
+            }
+        }
+        try { binding.bottomNavigation.selectedItemId = R.id.navigation_cine } catch (_: Exception) {}
+        if (media == null) {
+            SmartTips.showOnce(this, "deeplink_miss_$t", "💡 \"$t\" no está en el catálogo: usa el buscador")
+            return
+        }
+        try {
+            val dest = if (media.type == "movie") CineMovieDetailActivity::class.java
+                       else CineTvShowDetailActivity::class.java
+            startActivity(android.content.Intent(this, dest).apply { putExtra("media", media) })
+        } catch (_: Exception) {}
+    }
 
     private fun updateLumenNav(activeId: Int) {
         fun style(btn: View, icon: ImageView, label: TextView, id: Int) {

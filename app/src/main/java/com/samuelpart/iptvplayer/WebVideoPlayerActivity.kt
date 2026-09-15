@@ -15,6 +15,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
+import kotlinx.coroutines.launch
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.widget.FrameLayout
@@ -1095,15 +1096,43 @@ class WebVideoPlayerActivity : AppCompatActivity() {
 
         override fun onCast() = checkCastPermissionsAndAsk()
 
-        override fun onShare() {
+        override fun onShare() = shareWithCard()
+
+        /** Comparte la TARJETA de contenido (poster + marca) y el enlace
+         *  profundo: quien la reciba abre ESTA pelicula en Lumen con un
+         *  toque. Sin poster disponible comparte texto simple. */
+        private fun shareWithCard() {
+            val ctx = this@WebVideoPlayerActivity
+            val raw = ApplePlayerOverlay.splitTitleInfo(mediaTitle)
+            val meta = buildString {
+                val sub = raw.second
+                if (sub.isNotBlank()) append(sub) else append(Uri.parse(pageUrl).host ?: "")
+            }
             try {
-                val i = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, mediaTitle)
-                    putExtra(Intent.EXTRA_TEXT, "$mediaTitle\n$pageUrl")
-                }
-                startActivity(Intent.createChooser(i, "Compartir"))
+                Toast.makeText(ctx, "Creando tarjeta…", Toast.LENGTH_SHORT).show()
             } catch (_: Exception) {}
+            lifecycleScope.launch {
+                val uri = ContentCardShare.buildCardUri(ctx, mediaTitle, meta, null)
+                try {
+                    if (uri != null) {
+                        val i = Intent(Intent.ACTION_SEND).apply {
+                            type = "image/png"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            putExtra(Intent.EXTRA_SUBJECT, mediaTitle)
+                            putExtra(Intent.EXTRA_TEXT, DeepLink.shareText(ctx, mediaTitle))
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        startActivity(Intent.createChooser(i, "Compartir"))
+                    } else {
+                        val i = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, mediaTitle)
+                            putExtra(Intent.EXTRA_TEXT, DeepLink.shareText(ctx, mediaTitle))
+                        }
+                        startActivity(Intent.createChooser(i, "Compartir"))
+                    }
+                } catch (_: Exception) {}
+            }
         }
 
         override fun onInfo() {
