@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
@@ -15,18 +16,33 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.max
-import kotlin.math.min
 
 /**
- * Genera la TARJETA de contenido compartible (idea #1): 1080x1350 con el
- * poster a sangre completa, degradado cinematografico inferior, titulo con
- * corte inteligente, linea de meta (anio - genero) y firma de Lumen con
- * su glifo. Estilo glass Apple consistente con el reproductor y el dock.
+ * TARJETA de contenido compartible (diseno editorial horizontal 1200x675):
+ *
+ *   ┌────────────┬──────────────────────────────┐
+ *   │            │ ◤ LUMEN                      │
+ *   │  PÓSTER    │                              │
+ *   │  (altura   │  TITULO grande (3 lineas)    │
+ *   │  completa) │  ━━ (acento)                 │
+ *   │            │  año · género                │
+ *   │            │                ┌────┐        │
+ *   │            │  Escanea y     │ QR │        │
+ *   │            │  ábrelo en     └────┘        │
+ *   │            │  Lumen                       │
+ *   └────────────┴──────────────────────────────┘
+ *
+ * Todo ordenado con margenes consistentes: poster a sangre izquierda,
+ * panel oscuro a la derecha con jerarquia titulo > acento > meta > QR.
  */
 object ContentCardShare {
 
-    private const val W = 1080
-    private const val H = 1350
+    private const val W = 1200
+    private const val H = 675
+    private const val POSTER_W = 440          // columna izquierda del poster
+    private const val PAD = 56                // margen derecho del panel
+    private const val TEXT_X = 496            // inicio del texto
+    private const val TEXT_RIGHT = 1140       // fin del texto
 
     /** Genera el PNG de la tarjeta y devuelve su uri content:// lista para compartir. */
     suspend fun buildCardUri(
@@ -40,134 +56,111 @@ object ContentCardShare {
             val poster = loadPoster(posterUrl)
             val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
             val c = Canvas(bmp)
-            val densityScale = W / 360f
-
-            // ── Fondo ──
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            if (poster != null) {
-                // cover centrado-recortado (focus 40% superior para no perder caras)
-                val scale = max(W.toFloat() / poster.width, H.toFloat() / poster.height)
-                val dw = (poster.width * scale).toInt()
-                val dh = (poster.height * scale).toInt()
-                val left = (W - dw) / 2
-                val top = min(0, (H - dh) * 40 / 100)
-                c.drawBitmap(poster, null, Rect(left, top, left + dw, top + dh), paint)
-            } else {
-                paint.shader = LinearGradient(
-                    0f, 0f, W.toFloat(), H.toFloat(),
-                    intArrayOf(0xFF14141C.toInt(), 0xFF2A2A3A.toInt()),
-                    floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
-                )
-                c.drawRect(0f, 0f, W.toFloat(), H.toFloat(), paint)
-            }
-
-            // ── Scrims para legibilidad (igual que el reproductor) ──
-            paint.shader = LinearGradient(
-                0f, H * 0.28f, 0f, H.toFloat(),
-                intArrayOf(0x00000000, 0xF2000000.toInt()),
-                floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
-            )
-            c.drawRect(0f, H * 0.28f, W.toFloat(), H.toFloat(), paint)
-            paint.shader = LinearGradient(
-                0f, 0f, 0f, H * 0.18f,
-                intArrayOf(0x99000000.toInt(), 0x00000000),
-                floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
-            )
-            c.drawRect(0f, 0f, W.toFloat(), H * 0.18f, paint)
-            paint.shader = null
-
+            val p = Paint(Paint.ANTI_ALIAS_FLAG)
             val accent = AccentManager.color(context)
 
-            // ── Marca arriba-izquierda (pastilla de vidrio + glifo) ──
-            val pillH = 64 * densityScale
-            val glyphSize = 30 * densityScale
-            val padX = 34 * densityScale
-            val brandText = "LUMEN"
+            // ── Fondo del panel derecho: degradado profundo con matiz ──
+            p.shader = LinearGradient(
+                POSTER_W.toFloat(), 0f, W.toFloat(), H.toFloat(),
+                intArrayOf(0xFF0D0D15.toInt(), 0xFF1D1D2B.toInt()),
+                floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
+            )
+            c.drawRect(POSTER_W.toFloat(), 0f, W.toFloat(), H.toFloat(), p)
+            p.shader = null
+
+            // ── Poster a sangre izquierda (cover, focus 40% superior) ──
+            if (poster != null) {
+                val scale = max(POSTER_W.toFloat() / poster.width, H.toFloat() / poster.height)
+                val dw = (poster.width * scale).toInt()
+                val dh = (poster.height * scale).toInt()
+                val left = (POSTER_W - dw) / 2
+                val top = ((H - dh) * 40 / 100).coerceAtMost(0)
+                c.drawBitmap(poster, null, Rect(left, top, left + dw, top + dh), p)
+                // scrim sutil para unificar con el panel
+                p.shader = LinearGradient(
+                    0f, 0f, POSTER_W.toFloat(), 0f,
+                    intArrayOf(0x00000000, 0x2E0D0D15),
+                    floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
+                )
+                c.drawRect(0f, 0f, POSTER_W.toFloat(), H.toFloat(), p)
+                p.shader = null
+            } else {
+                // Sin poster: degradado + glifo prisma grande centrado
+                p.shader = LinearGradient(
+                    0f, 0f, POSTER_W.toFloat(), H.toFloat(),
+                    intArrayOf(0xFF15151F.toInt(), 0xFF262638.toInt()),
+                    floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
+                )
+                c.drawRect(0f, 0f, POSTER_W.toFloat(), H.toFloat(), p)
+                p.shader = null
+                drawGlyph(c, p, POSTER_W / 2f - 70, H / 2f - 70, 140, 0x55FFFFFF.toInt())
+            }
+
+            // ── Separador de acento entre poster y panel ──
+            p.color = accent
+            c.drawRect(POSTER_W.toFloat(), 0f, POSTER_W + 7f, H.toFloat(), p)
+
+            // ── Marca LUMEN (pastilla vidrio arriba del panel) ──
             val brand = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFFFFFFFF.toInt()
-                textSize = 24 * densityScale
-                isFakeBoldText = true
+                color = 0xFFFFFFFF.toInt(); textSize = 22f; isFakeBoldText = true
             }
+            val brandText = "LUMEN"
             val brandW = brand.measureText(brandText)
-            val pillW = padX + glyphSize + 10 * densityScale + brandW + padX
-            val pill = RectF(padX, padX, padX + pillW, padX + pillH)
-            paint.color = 0x59050508.toInt()
-            c.drawRoundRect(pill, pillH / 2, pillH / 2, paint)
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 1.5f * densityScale
-            paint.color = 0x26FFFFFF
-            c.drawRoundRect(pill, pillH / 2, pillH / 2, paint)
-            paint.style = Paint.Style.FILL
-            // glifo prisma
-            val gl = 2.8f * densityScale // escala del vector 24 -> dibujo
-            val gx = pill.left + padX
-            val gy = pill.top + (pillH - glyphSize) / 2
-            val tri = android.graphics.Path().apply {
-                moveTo(gx + 12 * gl, gy + 2.6f * gl)
-                lineTo(gx + 21.2f * gl, gy + 19.2f * gl)
-                lineTo(gx + 2.8f * gl, gy + 19.2f * gl)
-                close()
-            }
-            paint.color = accent
-            c.drawPath(tri, paint)
-            c.drawText(
-                brandText, gx + glyphSize + 10 * densityScale,
-                pill.centerY() + brand.textSize * 0.35f, brand
-            )
+            val pillH = 58f
+            val pillW = 20f + 26f + 10f + brandW + 20f
+            val pill = RectF(TEXT_X.toFloat(), 54f, TEXT_X + pillW, 54f + pillH)
+            p.color = 0x59050508.toInt()
+            c.drawRoundRect(pill, pillH / 2, pillH / 2, p)
+            p.style = Paint.Style.STROKE; p.strokeWidth = 1.5f; p.color = 0x26FFFFFF
+            c.drawRoundRect(pill, pillH / 2, pillH / 2, p)
+            p.style = Paint.Style.FILL
+            drawGlyph(c, p, pill.left + 20f, pill.top + (pillH - 26f) / 2, 26f, accent)
+            c.drawText(brandText, pill.left + 20f + 26f + 10f, pill.centerY() + brand.textSize * 0.35f, brand)
 
-            // ── Titulo con corte inteligente (max 3 lineas) ──
+            // ── Titulo (3 lineas max, corte por palabras) ──
             val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFFFFFFFF.toInt()
-                textSize = 64 * densityScale
-                isFakeBoldText = true
+                color = 0xFFFFFFFF.toInt(); textSize = 60f; isFakeBoldText = true
             }
-            val maxTextW = W - 2 * padX
-            val lines = wrapTitle(title, titlePaint, maxTextW, 3)
-            val lineH = titlePaint.textSize * 1.16f
+            val maxW = (TEXT_RIGHT - TEXT_X).toFloat()
+            val lines = wrapTitle(title, titlePaint, maxW, 3)
+            val lineH = titlePaint.textSize * 1.14f
+            var y = 236f
+            for (ln in lines) { c.drawText(ln, TEXT_X.toFloat(), y, titlePaint); y += lineH }
+
+            // ── Barra de acento ──
+            val barY = y - lineH + titlePaint.textSize + 26f
+            p.color = accent
+            c.drawRoundRect(RectF(TEXT_X.toFloat(), barY, TEXT_X + 88f, barY + 7f), 3.5f, 3.5f, p)
+
+            // ── Meta (anio - genero) ──
             val meta = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = 0xFFC9C9CE.toInt()
-                textSize = 30 * densityScale
+                color = 0xFFC9C9CE.toInt(); textSize = 28f
             }
-            val metaText = metaLine.trim()
-            val blockH = lines.size * lineH + (if (metaText.isEmpty()) 0f else meta.textSize + 18 * densityScale)
-            val baseY = H - 92 * densityScale - blockH + titlePaint.textSize
+            if (metaLine.isNotBlank()) c.drawText(metaLine, TEXT_X.toFloat(), barY + 46f, meta)
 
-            var y = baseY
-            for (ln in lines) {
-                c.drawText(ln, padX, y, titlePaint)
-                y += lineH
-            }
-            if (metaText.isNotEmpty()) {
-                c.drawText(metaText, padX, y + 10 * densityScale, meta)
-            }
-
-            // ── Linea de acento bajo el bloque ──
-            paint.color = accent
-            c.drawRoundRect(
-                RectF(padX, H - 62 * densityScale, padX + 88 * densityScale, H - 54 * densityScale),
-                4 * densityScale, 4 * densityScale, paint
-            )
-
-            // ── QR de apertura directa (esquina inferior derecha) ──
-            // La camara del telefono escanea y abre Lumen en ESTE titulo:
-            // funciona incluso donde los enlaces lumen:// no son clicables.
+            // ── QR (pastilla blanca abajo-derecha) + instruccion ──
             if (!qrContent.isNullOrBlank()) {
                 try {
                     val qrBmp = QrHelper.qrBitmap(qrContent, 420)
-                    val qrSize = 190 * densityScale
-                    val qrPad = 16 * densityScale
-                    val boxSize = qrSize + qrPad * 2
-                    val boxL = W - padX - boxSize
-                    val boxT = H - padX - boxSize
-                    paint.color = 0xFFFFFFFF.toInt()
-                    c.drawRoundRect(RectF(boxL, boxT, boxL + boxSize, boxT + boxSize),
-                        22 * densityScale, 22 * densityScale, paint)
+                    val qrPad = 14f
+                    val boxSize = 160f + qrPad * 2
+                    val boxL = TEXT_RIGHT - boxSize
+                    val boxT = H - 48f - boxSize
+                    p.color = 0xFFFFFFFF.toInt()
+                    c.drawRoundRect(RectF(boxL, boxT, boxL + boxSize, boxT + boxSize), 20f, 20f, p)
                     c.drawBitmap(
                         qrBmp, null,
-                        Rect(boxL.toInt() + qrPad.toInt(), boxT.toInt() + qrPad.toInt(),
+                        Rect((boxL + qrPad).toInt(), (boxT + qrPad).toInt(),
                             (boxL + boxSize - qrPad).toInt(), (boxT + boxSize - qrPad).toInt()),
-                        paint
+                        p
                     )
+                    val inst = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = 0xFFC9C9CE.toInt(); textSize = 24f; isFakeBoldText = true
+                    }
+                    val instX = TEXT_X.toFloat()
+                    val cy = boxT + boxSize / 2f
+                    c.drawText("Escanea y míralo", instX, cy - 6f, inst)
+                    c.drawText("directo en Lumen", instX, cy + 28f, inst)
                 } catch (_: Exception) {}
             }
 
@@ -179,6 +172,19 @@ object ContentCardShare {
         } catch (_: Exception) {
             null
         }
+    }
+
+    /** Glifo prisma de Lumen dibujado por path (reutilizable, vector 24 escalado). */
+    private fun drawGlyph(c: Canvas, p: Paint, x: Float, y: Float, size: Float, color: Int) {
+        val gl = size / 24f
+        val path = Path().apply {
+            moveTo(x + 12 * gl, y + 2.6f * gl)
+            lineTo(x + 21.2f * gl, y + 19.2f * gl)
+            lineTo(x + 2.8f * gl, y + 19.2f * gl)
+            close()
+        }
+        p.color = color
+        c.drawPath(path, p)
     }
 
     /** Corte por palabras; recorta con … si excede [maxLines]. */
