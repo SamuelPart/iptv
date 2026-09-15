@@ -26,108 +26,165 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Barra inferior global premium: pildora flotante con iconos -->
+    <!-- ═══ DOCK INFERIOR APPLE (v7): vidrio oscuro flotante, iconos SF + labels ═══ -->
     <LinearLayout
         android:id="@+id/lumenNavBar"
         android:layout_width="0dp"
-        android:layout_height="58dp"
-        android:layout_marginHorizontal="18dp"
-        android:layout_marginBottom="16dp"
+        android:layout_height="64dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="14dp"
         android:orientation="horizontal"
         android:gravity="center"
-        android:background="@drawable/bg_nav_pill"
+        android:background="@drawable/bg_apple_dock"
         android:elevation="14dp"
-        android:paddingHorizontal="10dp"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <FrameLayout
+        <LinearLayout
             android:id="@+id/navBtnHome"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="46dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
             android:clickable="true"
             android:focusable="true"
-            android:background="@drawable/bg_circle_champagne">
+            android:background="@drawable/bg_apple_dock_active">
 
             <ImageView
                 android:id="@+id/imgNavHome"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_ios_home"
-                app:tint="#16181C" />
-        </FrameLayout>
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_home"
+                app:tint="#FFFFFF" />
 
-        <FrameLayout
+            <TextView
+                android:id="@+id/txtNavHome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Inicio"
+                android:textColor="#FFFFFF"
+                android:textSize="9.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/navBtnChannels"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="46dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
             android:clickable="true"
             android:focusable="true">
 
             <ImageView
                 android:id="@+id/imgNavCh"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_ios_tv"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_tv"
                 app:tint="#8A8A93" />
-        </FrameLayout>
 
-        <FrameLayout
+            <TextView
+                android:id="@+id/txtNavChannels"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Canales"
+                android:textColor="#6E6E76"
+                android:textSize="9.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/navBtnSearch"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="46dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
             android:clickable="true"
             android:focusable="true">
 
             <ImageView
                 android:id="@+id/imgNavSearch"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_ios_search"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_search"
                 app:tint="#8A8A93" />
-        </FrameLayout>
 
-        <FrameLayout
+            <TextView
+                android:id="@+id/txtNavSearch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Buscar"
+                android:textColor="#6E6E76"
+                android:textSize="9.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/navBtnCine"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="46dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
             android:clickable="true"
             android:focusable="true">
 
             <ImageView
                 android:id="@+id/imgNavCine"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_ios_movie"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_cine"
                 app:tint="#8A8A93" />
-        </FrameLayout>
 
-        <FrameLayout
+            <TextView
+                android:id="@+id/txtNavCine"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Cine"
+                android:textColor="#6E6E76"
+                android:textSize="9.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/navBtnSettings"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="46dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
             android:clickable="true"
             android:focusable="true">
 
             <ImageView
                 android:id="@+id/imgNavSettings"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_gear_modern"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_nav_gear"
                 app:tint="#8A8A93" />
-        </FrameLayout>
+
+            <TextView
+                android:id="@+id/txtNavSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Ajustes"
+                android:textColor="#6E6E76"
+                android:textSize="9.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
+
 
     <!-- Bottom Ads Container -->
     <LinearLayout

@@ -132,6 +132,8 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNavigation.itemIconTintList = navTint
         binding.bottomNavigation.itemTextColor = navTint
         updateLumenNav(R.id.navigation_home)
+        listOf(binding.navBtnHome, binding.navBtnChannels, binding.navBtnSearch,
+            binding.navBtnCine, binding.navBtnSettings).forEach { it.springPress() }
         binding.navBtnHome.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_home }
         binding.navBtnChannels.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_channels }
         binding.navBtnSearch.setOnClickListener { binding.bottomNavigation.selectedItemId = R.id.navigation_search }
@@ -1924,18 +1926,17 @@ class MainActivity : AppCompatActivity() {
     private var coverflowSnap: androidx.recyclerview.widget.LinearSnapHelper? = null
 
     private fun updateLumenNav(activeId: Int) {
-        val entries = listOf(
-            Triple(binding.navBtnHome, binding.imgNavHome, R.id.navigation_home),
-            Triple(binding.navBtnChannels, binding.imgNavCh, R.id.navigation_channels),
-            Triple(binding.navBtnSearch, binding.imgNavSearch, R.id.navigation_search),
-            Triple(binding.navBtnCine, binding.imgNavCine, R.id.navigation_cine),
-            Triple(binding.navBtnSettings, binding.imgNavSettings, R.id.navigation_settings)
-        )
-        entries.forEach { (frame, iv, id) ->
+        fun style(btn: View, icon: ImageView, label: TextView, id: Int) {
             val on = id == activeId
-            frame.setBackgroundResource(if (on) R.drawable.bg_circle_champagne else android.R.color.transparent)
-            iv.setColorFilter(android.graphics.Color.parseColor(if (on) "#16181C" else "#8A8A93"))
+            btn.setBackgroundResource(if (on) R.drawable.bg_apple_dock_active else android.R.color.transparent)
+            icon.setColorFilter(android.graphics.Color.parseColor(if (on) "#FFFFFF" else "#8A8A93"))
+            label.setTextColor(android.graphics.Color.parseColor(if (on) "#FFFFFF" else "#6E6E76"))
         }
+        style(binding.navBtnHome, binding.imgNavHome, binding.txtNavHome, R.id.navigation_home)
+        style(binding.navBtnChannels, binding.imgNavCh, binding.txtNavChannels, R.id.navigation_channels)
+        style(binding.navBtnSearch, binding.imgNavSearch, binding.txtNavSearch, R.id.navigation_search)
+        style(binding.navBtnCine, binding.imgNavCine, binding.txtNavCine, R.id.navigation_cine)
+        style(binding.navBtnSettings, binding.imgNavSettings, binding.txtNavSettings, R.id.navigation_settings)
     }
 
     private fun platformIconOf(label: String): Int = when {
