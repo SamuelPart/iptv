@@ -1112,7 +1112,15 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 Toast.makeText(ctx, "Creando tarjeta…", Toast.LENGTH_SHORT).show()
             } catch (_: Exception) {}
             lifecycleScope.launch {
-                val uri = ContentCardShare.buildCardUri(ctx, mediaTitle, meta, null)
+                // Busca el poster real en el catalogo (cache en memoria) para
+                // que la tarjeta salga con la caratula de la pelicula.
+                val poster = try {
+                    CineRepository.getCineCatalog(ctx).firstOrNull {
+                        it.title.equals(mediaTitle, ignoreCase = true) ||
+                            it.searchTitle.equals(mediaTitle, ignoreCase = true)
+                    }?.posterUrl
+                } catch (_: Exception) { null }
+                val uri = ContentCardShare.buildCardUri(ctx, mediaTitle, meta, poster)
                 try {
                     if (uri != null) {
                         val i = Intent(Intent.ACTION_SEND).apply {
