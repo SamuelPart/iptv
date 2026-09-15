@@ -119,8 +119,6 @@ class MainActivity : AppCompatActivity() {
         // Auto-restore last successfully loaded playlist on app startup!
         restoreSavedPlaylist()
 
-        // Check if we need to show the interactive walkthrough tutorial for new users
-        checkFirstTimeTutorial()
 
         // Load the TMDb integrated Cine & Series Catalog!
         loadCineCatalog()
@@ -1235,99 +1233,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkFirstTimeTutorial() {
-        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-        val isFirstTime = sharedPref.getBoolean("is_first_time", true)
-        if (isFirstTime) {
-            // Slight delay to allow UI to be completely drawn
-            binding.root.postDelayed({
-                showTutorialStep(1)
-            }, 1000)
-        }
-    }
-
-    private fun showTutorialStep(step: Int) {
-        val builder = AlertDialog.Builder(this)
-        
-        when (step) {
-            1 -> {
-                builder.setTitle("🎉 ¡Bienvenido a IPTV Player PRO!")
-                    .setMessage("Te damos la bienvenida a la mejor aplicación para disfrutar de televisión, películas y series gratis.\n\nHemos preparado un recorrido rápido de 5 pasos para explicarte cómo sacarle el máximo provecho. ¿Comenzamos?")
-                    .setPositiveButton("Iniciar Recorrido") { _, _ ->
-                        showTutorialStep(2)
-                    }
-                    .setNegativeButton("Omitir") { _, _ ->
-                        completeTutorial()
-                    }
-                    .setCancelable(false)
-                    .show()
-            }
-            2 -> {
-                // Switch to HOME tab programmatically
-                binding.bottomNavigation.selectedItemId = R.id.navigation_home
-                builder.setTitle("🏠 Paso 1: Pestaña Inicio")
-                    .setMessage("Aquí es donde administras tus listas.\n\nPuedes ingresar cualquier enlace IPTV (M3U) de tu preferencia o tocar cualquiera de nuestros tres botones rápidos (España 🇪🇸, Global 🌐, Noticias 📰) para cargar cientos de canales gratis al instante.")
-                    .setPositiveButton("Siguiente") { _, _ ->
-                        showTutorialStep(3)
-                    }
-                    .setCancelable(false)
-                    .show()
-            }
-            3 -> {
-                // Switch to CHANNELS tab programmatically
-                binding.bottomNavigation.selectedItemId = R.id.navigation_channels
-                builder.setTitle("📺 Paso 2: Pestaña Canales")
-                    .setMessage("Una vez cargues tu lista, aquí aparecerán tus canales.\n\nHemos colocado un hermoso panel de opciones arriba. Toca el botón de Filtro para ordenar por País, Categoría o Alfabéticamente. Toca el botón de Cuadrícula para cambiar entre diseño Grid o Lista al instante.")
-                    .setPositiveButton("Siguiente") { _, _ ->
-                        showTutorialStep(4)
-                    }
-                    .setCancelable(false)
-                    .show()
-            }
-            4 -> {
-                // Switch to SEARCH tab programmatically
-                binding.bottomNavigation.selectedItemId = R.id.navigation_search
-                builder.setTitle("🔍 Paso 3: Buscador de Canales")
-                    .setMessage("Encuentra rápidamente cualquiera de tus canales IPTV cargados escribiendo su nombre aquí.\n\n¡Además, puedes desplegar o cerrar tu historial de búsquedas recientes con un solo toque en el icono de reloj!")
-                    .setPositiveButton("Siguiente") { _, _ ->
-                        showTutorialStep(5)
-                    }
-                    .setCancelable(false)
-                    .show()
-            }
-            5 -> {
-                // Switch to CINE tab programmatically
-                binding.bottomNavigation.selectedItemId = R.id.navigation_cine
-                builder.setTitle("🎬 Paso 4: Cine y Series PRO")
-                    .setMessage("Disfruta de más de 9,000 películas y series organizadas en una hermosa interfaz.\n\nAl seleccionar cualquier título, la app desglosa la sinopsis, valoraciones y trailers de TMDb en segundo plano al instante.")
-                    .setPositiveButton("Siguiente") { _, _ ->
-                        showTutorialStep(6)
-                    }
-                    .setCancelable(false)
-                    .show()
-            }
-            6 -> {
-                // Switch to SETTINGS tab programmatically
-                binding.bottomNavigation.selectedItemId = R.id.navigation_settings
-                builder.setTitle("⚙️ Paso 5: Ajustes y Configuración")
-                    .setMessage("Accede de forma rápida al Control Parental (bloqueo por PIN de 4 dígitos) para ocultar categorías de adultos, borra la caché de lista para limpiar la app, o revisa la versión de soporte de la app.")
-                    .setPositiveButton("Comenzar a Disfrutar") { _, _ ->
-                        completeTutorial()
-                    }
-                    .setCancelable(false)
-                    .show()
-            }
-        }
-    }
-
-    private fun completeTutorial() {
-        val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
-        sharedPref.edit().putBoolean("is_first_time", false).apply()
-        
-        // Return back to Home tab so they can begin loading their lists
-        binding.bottomNavigation.selectedItemId = R.id.navigation_home
-        Toast.makeText(this, "¡Recorrido completado! Que disfrutes de la aplicación. 🎉", Toast.LENGTH_LONG).show()
-    }
 
     /** Vacía la lista cargada (lo usa la pantalla de Almacenamiento / Limpiar). */
     private fun clearPlaylist() {
