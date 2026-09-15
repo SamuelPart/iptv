@@ -54,7 +54,8 @@ object ContentCardShare {
             } else {
                 paint.shader = LinearGradient(
                     0f, 0f, W.toFloat(), H.toFloat(),
-                    0xFF14141C.toInt(), 0xFF2A2A3A.toInt(), Shader.TileMode.CLAMP
+                    intArrayOf(0xFF14141C.toInt(), 0xFF2A2A3A.toInt()),
+                    floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
                 )
                 c.drawRect(0f, 0f, W.toFloat(), H.toFloat(), paint)
             }
@@ -62,12 +63,14 @@ object ContentCardShare {
             // ── Scrims para legibilidad (igual que el reproductor) ──
             paint.shader = LinearGradient(
                 0f, H * 0.28f, 0f, H.toFloat(),
-                0x00000000, 0xF2000000, Shader.TileMode.CLAMP
+                intArrayOf(0x00000000, 0xF2000000),
+                floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
             )
             c.drawRect(0f, H * 0.28f, W.toFloat(), H.toFloat(), paint)
             paint.shader = LinearGradient(
                 0f, 0f, 0f, H * 0.18f,
-                0x99000000, 0x00000000, Shader.TileMode.CLAMP
+                intArrayOf(0x99000000, 0x00000000),
+                floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
             )
             c.drawRect(0f, 0f, W.toFloat(), H * 0.18f, paint)
             paint.shader = null

@@ -358,11 +358,14 @@ class CineTvShowDetailActivity : AppCompatActivity() {
     private fun showShareOptions() {
         AlertDialog.Builder(this)
             .setTitle("Compartir")
-            .setItems(arrayOf("Compartir como texto 📄", "Mostrar código QR 📲")) { _, which ->
+            .setItems(
+                arrayOf("Tarjeta con póster 🎴", "Compartir como texto 📄", "Mostrar código QR 📲")
+            ) { _, which ->
                 val link = if (media.urls.isNotEmpty()) media.urls[0] else media.url
                 when (which) {
-                    0 -> shareText(link)
-                    1 -> QrHelper.showQrDialog(this, media.title, link)
+                    0 -> shareCard()
+                    1 -> shareText(link)
+                    2 -> QrHelper.showQrDialog(this, media.title, link)
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -374,12 +377,42 @@ class CineTvShowDetailActivity : AppCompatActivity() {
             append("🎬 ¡Mira esto en IPTV Player PRO!\n\n")
             append("📺 Título: ${media.title}\n\n")
             append("📝 Sinopsis: ${media.overview ?: "Sin sinopsis disponible."}\n\n")
-            append("📲 ¡Descarga la aplicación IPTV Player PRO para ver películas, series y TV en vivo gratis!")
+            append("📲 ¡Descarga la aplicación IPTV Player PRO para ver películas, series y TV en vivo gratis!\n\n")
+            append("▶ Abrir en Lumen: ${DeepLink.build(media.title)}")
         }
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(intent, "Compartir"))
+    }
+
+    /** Comparte la TARJETA visual (poster + marca Lumen) con enlace profundo:
+     *  quien la reciba abre ESTE titulo en la app con un toque. */
+    private fun shareCard() {
+        val ctx = this
+        val year = Regex("\\((\\d{4})\\)").find(media.title)?.groupValues?.get(1)
+        val meta = listOfNotNull(
+            year,
+            media.group.takeIf { it.isNotBlank() && !it.contains("Temporada") }
+        ).joinToString(" · ")
+        try { Toast.makeText(ctx, "Creando tarjeta…", Toast.LENGTH_SHORT).show() } catch (_: Exception) {}
+        lifecycleScope.launch {
+            val uri = ContentCardShare.buildCardUri(ctx, media.title, meta, media.posterUrl)
+            try {
+                if (uri != null) {
+                    val i = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/png"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        putExtra(Intent.EXTRA_SUBJECT, media.title)
+                        putExtra(Intent.EXTRA_TEXT, DeepLink.shareText(ctx, media.title))
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(i, "Compartir"))
+                } else {
+                    shareText(if (media.urls.isNotEmpty()) media.urls[0] else media.url)
+                }
+            } catch (_: Exception) {}
+        }
     }
 }
