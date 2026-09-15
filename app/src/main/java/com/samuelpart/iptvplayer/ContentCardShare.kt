@@ -125,7 +125,7 @@ object ContentCardShare {
                 textSize = 30 * densityScale
             }
             val metaText = metaLine.trim()
-            val blockH = lines.size * lineH + (if (metaText.isEmpty()) 0 else meta.textSize + 18 * densityScale)
+            val blockH = lines.size * lineH + (if (metaText.isEmpty()) 0f else meta.textSize + 18 * densityScale)
             val baseY = H - 92 * densityScale - blockH + titlePaint.textSize
 
             var y = baseY
