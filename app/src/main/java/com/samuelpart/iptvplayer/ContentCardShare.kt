@@ -93,7 +93,7 @@ object ContentCardShare {
                 )
                 c.drawRect(0f, 0f, POSTER_W.toFloat(), H.toFloat(), p)
                 p.shader = null
-                drawGlyph(c, p, POSTER_W / 2f - 70, H / 2f - 70, 140, 0x55FFFFFF.toInt())
+                drawGlyph(c, p, POSTER_W / 2f - 70, H / 2f - 70, 140f, 0x55FFFFFF.toInt())
             }
 
             // ── Separador de acento entre poster y panel ──
