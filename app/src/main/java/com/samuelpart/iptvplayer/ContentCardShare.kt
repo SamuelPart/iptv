@@ -33,7 +33,8 @@ object ContentCardShare {
         context: Context,
         title: String,
         metaLine: String,
-        posterUrl: String?
+        posterUrl: String?,
+        qrContent: String? = null
     ): Uri? = withContext(Dispatchers.IO) {
         try {
             val poster = loadPoster(posterUrl)
@@ -146,6 +147,29 @@ object ContentCardShare {
                 RectF(padX, H - 62 * densityScale, padX + 88 * densityScale, H - 54 * densityScale),
                 4 * densityScale, 4 * densityScale, paint
             )
+
+            // ── QR de apertura directa (esquina inferior derecha) ──
+            // La camara del telefono escanea y abre Lumen en ESTE titulo:
+            // funciona incluso donde los enlaces lumen:// no son clicables.
+            if (!qrContent.isNullOrBlank()) {
+                try {
+                    val qrBmp = QrHelper.qrBitmap(qrContent, 420)
+                    val qrSize = 190 * densityScale
+                    val qrPad = 16 * densityScale
+                    val boxSize = qrSize + qrPad * 2
+                    val boxL = W - padX - boxSize
+                    val boxT = H - padX - boxSize
+                    paint.color = 0xFFFFFFFF.toInt()
+                    c.drawRoundRect(RectF(boxL, boxT, boxL + boxSize, boxT + boxSize),
+                        22 * densityScale, 22 * densityScale, paint)
+                    c.drawBitmap(
+                        qrBmp, null,
+                        Rect(boxL.toInt() + qrPad.toInt(), boxT.toInt() + qrPad.toInt(),
+                            (boxL + boxSize - qrPad).toInt(), (boxT + boxSize - qrPad).toInt()),
+                        paint
+                    )
+                } catch (_: Exception) {}
+            }
 
             // ── Guardar y devolver content:// ──
             val dir = File(context.cacheDir, "shared_cards").apply { mkdirs() }

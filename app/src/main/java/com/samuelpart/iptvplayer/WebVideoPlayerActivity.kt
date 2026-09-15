@@ -1120,24 +1120,22 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                             it.searchTitle.equals(mediaTitle, ignoreCase = true)
                     }?.posterUrl
                 } catch (_: Exception) { null }
-                val uri = ContentCardShare.buildCardUri(ctx, mediaTitle, meta, poster)
+                val uri = ContentCardShare.buildCardUri(
+                    ctx, mediaTitle, meta, poster,
+                    DeepLink.build(mediaTitle)
+                )
                 try {
                     if (uri != null) {
                         val i = Intent(Intent.ACTION_SEND).apply {
                             type = "image/png"
                             putExtra(Intent.EXTRA_STREAM, uri)
                             putExtra(Intent.EXTRA_SUBJECT, mediaTitle)
-                            putExtra(Intent.EXTRA_TEXT, DeepLink.shareText(ctx, mediaTitle))
+                            putExtra(Intent.EXTRA_TEXT, "$mediaTitle\n🎬 Escanea el QR de la imagen y ábrela directo en Lumen")
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
                         startActivity(Intent.createChooser(i, "Compartir"))
                     } else {
-                        val i = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, mediaTitle)
-                            putExtra(Intent.EXTRA_TEXT, DeepLink.shareText(ctx, mediaTitle))
-                        }
-                        startActivity(Intent.createChooser(i, "Compartir"))
+                        QrHelper.showQrDialog(ctx, mediaTitle, DeepLink.build(mediaTitle))
                     }
                 } catch (_: Exception) {}
             }

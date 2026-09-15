@@ -360,13 +360,11 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Compartir")
             .setItems(
-                arrayOf("Tarjeta con póster 🎴", "Compartir como texto 📄", "Mostrar código QR 📲")
+                arrayOf("Tarjeta con póster 🎴", "Mostrar código QR 📲")
             ) { _, which ->
-                val link = if (media.urls.isNotEmpty()) media.urls[0] else media.url
                 when (which) {
                     0 -> shareCard()
-                    1 -> shareText(link)
-                    2 -> QrHelper.showQrDialog(this, media.title, link)
+                    1 -> QrHelper.showQrDialog(this, media.title, DeepLink.build(media.title))
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -378,8 +376,7 @@ class CineTvShowDetailActivity : AppCompatActivity() {
             append("🎬 ¡Mira esto en IPTV Player PRO!\n\n")
             append("📺 Título: ${media.title}\n\n")
             append("📝 Sinopsis: ${media.overview ?: "Sin sinopsis disponible."}\n\n")
-            append("📲 ¡Descarga la aplicación IPTV Player PRO para ver películas, series y TV en vivo gratis!\n\n")
-            append("▶ Abrir en Lumen: ${DeepLink.build(media.title)}")
+            append("📲 ¡Descarga la aplicación IPTV Player PRO para ver películas, series y TV en vivo gratis!")
         }
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -399,19 +396,22 @@ class CineTvShowDetailActivity : AppCompatActivity() {
         ).joinToString(" · ")
         try { Toast.makeText(ctx, "Creando tarjeta…", Toast.LENGTH_SHORT).show() } catch (_: Exception) {}
         lifecycleScope.launch {
-            val uri = ContentCardShare.buildCardUri(ctx, media.title, meta, media.posterUrl)
+            val uri = ContentCardShare.buildCardUri(
+                ctx, media.title, meta, media.posterUrl,
+                DeepLink.build(media.title)
+            )
             try {
                 if (uri != null) {
                     val i = Intent(Intent.ACTION_SEND).apply {
                         type = "image/png"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         putExtra(Intent.EXTRA_SUBJECT, media.title)
-                        putExtra(Intent.EXTRA_TEXT, DeepLink.shareText(ctx, media.title))
+                        putExtra(Intent.EXTRA_TEXT, "${media.title}\n🎬 Escanea el QR de la imagen y ábrela directo en Lumen")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     startActivity(Intent.createChooser(i, "Compartir"))
                 } else {
-                    shareText(if (media.urls.isNotEmpty()) media.urls[0] else media.url)
+                    QrHelper.showQrDialog(ctx, media.title, DeepLink.build(media.title))
                 }
             } catch (_: Exception) {}
         }
