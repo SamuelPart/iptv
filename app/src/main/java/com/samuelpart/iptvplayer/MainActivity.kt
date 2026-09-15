@@ -122,6 +122,12 @@ class MainActivity : AppCompatActivity() {
 
         // Load the TMDb integrated Cine & Series Catalog!
         loadCineCatalog()
+
+        // Tip contextual de bienvenida (solo la primera vez que se abre la app)
+        binding.root.postDelayed({
+            if (!isFinishing) SmartTips.showOnce(this, "home",
+                "💡 Bienvenido: carga tu lista M3U en Inicio o toca Cine para +9.000 películas")
+        }, 3200)
     }
 
     private fun setupBottomNavigation() {
@@ -147,14 +153,20 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.navigation_channels -> {
                     showTab(View.GONE, View.VISIBLE, View.GONE, View.GONE, View.GONE)
+                    SmartTips.showOnce(this, "channels",
+                        "💡 Toca el filtro para ordenar los canales por país o categoría")
                     true
                 }
                 R.id.navigation_search -> {
                     showTab(View.GONE, View.GONE, View.GONE, View.GONE, View.VISIBLE)
+                    SmartTips.showOnce(this, "search",
+                        "💡 Busca canales y películas al instante, con historial incluido")
                     true
                 }
                 R.id.navigation_cine -> {
                     showTab(View.GONE, View.GONE, View.VISIBLE, View.GONE, View.GONE)
+                    SmartTips.showOnce(this, "cine",
+                        "💡 El BOT busca los mejores servidores por ti: toca una película y solo disfruta")
                     true
                 }
                 R.id.navigation_settings -> {

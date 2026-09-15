@@ -108,6 +108,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                         isVideoRolling = true
                         revealBootLayer()
                         try { appleOverlay.showControls() } catch (_: Exception) {}
+                        showPlayerTip()
                     }
                     if (!resumeDone && resumePendingMs > 0 && snap.d > 0 && snap.t < 30_000) {
                         resumeDone = true
@@ -116,6 +117,12 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                 }
             } catch (_: Exception) {}
         }
+    }
+
+    /** Tip contextual del reproductor (una sola vez por instalacion). */
+    private fun showPlayerTip() {
+        SmartTips.showOnce(this, "player",
+            "💡 Toca la pantalla para ver los controles · doble toque = ±10s", bottomDp = 64)
     }
 
     /** Orden del overlay nativo -> video del embed (reparte a los iframes). */
@@ -559,6 +566,7 @@ class WebVideoPlayerActivity : AppCompatActivity() {
                         if (res.contains("1") && !res.contains("IFRAME:")) {
                             isVideoRolling = true
                             revealBootLayer()
+                            showPlayerTip()
                         }
                     }
                 }

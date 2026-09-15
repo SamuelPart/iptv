@@ -360,6 +360,9 @@ class PlayerActivity : AppCompatActivity() {
                         MediaPlayer.Event.Playing -> {
                             binding.playerProgress.visibility = View.GONE
                             appleOverlay.notifyPlayingStateChanged()
+                            SmartTips.showOnce(this@PlayerActivity, "player",
+                                "💡 Toca la pantalla para ver los controles · doble toque = ±10s",
+                                bottomDp = 64)
                             
                             if (pendingSeekPosition > 0L) {
                                 val len = mediaPlayer?.length ?: 0L
