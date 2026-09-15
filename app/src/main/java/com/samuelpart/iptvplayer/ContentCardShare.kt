@@ -63,13 +63,13 @@ object ContentCardShare {
             // ── Scrims para legibilidad (igual que el reproductor) ──
             paint.shader = LinearGradient(
                 0f, H * 0.28f, 0f, H.toFloat(),
-                intArrayOf(0x00000000, 0xF2000000),
+                intArrayOf(0x00000000, 0xF2000000.toInt()),
                 floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
             )
             c.drawRect(0f, H * 0.28f, W.toFloat(), H.toFloat(), paint)
             paint.shader = LinearGradient(
                 0f, 0f, 0f, H * 0.18f,
-                intArrayOf(0x99000000, 0x00000000),
+                intArrayOf(0x99000000.toInt(), 0x00000000),
                 floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
             )
             c.drawRect(0f, 0f, W.toFloat(), H * 0.18f, paint)

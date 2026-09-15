@@ -1,6 +1,7 @@
 package com.samuelpart.iptvplayer
 
 import android.content.Intent
+import android.widget.Toast
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
