@@ -2334,6 +2334,33 @@
 
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/menuItemWallpapers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingVertical="13dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_ios_photo"
+                app:tint="#C9A96E" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="13dp"
+                android:text="Fondos de pantalla"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/menuItemGenres"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

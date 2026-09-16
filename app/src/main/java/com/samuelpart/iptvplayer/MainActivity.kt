@@ -2045,6 +2045,9 @@ class MainActivity : AppCompatActivity() {
 
         binding.menuItemFav.setOnClickListener { openCineList("FAVORITOS", "favorites") }
         binding.menuItemContinue.setOnClickListener { openCineList("SEGUIR VIENDO", "continue") }
+        binding.menuItemWallpapers.setOnClickListener {
+            startActivity(android.content.Intent(this, CineWallpapersActivity::class.java))
+        }
         binding.menuItemRecent.setOnClickListener { openCineList("ESTRENOS", "recent") }
         binding.menuItemAlerts.setOnClickListener { openCineList("ALERTAS", "alerts") }
         binding.menuItemHistory.setOnClickListener { openCineList("HISTORIAL", "history") }

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Visor a pantalla completa del fondo, con acciones de wallpaper. -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <ImageView
+        android:id="@+id/imgWallpaperFull"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="Fondo de la pelicula o serie" />
+
+    <LinearLayout
+        android:id="@+id/wallpaperTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_scrim_top"
+        android:paddingHorizontal="14dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="26dp">
+
+        <ImageView
+            android:id="@+id/btnWallpaperBack"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="7dp"
+            android:background="@drawable/bg_circle_glass"
+            android:src="@drawable/ic_ios_xmark"
+            app:tint="#FFFFFF"
+            android:contentDescription="Cerrar" />
+
+        <TextView
+            android:id="@+id/txtWallpaperTitle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/wallpaperBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/bg_scrim_bottom"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="34dp"
+        android:paddingBottom="22dp">
+
+        <TextView
+            android:id="@+id/btnWallpaperHome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_apple_glass_pill"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="11dp"
+            android:layout_marginHorizontal="4dp"
+            android:text="Inicio 🏠"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnWallpaperLock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_apple_glass_pill"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="11dp"
+            android:layout_marginHorizontal="4dp"
+            android:text="Bloqueo 🔒"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnWallpaperBoth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_apple_glass_pill"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="11dp"
+            android:layout_marginHorizontal="4dp"
+            android:text="Ambos ✨"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+</FrameLayout>
