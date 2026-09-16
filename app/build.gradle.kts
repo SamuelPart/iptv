@@ -11,7 +11,7 @@ android {
         applicationId = "com.samuelpart.iptvplayer"
         minSdk = 21
         targetSdk = 35
-        versionCode = 13
+        versionCode = 14
         versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
