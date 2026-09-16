@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Claves de firma y paquetes de Play (NUNCA al repositorio)
+*.jks
+*.keystore
+*.aab
+app/release/
+keystore.properties
