@@ -60,8 +60,10 @@ class CineMovieDetailActivity : AppCompatActivity() {
                 if (media.trailerUrl.isNullOrEmpty()) CineRepository.fetchTmdTrailer(media)
                 if (media.platformLogoUrl.isNullOrBlank()) CineRepository.fetchWatchProviders(media)
             }
+            val backdrops = withContext(Dispatchers.IO) { CineRepository.fetchTmdbBackdrops(media) }
             renderFromMedia()
             if (details != null) renderDetails(details)
+            renderBackdrops(backdrops)
             binding.progress.visibility = View.GONE
         }
     }
@@ -119,6 +121,21 @@ class CineMovieDetailActivity : AppCompatActivity() {
         if (hasCast) {
             binding.rvCast.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
             binding.rvCast.adapter = CineCastAdapter(cast)
+        }
+    }
+
+    private fun renderBackdrops(urls: List<String>) {
+        val show = urls.isNotEmpty()
+        binding.lblBackdrops.visibility = if (show) View.VISIBLE else View.GONE
+        binding.rvBackdrops.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) {
+            binding.rvBackdrops.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            binding.rvBackdrops.adapter = BackdropsAdapter(urls) { url ->
+                startActivity(android.content.Intent(this, WallpaperViewerActivity::class.java).apply {
+                    putExtra("title", media.title)
+                    putExtra("url", url)
+                })
+            }
         }
     }
 

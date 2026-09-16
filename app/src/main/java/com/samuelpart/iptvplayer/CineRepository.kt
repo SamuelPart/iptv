@@ -690,6 +690,52 @@ object CineRepository {
         }
     }
 
+    private val backdropsCache = mutableMapOf<String, List<String>>()
+
+    /**
+     * Imagenes de fondo (backdrops) del titulo desde TMDB /images.
+     * Sin tmdbId usa el backdrop actual como unica imagen; cache en memoria
+     * para que reabrir la ficha sea instantaneo.
+     */
+    suspend fun fetchTmdbBackdrops(media: CineMedia): List<String> = withContext(Dispatchers.IO) {
+        val typeStr = if (media.type == "series") "tv" else "movie"
+        val cacheKey = "$typeStr/${media.tmdbId ?: media.title}"
+        backdropsCache[cacheKey]?.let { return@withContext it }
+        val id = media.tmdbId
+        if (id == null) {
+            val fb = media.backdropUrl
+            return@withContext if (fb.isNullOrBlank()) emptyList() else listOf(fb)
+        }
+        var conn: HttpURLConnection? = null
+        val out = mutableListOf<String>()
+        try {
+            val urlString = "https://api.themoviedb.org/3/$typeStr/$id/images?api_key=$TMDB_API_KEY&include_image_language=es,en,null"
+            conn = URL(urlString).openConnection() as HttpURLConnection
+            conn.connectTimeout = 6000
+            conn.readTimeout = 6000
+            if (conn.responseCode == 200) {
+                val jsonStr = conn.inputStream.bufferedReader().use { it.readText() }
+                val arr = JSONObject(jsonStr).optJSONArray("backdrops")
+                if (arr != null) {
+                    for (i in 0 until minOf(arr.length(), 12)) {
+                        val p = arr.getJSONObject(i).optString("file_path")
+                        if (p.isNotBlank() && p != "null") out.add("https://image.tmdb.org/t/p/w780$p")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            try { conn?.disconnect() } catch (_: Exception) {}
+        }
+        if (out.isEmpty()) {
+            val fb = media.backdropUrl
+            if (!fb.isNullOrBlank()) out.add(fb)
+        }
+        if (out.isNotEmpty()) backdropsCache[cacheKey] = out
+        out
+    }
+
     fun fetchTmdTrailer(media: CineMedia) {
         val tmdbId = media.tmdbId ?: return
         try {

@@ -273,6 +273,26 @@
                             android:layout_marginTop="8dp"
                             android:clipToPadding="false"
                             android:overScrollMode="never" />
+
+                        <TextView
+                            android:id="@+id/lblBackdrops"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="FONDOS DE PANTALLA"
+                            android:textColor="#8A8A93"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvBackdrops"
+                            android:layout_width="match_parent"
+                            android:layout_height="118dp"
+                            android:layout_marginTop="8dp"
+                            android:clipToPadding="false"
+                            android:overScrollMode="never"
+                            android:visibility="gone" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
