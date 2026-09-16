@@ -1905,7 +1905,7 @@ class MainActivity : AppCompatActivity() {
         label.contains("CRUNCHYROLL") -> R.drawable.ic_brand_crunchyroll
         label.contains("TUBI") -> R.drawable.ic_brand_tubi
         label.contains("PEACOCK") -> R.drawable.ic_brand_peacock
-        else -> R.drawable.icon_lumen_prisma
+        else -> R.drawable.icon_lumen_play
     }
 
     private var premierKind = "all"

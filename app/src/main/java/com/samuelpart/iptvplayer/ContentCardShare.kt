@@ -85,7 +85,7 @@ object ContentCardShare {
                 c.drawRect(0f, 0f, POSTER_W.toFloat(), H.toFloat(), p)
                 p.shader = null
             } else {
-                // Sin poster: degradado + glifo prisma grande centrado
+                // Sin poster: degradado + glifo play grande centrado
                 p.shader = LinearGradient(
                     0f, 0f, POSTER_W.toFloat(), H.toFloat(),
                     intArrayOf(0xFF15151F.toInt(), 0xFF262638.toInt()),
@@ -174,13 +174,13 @@ object ContentCardShare {
         }
     }
 
-    /** Glifo prisma de Lumen dibujado por path (reutilizable, vector 24 escalado). */
+    /** Glifo play de Lumen dibujado por path (reutilizable, vector 24 escalado). */
     private fun drawGlyph(c: Canvas, p: Paint, x: Float, y: Float, size: Float, color: Int) {
         val gl = size / 24f
         val path = Path().apply {
-            moveTo(x + 12 * gl, y + 2.6f * gl)
-            lineTo(x + 21.2f * gl, y + 19.2f * gl)
-            lineTo(x + 2.8f * gl, y + 19.2f * gl)
+            moveTo(x + 6.2f * gl, y + 3.4f * gl)
+            lineTo(x + 20.4f * gl, y + 12f * gl)
+            lineTo(x + 6.2f * gl, y + 20.6f * gl)
             close()
         }
         p.color = color

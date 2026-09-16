@@ -1430,7 +1430,7 @@
                                 android:layout_gravity="center"
                                 android:scaleType="centerCrop"
                                 android:background="@android:color/transparent"
-                                android:src="@drawable/icon_lumen_prisma"
+                                android:src="@drawable/icon_lumen_play"
                                 android:contentDescription="Logo plataforma" />
                         </FrameLayout>
 
