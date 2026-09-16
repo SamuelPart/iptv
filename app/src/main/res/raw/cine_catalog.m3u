@@ -1,4 +1,6 @@
 #EXTM3U
+#EXTINF:-1 tvg-logo="" group-title="Peliculas", Lisa Frankenstein (2024) 
+http://hdshost.vip:8880/movie/granAve/J3Z3mKUFMLWh/536525.mkv
 #EXTINF:-1 tvg-logo="" group-title="Peliculas",  Los vigilantes (2024) 
 http://hdshost.vip:8880/movie/granAve/J3Z3mKUFMLWh/548042.mkv
 #EXTINF:-1 tvg-logo="" group-title="Peliculas",  Inmersión letal (2005) 
@@ -6446,8 +6448,7 @@ http://hdshost.vip:8880/movie/granAve/J3Z3mKUFMLWh/536896.mkv
 http://hdshost.vip:8880/movie/granAve/J3Z3mKUFMLWh/536789.mp4
 #EXTINF:-1 tvg-logo="" group-title="Peliculas",Los que se quedan
 http://hdshost.vip:8880/movie/granAve/J3Z3mKUFMLWh/536788.mp4
-#EXTINF:-1 tvg-logo="" group-title="Peliculas",Lisa Frankenstein
-http://hdshost.vip:8880/movie/granAve/J3Z3mKUFMLWh/536525.mkv
+
 #EXTINF:-1 tvg-logo="" group-title="Peliculas",Amigos de Jesús: José de Nazaret
 http://hdshost.vip:8880/movie/granAve/J3Z3mKUFMLWh/536524.mkv
 #EXTINF:-1 tvg-logo="" group-title="Peliculas",Inri. La película de la Semana Santa de Estepa
