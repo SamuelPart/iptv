@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.samuelpart.iptvplayer"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.samuelpart.iptvplayer"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 14
         versionName = "3.0"
 
