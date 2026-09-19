@@ -20,6 +20,20 @@ Lumen: Player IPTV y Listas
 Reproductor IPTV elegante: tus listas M3U, TV en vivo, películas y series.
 ```
 
+### Variantes de la descripción breve (por si Play pide cambiarla)
+
+```
+Reproductor IPTV elegante: tus listas M3U, TV en vivo, películas y series.   (74)
+Reproductor IPTV: canales en vivo, películas y series de tus listas M3U.     (72)
+Tu reproductor IPTV de diseño: TV en vivo, cine y series desde listas M3U.   (74)
+Reproductor IPTV completo: listas M3U, TV en vivo, cine, series y fondos.    (73)
+```
+
+⚠️ Reglas para que la descripción no frene la revisión:
+- NUNCA nombres de canales, películas, series ni plataformas reales.
+- NUNCA prometer "contenido gratis" / "todo gratis" (dispara revisión de derechos).
+- La app se presenta siempre como REPRODUCTOR de listas que trae el usuario.
+
 ## 3. Descripción completa (máx. 4000 caracteres)
 
 ```
