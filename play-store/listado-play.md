@@ -39,9 +39,7 @@ Reproductor IPTV completo: listas M3U, TV en vivo, cine, series y fondos.    (73
 ```
 Convierte tus listas M3U en una experiencia de televisión elegante.
 
-Lumen es un reproductor IPTV rápido y sencillo, con un diseño moderno de
-vidrio oscuro, pensado para ver tu TV en vivo, tus películas y tus series
-sin complicaciones.
+Lumen es un reproductor IPTV rápido y sencillo, con un diseño moderno de vidrio oscuro, pensado para ver tu TV en vivo, tus películas y tus series sin complicaciones.
 
 📺 TV EN VIVO
 • Reproduce canales de tus listas M3U locales o remotas
@@ -49,28 +47,29 @@ sin complicaciones.
 • Cambia de canal y de servidor con un toque
 
 🎬 PELÍCULAS Y SERIES
-• Fichas con póster, año y detalles de cada título
-• Catálogo de cine navegable y ordenado
-• Marca tus favoritos para tenerlos siempre a mano
+• Fichas con póster, año, reparto y sinopsis de cada título
+• Catálogo de cine navegable por géneros y plataformas
+• Marca tus favoritos y continúa donde te quedaste
+
+🖼️ FONDOS DE PANTALLA
+• Galería con las imágenes de cine de cada película y serie
+• Pon tus imágenes favoritas como fondo de inicio, de bloqueo o ambos
 
 🔍 BÚSQUEDA INSTANTÁNEA
-• Encuentra cualquier canal, película o serie al instante
+• Encuentra cualquier canal, película o serie al instante, con historial
 
 🧲 COMPARTE TUS HALLAZGOS
 • Crea tarjetas con póster y código QR para recomendar títulos
-• Quien recibe la recomendación abre la app directo en ese título
+• Quien recibe la tarjeta escanea el QR y abre la app directo en ese título
 
 ⚙️ POTENTE Y COMPATIBLE
 • Doble motor de reproducción (Media3/ExoPlayer y LibVLC)
-• Compatibilidad amplia de formatos: HLS, DASH, RTSP y más
+• Amplia compatibilidad de formatos: HLS, DASH, RTSP y más
 • Envía a tu Chromecast con un toque
 • Colores de acento personalizables y modo oscuro elegante
 
 📌 IMPORTANTE
-Lumen es un REPRODUCTOR. No producimos ni suministramos contenido
-audiovisual: la app reproduce las listas M3U que cada usuario posea o
-tenga derecho a usar. Respeta los derechos de autor del contenido que
-reproduzcas.
+Lumen es un REPRODUCTOR. No producimos ni suministramos contenido audiovisual: la app reproduce las listas M3U que cada usuario posea o tenga derecho a usar. Respeta los derechos de autor del contenido que reproduzcas.
 
 📲 Descarga Lumen y dale a tu pantalla el reproductor que se merece.
 
