@@ -11,15 +11,15 @@ android {
         applicationId = "com.samuelpart.iptvplayer"
         minSdk = 21
         targetSdk = 36
-        versionCode = 17
-        versionName = "15.1.0"
+        versionCode = 18
+        versionName = "15.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
