@@ -44,8 +44,12 @@ class WatchHistoryActivity : AppCompatActivity() {
             onLongPress = { setEditMode(true) },
             onSelectionChanged = { count -> updateSelectionUi(count) }
         )
-        binding.rvWatchHistory.layoutManager = GridLayoutManager(this, 3)
+        binding.rvWatchHistory.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvWatchHistory.adapter = adapter
+
+        // Anuncio en bloque
+        NativeAds.attach(this, binding.adSlotWatchHist, NativeAds.VARIANT_MEDIA)
 
         binding.btnWatchHistEdit.setOnClickListener {
             setEditMode(adapter.selectionMode.not())
