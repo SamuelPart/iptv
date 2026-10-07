@@ -686,6 +686,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Barra de Inicio: el campo va a la pestaña Buscar; el reloj abre el historial
+        binding.homeSearchBar.setOnClickListener {
+            binding.bottomNavigation.selectedItemId = R.id.navigation_search
+        }
+        binding.btnWatchHistory.setOnClickListener {
+            startActivity(android.content.Intent(this, WatchHistoryActivity::class.java))
+        }
+        startHomeSearchRotator()
+
         // Abre la pestaña de Ajustes
         binding.btnOpenSettings.setOnClickListener {
             binding.bottomNavigation.selectedItemId = R.id.navigation_settings
@@ -2217,6 +2226,31 @@ class MainActivity : AppCompatActivity() {
         NativeAds.attach(this, binding.adSlotSettings, NativeAds.VARIANT_COMPACT)
         // Cine: bloque con vídeo/imagen
         NativeAds.attach(this, binding.adSlotCine, NativeAds.VARIANT_MEDIA)
+    }
+
+    /** Placeholder rotativo del buscador de Inicio: muestra las busquedas
+     *  pasadas una a una (3s, transicion vertical). Si no hay historial,
+     *  muestra una pista estatica. */
+    private fun startHomeSearchRotator() {
+        val suggestions = LinkedHashSet<String>().apply {
+            addAll(getSearchHistory(CINE_HISTORY_KEY))
+            addAll(getSearchHistory(CHANNELS_HISTORY_KEY))
+        }.toList().take(8)
+        val switcher = binding.homeSearchRotator
+        if (suggestions.isEmpty()) {
+            switcher.setText("Busca películas, series y canales…")
+            return
+        }
+        switcher.setText(suggestions[0])
+        var idx = 0
+        val r = object : Runnable {
+            override fun run() {
+                idx = (idx + 1) % suggestions.size
+                switcher.setText(suggestions[idx])
+                switcher.postDelayed(this, 3000)
+            }
+        }
+        switcher.postDelayed(r, 3000)
     }
 
     private fun getSearchHistory(key: String): MutableList<String> {

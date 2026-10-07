@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Historial de lo visto: poster + titulo + minuto donde quedo, con modo
+     de seleccion para borrar. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0D0D15">
+
+    <LinearLayout
+        android:id="@+id/watchHistHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnWatchHistBack"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="7dp"
+            android:background="@drawable/bg_circle_glass"
+            android:src="@drawable/ic_ios_xmark"
+            app:tint="#FFFFFF"
+            android:contentDescription="Cerrar" />
+
+        <TextView
+            android:id="@+id/txtWatchHistTitle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="HISTORIAL"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08" />
+
+        <TextView
+            android:id="@+id/btnWatchHistEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_apple_glass_pill"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:text="Editar"
+            android:textColor="#C9A96E"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvWatchHistory"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="6dp"
+        android:clipToPadding="false"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        app:layout_constraintTop_toBottomOf="@id/watchHistHeader"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <TextView
+        android:id="@+id/txtWatchHistEmpty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Aún no hay historial de reproducción"
+        android:textColor="#8A8A93"
+        android:textSize="14sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/watchHistHeader"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/barWatchDelete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/bg_scrim_bottom"
+        android:paddingTop="26dp"
+        android:paddingBottom="20dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:id="@+id/btnWatchHistDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_apple_glass_pill"
+            android:paddingHorizontal="22dp"
+            android:paddingVertical="12dp"
+            android:text="Borrar seleccionados (0)"
+            android:textColor="#FF7A7A"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

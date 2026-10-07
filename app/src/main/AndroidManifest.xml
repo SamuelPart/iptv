@@ -71,6 +71,9 @@
             android:name=".CineSearchActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".WatchHistoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".CineWallpapersActivity"
             android:exported="false" />
         <activity
