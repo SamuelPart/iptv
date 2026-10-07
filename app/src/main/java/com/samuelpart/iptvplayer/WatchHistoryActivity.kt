@@ -7,7 +7,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.samuelpart.iptvplayer.databinding.ActivityWatchHistoryBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -686,9 +686,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Barra de Inicio: el campo va a la pestaña Buscar; el reloj abre el historial
+        // Barra de Inicio: abre el BUSCADOR DE CINE (peliculas/series; nada de
+        // canales). El reloj abre el historial de lo visto.
         binding.homeSearchBar.setOnClickListener {
-            binding.bottomNavigation.selectedItemId = R.id.navigation_search
+            startActivity(android.content.Intent(this, CineSearchActivity::class.java))
         }
         binding.btnWatchHistory.setOnClickListener {
             startActivity(android.content.Intent(this, WatchHistoryActivity::class.java))
@@ -2272,7 +2273,7 @@ class MainActivity : AppCompatActivity() {
         val current = getSearchHistory(key)
         current.remove(trimmed) // Remove duplicates
         current.add(0, trimmed) // Add to top
-        if (current.size > 5) { // Keep last 5 recent searches
+        if (current.size > 10) { // Keep last 10 recent searches
             current.removeAt(current.size - 1)
         }
         saveSearchHistory(key, current)
