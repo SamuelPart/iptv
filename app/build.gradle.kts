@@ -9,9 +9,9 @@ android {
 
     defaultConfig {
         applicationId = "com.samuelpart.iptvplayer"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 36
-        versionCode = 18
+        versionCode = 19
         versionName = "15.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
