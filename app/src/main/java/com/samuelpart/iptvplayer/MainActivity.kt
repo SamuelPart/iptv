@@ -513,7 +513,7 @@ class MainActivity : AppCompatActivity() {
                 scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
                 Glide.with(this@MainActivity).load(m.posterUrl).centerCrop()
                     .placeholder(R.drawable.bg_tile_glass).into(this)
-                setColorFilter(0x99000000, android.graphics.PorterDuff.Mode.SRC_OVER)
+                setColorFilter(0x99000000.toInt(), android.graphics.PorterDuff.Mode.SRC_OVER)
             })
             // EL CARTEL completo centrado: el poster ya muestra el nombre
             slide.addView(android.widget.ImageView(this).apply {
