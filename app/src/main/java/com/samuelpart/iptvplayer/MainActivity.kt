@@ -695,12 +695,22 @@ class MainActivity : AppCompatActivity() {
         binding.btnWatchHistory.setOnClickListener {
             startActivity(android.content.Intent(this, WatchHistoryActivity::class.java))
         }
+
+        // Secciones de Inicio: cada chip abre su pantalla del catalogo
+        binding.chipHomePeliculas.setOnClickListener {
+            openCineList("PELICULAS", "type", "movie")
+        }
+        binding.chipHomeSeries.setOnClickListener {
+            openCineList("SERIES", "type", "series")
+        }
+        binding.chipHomeAnimacion.setOnClickListener {
+            openCineList("ANIMACION", "genre", "animación")
+        }
+        binding.chipHomePlataformas.setOnClickListener {
+            openCineList("PLATAFORMAS", "platform_all", "")
+        }
         startHomeSearchRotator()
 
-        // Abre la pestaña de Ajustes
-        binding.btnOpenSettings.setOnClickListener {
-            binding.bottomNavigation.selectedItemId = R.id.navigation_settings
-        }
 
         // Toggle Cine Search History Click Listener
         binding.btnCineSearchHistory.setOnClickListener {
@@ -1613,7 +1623,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateCineFilterButtons() {
         val orangeColor = AccentManager.color(this)
-        val grayColor = android.graphics.Color.parseColor("#14141E")
+        val grayColor = android.graphics.Color.parseColor("#0F2144")
         
         binding.btnCineFilterAll.setBackgroundColor(if (selectedCineType == "all") orangeColor else grayColor)
         binding.btnCineFilterAll.setTextColor(if (selectedCineType == "all") android.graphics.Color.WHITE else android.graphics.Color.parseColor("#98989F"))
@@ -1639,7 +1649,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateParaTiChips() {
-        val activeText = android.graphics.Color.parseColor("#16181C")
+        val activeText = android.graphics.Color.parseColor("#0F2144")
         val grayText = android.graphics.Color.parseColor("#98989F")
         fun paint(b: android.widget.TextView, active: Boolean) {
             b.setBackgroundResource(if (active) R.drawable.bg_chip_active else R.drawable.bg_chip_idle)
@@ -1708,7 +1718,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCatalogSegments() {
-        val activeText = android.graphics.Color.parseColor("#16181C")
+        val activeText = android.graphics.Color.parseColor("#0F2144")
         val grayText = android.graphics.Color.parseColor("#98989F")
         fun seg(v: android.widget.TextView, active: Boolean) {
             v.setBackgroundResource(if (active) R.drawable.bg_chip_active else android.R.color.transparent)
@@ -1928,7 +1938,7 @@ class MainActivity : AppCompatActivity() {
     private fun updateKindChips() {
         fun setActive(v: android.widget.TextView, on: Boolean) {
             v.setBackgroundResource(if (on) R.drawable.bg_chip_active else R.drawable.bg_chip_idle)
-            v.setTextColor(android.graphics.Color.parseColor(if (on) "#16181C" else "#C9A96E"))
+            v.setTextColor(android.graphics.Color.parseColor(if (on) "#0F2144" else "#C9A96E"))
         }
         setActive(binding.chipKindMovies, premierKind == "movie")
         setActive(binding.chipKindSeries, premierKind == "series")
@@ -2380,8 +2390,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateAppThemeColors(isDark: Boolean) {
-        val bgColor = if (isDark) android.graphics.Color.parseColor("#121212") else android.graphics.Color.parseColor("#F5F5F5")
-        val cardColor = if (isDark) android.graphics.Color.parseColor("#1E1E1E") else android.graphics.Color.parseColor("#FFFFFF")
+        val bgColor = if (isDark) android.graphics.Color.parseColor("#0A1834") else android.graphics.Color.parseColor("#F5F5F5")
+        val cardColor = if (isDark) android.graphics.Color.parseColor("#14294F") else android.graphics.Color.parseColor("#FFFFFF")
         val textColor = if (isDark) android.graphics.Color.WHITE else android.graphics.Color.BLACK
         
         // 1. Update window background
@@ -2408,7 +2418,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateSubviewsColorRecursive(view: android.view.View, isDark: Boolean) {
         val textColor = if (isDark) android.graphics.Color.WHITE else android.graphics.Color.BLACK
-        val cardColor = if (isDark) android.graphics.Color.parseColor("#1E1E1E") else android.graphics.Color.parseColor("#FFFFFF")
+        val cardColor = if (isDark) android.graphics.Color.parseColor("#14294F") else android.graphics.Color.parseColor("#FFFFFF")
         
         if (view is androidx.cardview.widget.CardView) {
             view.setCardBackgroundColor(cardColor)
@@ -2422,7 +2432,7 @@ class MainActivity : AppCompatActivity() {
         } else if (view is android.widget.EditText) {
             view.setTextColor(textColor)
             view.setHintTextColor(if (isDark) android.graphics.Color.parseColor("#666666") else android.graphics.Color.parseColor("#999999"))
-            view.setBackgroundColor(if (isDark) android.graphics.Color.parseColor("#1E1E1E") else android.graphics.Color.parseColor("#E0E0E0"))
+            view.setBackgroundColor(if (isDark) android.graphics.Color.parseColor("#14294F") else android.graphics.Color.parseColor("#E0E0E0"))
         }
         
         if (view is android.view.ViewGroup) {

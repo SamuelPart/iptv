@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="#0A1834"
     android:fitsSystemWindows="true">
 
     <ScrollView
@@ -114,7 +114,7 @@
                         android:paddingLeft="10dp" android:paddingRight="10dp"
                         android:paddingTop="4dp" android:paddingBottom="4dp"
                         android:text="PELÍCULA"
-                        android:textColor="#1B1E24"
+                        android:textColor="#14294F"
                         android:textSize="9.5sp"
                         android:textStyle="bold" />
 
@@ -160,7 +160,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="▶  REPRODUCIR"
-                        android:textColor="#141414"
+                        android:textColor="#0F2144"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 

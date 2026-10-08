@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 /**
  * Pantalla de lista generica del Cine. Recibe extras:
  *   title: texto del encabezado
- *   kind:  all | favorites | continue | recent | genre | platform | alerts | history
+ *   kind:  all | favorites | continue | recent | genre | platform | type |
+ *          platform_all | alerts | history
  *   param: valor del filtro (genero/plataforma)
  */
 class CinePopularAllActivity : AppCompatActivity() {
@@ -60,9 +61,29 @@ class CinePopularAllActivity : AppCompatActivity() {
                 "genre" -> catalog.filter { m ->
                     if (param == "anime") {
                         m.title.lowercase().contains("anime") || m.group.lowercase().contains("anime")
+                    } else if (param == "animación") {
+                        m.title.lowercase().contains("animac") || m.group.lowercase().contains("animac") ||
+                            m.group.lowercase().contains("anime") ||
+                            TasteProfile.genreKeysOf(m).contains("animación")
                     } else {
                         TasteProfile.genreKeysOf(m).contains(param)
                     }
+                }
+
+                "type" -> catalog
+                    .filter { if (param == "series") it.type != "movie" else it.type == "movie" }
+                    .sortedBy { it.title }
+
+                "platform_all" -> {
+                    val aliases = listOf("netflix", "disney", "hbo", "max", "prime", "amazon", "apple", "hulu", "paramount", "peacock", "skyshowtime")
+                    catalog.filter { m ->
+                        aliases.any { p ->
+                            m.group.lowercase().contains(p) ||
+                                m.title.lowercase().contains(p) ||
+                                m.searchTitle.lowercase().contains(p) ||
+                                (m.platformName?.lowercase()?.contains(p) == true)
+                        }
+                    }.sortedBy { it.title }
                 }
 
                 "platform" -> {

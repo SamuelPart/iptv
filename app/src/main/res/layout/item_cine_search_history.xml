@@ -22,7 +22,7 @@
             android:layout_height="78dp"
             app:cardCornerRadius="8dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#14141E">
+            app:cardBackgroundColor="#0F2144">
 
             <ImageView
                 android:id="@+id/imgHistoryPoster"
@@ -78,7 +78,7 @@
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
                     android:text="TOP"
-                    android:textColor="#17131F"
+                    android:textColor="#0F2144"
                     android:textSize="8.5sp"
                     android:textStyle="bold"
                     android:visibility="gone" />

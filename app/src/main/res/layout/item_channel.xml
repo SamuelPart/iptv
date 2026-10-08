@@ -73,7 +73,7 @@
             android:id="@+id/layoutName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#E60A0A12"
+            android:background="#E614294F"
             android:orientation="vertical"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"

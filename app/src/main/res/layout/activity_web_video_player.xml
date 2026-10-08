@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="#0A1834">
 
     <WebView
         android:id="@+id/webFramePlayer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#000000" />
+        android:background="#0A1834" />
 
     <FrameLayout
         android:id="@+id/frameWebFullscreen"
@@ -30,7 +30,7 @@
         android:id="@+id/layerWebBoot"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#050506"
+        android:background="#0A1834"
         android:elevation="5dp">
 
         <ProgressBar

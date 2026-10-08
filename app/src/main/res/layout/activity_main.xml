@@ -306,33 +306,96 @@
                         android:contentDescription="Historial de lo visto" />
                 </LinearLayout>
 
-                <!-- Mini top bar -->
-                <LinearLayout
+                <!-- Secciones de Inicio: cada chip abre su pantalla del catalogo -->
+                <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:layout_marginTop="14dp"
+                    android:scrollbars="none"
+                    android:overScrollMode="never"
+                    android:fillViewport="true">
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <LinearLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="✦ LUMEN"
-                        android:textColor="@color/ios_cyan"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.35" />
+                        android:orientation="horizontal">
 
-                    <ImageButton
-                        android:id="@+id/btnOpenSettings"
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_ios_gear"
-                        android:contentDescription="Ajustes de la App"
-                        app:tint="#E6FFFFFF" />
+                        <TextView
+                            android:id="@+id/chipHomeInicio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_chip_active"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="9dp"
+                            android:text="Inicio"
+                            android:textColor="#0F2144"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
 
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/chipHomePeliculas"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_apple_glass_pill"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="9dp"
+                            android:text="Películas"
+                            android:textColor="#D6DAE4"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/chipHomeSeries"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_apple_glass_pill"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="9dp"
+                            android:text="Series"
+                            android:textColor="#D6DAE4"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/chipHomeAnimacion"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_apple_glass_pill"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="9dp"
+                            android:text="Animación"
+                            android:textColor="#D6DAE4"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/chipHomePlataformas"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_apple_glass_pill"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="9dp"
+                            android:text="Plataformas"
+                            android:textColor="#D6DAE4"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
+                </HorizontalScrollView>
 
                 <!-- v4 coverflow: saludo mini -->
                 <TextView
@@ -460,7 +523,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:visibility="gone"
-                    app:cardBackgroundColor="#000000"
+                    app:cardBackgroundColor="#0A1834"
                     app:cardCornerRadius="18dp"
                     app:cardElevation="0dp"
                     app:strokeColor="#1FFFFFFF"
@@ -514,7 +577,7 @@
                                     android:paddingTop="4dp"
                                     android:paddingBottom="4dp"
                                     android:text="ANUNCIO"
-                                    android:textColor="#1B1E24"
+                                    android:textColor="#14294F"
                                     android:textSize="9sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
@@ -548,7 +611,7 @@
                                 android:backgroundTint="@color/ios_blue"
                                 android:minWidth="120dp"
                                 android:text="Instalar"
-                                android:textColor="#1B1E24"
+                                android:textColor="#14294F"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -976,7 +1039,7 @@
             android:id="@+id/containerBrowser"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#FF000000"
+            android:background="#0A1834"
             android:visibility="gone">
 
             <ScrollView
@@ -1447,7 +1510,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone"
-            android:background="#000000">
+            android:background="#0A1834">
                     <!-- ================= PANTALLA PREMIER ================= -->
             <androidx.core.widget.NestedScrollView
                 android:id="@+id/premierScroll"
@@ -1885,7 +1948,7 @@
                             android:gravity="center"
                             android:paddingVertical="9dp"
                             android:text="Todos"
-                            android:textColor="#16181C"
+                            android:textColor="#0F2144"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
@@ -2268,7 +2331,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:orientation="vertical"
-            android:background="#F513151A"
+            android:background="#F50F2144"
             android:elevation="0dp"
             android:paddingHorizontal="16dp"
             android:paddingTop="20dp">

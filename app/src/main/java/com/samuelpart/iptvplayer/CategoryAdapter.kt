@@ -25,7 +25,7 @@ class CategoryAdapter(
                 binding.txtCategoryName.textColor = android.graphics.Color.parseColor("#FFFFFF")
             } else {
                 // Unselected: iOS dark surface, white text
-                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#14141E"))
+                binding.cardCategory.setCardBackgroundColor(android.graphics.Color.parseColor("#0F2144"))
                 binding.txtCategoryName.textColor = android.graphics.Color.parseColor("#FFFFFF")
             }
 

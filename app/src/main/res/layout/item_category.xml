@@ -7,7 +7,7 @@
     android:layout_margin="4dp"
     app:cardCornerRadius="18dp"
     app:cardElevation="0dp"
-    app:cardBackgroundColor="#FF14141E"
+    app:cardBackgroundColor="#FF0F2144"
     app:cardPreventCornerOverlap="true">
 
     <TextView

@@ -16,7 +16,7 @@
         android:layout_height="64dp"
         app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#1D1D2B">
+        app:cardBackgroundColor="#14294F">
 
         <ImageView
             android:id="@+id/imgResultPoster"

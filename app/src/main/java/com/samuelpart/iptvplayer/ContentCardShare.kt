@@ -79,7 +79,7 @@ object ContentCardShare {
                 // scrim sutil para unificar con el panel
                 p.shader = LinearGradient(
                     0f, 0f, POSTER_W.toFloat(), 0f,
-                    intArrayOf(0x00000000, 0x2E0D0D15),
+                    intArrayOf(0x00000000, 0x2E0A1834),
                     floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
                 )
                 c.drawRect(0f, 0f, POSTER_W.toFloat(), H.toFloat(), p)

@@ -45,7 +45,7 @@
 
     <!-- Cross 'X' inside circular badge -->
     <path
-        android:strokeColor="#000000"
+        android:strokeColor="#0A1834"
         android:strokeWidth="1.2"
         android:strokeLineCap="round"
         android:pathData="M16,16L20,20M20,16L16,20" />

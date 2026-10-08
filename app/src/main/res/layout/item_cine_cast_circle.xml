@@ -12,7 +12,7 @@
         android:layout_height="64dp"
         app:cardCornerRadius="32dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#16181C">
+        app:cardBackgroundColor="#0F2144">
 
         <ImageView
             android:id="@+id/imgCastFace"
