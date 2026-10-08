@@ -397,6 +397,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        startHomeSearchRotator()
         refreshContinueWatching()
         refreshFavorites()
         applyAccentColor()
@@ -2229,29 +2230,39 @@ class MainActivity : AppCompatActivity() {
         NativeAds.attach(this, binding.adSlotCine, NativeAds.VARIANT_MEDIA)
     }
 
+    private var homeRotatorRunnable: Runnable? = null
+
     /** Placeholder rotativo del buscador de Inicio: muestra las busquedas
-     *  pasadas una a una (3s, transicion vertical). Si no hay historial,
-     *  muestra una pista estatica. */
+     *  pasadas una a una (3s, transicion vertical). Se reconstruye en cada
+     *  onResume para reflejar las busquedas nuevas. Con una sola busqueda la
+     *  muestra FIJA (sin transicion que repita el mismo texto). */
     private fun startHomeSearchRotator() {
+        homeRotatorRunnable?.let { binding.homeSearchRotator.removeCallbacks(it) }
+        homeRotatorRunnable = null
         val suggestions = LinkedHashSet<String>().apply {
             addAll(getSearchHistory(CINE_HISTORY_KEY))
             addAll(getSearchHistory(CHANNELS_HISTORY_KEY))
-        }.toList().take(8)
+        }.toList().filter { it.isNotBlank() }.take(8)
         val switcher = binding.homeSearchRotator
-        if (suggestions.isEmpty()) {
-            switcher.setText("Busca películas, series y canales…")
-            return
-        }
-        switcher.setText(suggestions[0])
-        var idx = 0
-        val r = object : Runnable {
-            override fun run() {
-                idx = (idx + 1) % suggestions.size
-                switcher.setText(suggestions[idx])
-                switcher.postDelayed(this, 3000)
+        when {
+            suggestions.isEmpty() ->
+                switcher.setText("Busca películas, series y canales…")
+            suggestions.size == 1 ->
+                switcher.setText(suggestions[0])
+            else -> {
+                switcher.setText(suggestions[0])
+                var idx = 0
+                val r = object : Runnable {
+                    override fun run() {
+                        idx = (idx + 1) % suggestions.size
+                        switcher.setText(suggestions[idx])
+                        switcher.postDelayed(this, 3000)
+                    }
+                }
+                homeRotatorRunnable = r
+                switcher.postDelayed(r, 3000)
             }
         }
-        switcher.postDelayed(r, 3000)
     }
 
     private fun getSearchHistory(key: String): MutableList<String> {
@@ -2490,6 +2501,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 .start()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        homeRotatorRunnable?.let { binding.homeSearchRotator.removeCallbacks(it) }
     }
 
     override fun onDestroy() {

@@ -44,8 +44,7 @@ class WatchHistoryActivity : AppCompatActivity() {
             onLongPress = { setEditMode(true) },
             onSelectionChanged = { count -> updateSelectionUi(count) }
         )
-        binding.rvWatchHistory.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvWatchHistory.layoutManager = LinearLayoutManager(this)
         binding.rvWatchHistory.adapter = adapter
 
         // Anuncio en bloque

@@ -1,41 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fila del historial de busquedas: reloj + consulta + papelera para borrar. -->
-<LinearLayout
+<!-- Fila del historial de busquedas: POSTER a la izquierda; titulo a la
+     derecha con etiquetas HOT/TOP; play (abre directo) y papelera (borra). -->
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:background="?attr/selectableItemBackground"
-    android:paddingStart="4dp"
-    android:paddingEnd="0dp">
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="2dp"
+    android:paddingVertical="4dp">
 
-    <ImageView
-        android:layout_width="16dp"
-        android:layout_height="16dp"
-        android:src="@drawable/ic_ios_clock"
-        app:tint="#8A8A93"
-        android:contentDescription="@null" />
-
-    <TextView
-        android:id="@+id/txtHistoryQuery"
-        android:layout_width="0dp"
-        android:layout_weight="1"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:maxLines="1"
-        android:ellipsize="end" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_row_glass"
+        android:padding="8dp">
 
-    <ImageView
-        android:id="@+id/btnDeleteQuery"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:padding="10dp"
-        android:src="@drawable/ic_ios_trash"
-        app:tint="#8A8A93"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Eliminar búsqueda" />
-</LinearLayout>
+        <androidx.cardview.widget.CardView
+            android:layout_width="56dp"
+            android:layout_height="78dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#14141E">
+
+            <ImageView
+                android:id="@+id/imgHistoryPoster"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="Poster" />
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="6dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtHistoryQuery"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="14.5sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/txtHistoryHot"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_hot"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:text="HOT"
+                    android:textColor="#FFFFFF"
+                    android:textSize="8.5sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/txtHistoryTop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:background="@drawable/bg_badge_top"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:text="TOP"
+                    android:textColor="#17131F"
+                    android:textSize="8.5sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/imgHistoryPlay"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="2dp"
+            android:background="@drawable/bg_circle_glass"
+            android:src="@drawable/ic_ios_play"
+            app:tint="#C9A96E"
+            android:padding="9dp"
+            android:visibility="gone"
+            android:contentDescription="Ver" />
+
+        <ImageView
+            android:id="@+id/btnDeleteQuery"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:padding="10dp"
+            android:src="@drawable/ic_ios_trash"
+            app:tint="#8A8A93"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Eliminar búsqueda" />
+    </LinearLayout>
+</FrameLayout>

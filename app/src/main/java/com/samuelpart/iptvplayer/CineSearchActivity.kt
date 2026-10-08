@@ -40,6 +40,16 @@ data class PopularItem(
     val media: CineMedia?
 )
 
+/** Fila del historial de busquedas resuelta a contenido: poster, badges
+ *  HOT/TOP (datos de trending) y play si la consulta es reproducible. */
+data class HistoryRowData(
+    val query: String,
+    val poster: String,
+    val hot: Boolean,
+    val top: Boolean,
+    val media: CineMedia?
+)
+
 /**
  * Buscador de Inicio: SOLO peliculas y series (nada de canales). Busca por
  * titulo y tambien por ACTOR o DIRECTOR (via TMDB search/person intersectado
@@ -68,6 +78,9 @@ class CineSearchActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var pendingSearch: Runnable? = null
     private var lastSubmitted = ""
+    private var trendingHot: Set<String> = emptySet()
+    private var trendingTop: Set<String> = emptySet()
+    private val posterCache = HashMap<String, String?>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,11 +97,12 @@ class CineSearchActivity : AppCompatActivity() {
 
         rvHistory.layoutManager = LinearLayoutManager(this)
         historyAdapter = SearchHistoryRowAdapter(
-            onClick = { q -> edtInput.setText(q); edtInput.setSelection(q.length); submitSearch(q) },
+            onRowClick = { q -> edtInput.setText(q); edtInput.setSelection(q.length); submitSearch(q) },
             onDelete = { q ->
                 SearchHistoryStore.remove(this, q)
                 refreshHistory()
-            }
+            },
+            onPlay = { m -> openDetail(m) }
         )
         rvHistory.adapter = historyAdapter
 
@@ -141,7 +155,11 @@ class CineSearchActivity : AppCompatActivity() {
         edtInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val q = edtInput.text.toString().trim()
-                if (q.isNotEmpty()) submitSearch(q)
+                if (q.isNotEmpty()) {
+                    submitSearch(q)
+                    SearchHistoryStore.add(this, q)
+                    refreshHistory()
+                }
                 hideKeyboard()
                 true
             } else false
@@ -171,9 +189,56 @@ class CineSearchActivity : AppCompatActivity() {
     // ══════════════ Historial ══════════════
 
     private fun refreshHistory() {
-        val list = SearchHistoryStore.get(this)
-        historyAdapter.submit(list)
-        txtHistoryEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+        val queries = SearchHistoryStore.get(this)
+        historyAdapter.submit(queries.map { HistoryRowData(it, "", false, false, null) })
+        txtHistoryEmpty.visibility = if (queries.isEmpty()) View.VISIBLE else View.GONE
+        if (queries.isEmpty()) return
+        lifecycleScope.launch {
+            val rows = withContext(Dispatchers.IO) { queries.map { resolveRow(it) } }
+            historyAdapter.submit(rows)
+            txtHistoryEmpty.visibility = if (rows.isEmpty()) View.VISIBLE else View.GONE
+        }
+    }
+
+    /** Resuelve una consulta del historial: poster (catalogo o TMDB) y
+     *  badges HOT/TOP segun la lista de tendencia del dia. */
+    private fun resolveRow(q: String): HistoryRowData {
+        val media = if (catalogReady) findInCatalog(q) else null
+        var poster = media?.posterUrl ?: media?.rawLogo ?: ""
+        if (poster.isEmpty() && q.length >= 3) {
+            if (posterCache.containsKey(q)) {
+                poster = posterCache[q] ?: ""
+            } else {
+                val found = tmdbPosterFor(q)
+                posterCache[q] = found
+                poster = found ?: ""
+            }
+        }
+        val n = norm(q)
+        fun badge(set: Set<String>): Boolean = set.any {
+            it == n || (n.length >= 4 && (it.contains(n) || n.contains(it)))
+        }
+        return HistoryRowData(q, poster, badge(trendingHot), badge(trendingTop), media)
+    }
+
+    /** Poster generico via TMDB search/multi (para consultas fuera del catalogo). */
+    private fun tmdbPosterFor(q: String): String? {
+        return try {
+            val arr = tmdbJson(
+                "https://api.themoviedb.org/3/search/multi" +
+                    "?api_key=${CineRepository.TMDB_API_KEY}&query=${URLEncoder.encode(q, "UTF-8")}&language=es-ES"
+            )?.optJSONArray("results") ?: return null
+            for (i in 0 until minOf(4, arr.length())) {
+                val r = arr.optJSONObject(i) ?: continue
+                val type = r.optString("media_type", "")
+                if (type != "movie" && type != "tv") continue
+                val path = r.optString("poster_path", "")
+                if (path.isNotEmpty()) return "https://image.tmdb.org/t/p/w780$path"
+            }
+            null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     // ══════════════ Popular (trending TMDB ∩ catálogo) ══════════════
@@ -199,6 +264,8 @@ class CineSearchActivity : AppCompatActivity() {
                 )
             }
         }
+        trendingHot = raw.take(5).map { norm(it.title) }.toSet()
+        trendingTop = raw.filter { it.rating >= 7.5 }.map { norm(it.title) }.toSet()
         if (raw.isEmpty()) return
         val matched = withContext(Dispatchers.IO) {
             raw.map { it.copy(media = if (catalogReady) findInCatalog(it.title) else null) }
@@ -327,15 +394,16 @@ class CineSearchActivity : AppCompatActivity() {
 // Adapters del buscador
 // ══════════════════════════════════════════════════════════════
 
-/** Fila de historial: reloj + texto + papelera. */
+/** Fila del historial de busquedas: poster + titulo + HOT/TOP + play + papelera. */
 class SearchHistoryRowAdapter(
-    private val onClick: (String) -> Unit,
-    private val onDelete: (String) -> Unit
+    private val onRowClick: (String) -> Unit,
+    private val onDelete: (String) -> Unit,
+    private val onPlay: (CineMedia) -> Unit
 ) : RecyclerView.Adapter<SearchHistoryRowAdapter.Holder>() {
 
-    private val items = mutableListOf<String>()
+    private val items = mutableListOf<HistoryRowData>()
 
-    fun submit(list: List<String>) {
+    fun submit(list: List<HistoryRowData>) {
         items.clear()
         items.addAll(list)
         notifyDataSetChanged()
@@ -348,16 +416,30 @@ class SearchHistoryRowAdapter(
     }
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
-        val q = items[position]
-        holder.txt.text = q
-        holder.itemView.setOnClickListener { onClick(q) }
-        holder.btnDelete.setOnClickListener { onDelete(q) }
+        val row = items[position]
+        holder.txt.text = row.query
+        if (row.poster.isNotEmpty()) {
+            Glide.with(holder.img).load(row.poster).centerCrop()
+                .placeholder(R.drawable.bg_tile_glass).into(holder.img)
+        } else {
+            holder.img.setImageResource(R.drawable.bg_tile_glass)
+        }
+        holder.txtHot.visibility = if (row.hot) View.VISIBLE else View.GONE
+        holder.txtTop.visibility = if (row.top) View.VISIBLE else View.GONE
+        holder.imgPlay.visibility = if (row.media != null) View.VISIBLE else View.GONE
+        holder.itemView.setOnClickListener { onRowClick(row.query) }
+        holder.btnDelete.setOnClickListener { onDelete(row.query) }
+        holder.imgPlay.setOnClickListener { row.media?.let(onPlay) }
     }
 
     override fun getItemCount(): Int = items.size
 
     class Holder(v: View) : RecyclerView.ViewHolder(v) {
+        val img: ImageView = v.findViewById(R.id.imgHistoryPoster)
         val txt: TextView = v.findViewById(R.id.txtHistoryQuery)
+        val txtHot: TextView = v.findViewById(R.id.txtHistoryHot)
+        val txtTop: TextView = v.findViewById(R.id.txtHistoryTop)
+        val imgPlay: ImageView = v.findViewById(R.id.imgHistoryPlay)
         val btnDelete: ImageView = v.findViewById(R.id.btnDeleteQuery)
     }
 }

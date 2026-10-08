@@ -56,26 +56,26 @@
             android:focusable="true" />
     </LinearLayout>
 
-    <!-- Fila horizontal (una sola linea, no cuadricula) -->
+    <!-- Lista en filas: poster a la izquierda + titulo y minuto a la derecha -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvWatchHistory"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="6dp"
+        android:layout_height="0dp"
+        android:paddingVertical="6dp"
         android:clipToPadding="false"
         android:scrollbars="none"
         android:overScrollMode="never"
-        app:layout_constraintTop_toBottomOf="@id/watchHistHeader" />
+        app:layout_constraintTop_toBottomOf="@id/watchHistHeader"
+        app:layout_constraintBottom_toTopOf="@id/adSlotWatchHist" />
 
-    <!-- Anuncio en bloque (nativo) -->
+    <!-- Anuncio en bloque (nativo), fijo abajo -->
     <FrameLayout
         android:id="@+id/adSlotWatchHist"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:layout_marginBottom="8dp"
-        app:layout_constraintTop_toBottomOf="@id/rvWatchHistory" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 
     <TextView
