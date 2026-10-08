@@ -20,6 +20,10 @@ class CinePopularAllActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCinePopularAllBinding
 
+    private var fullList: List<CineMedia> = emptyList()
+    private var shownCount = 0
+    private var loadingMore = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCinePopularAllBinding.inflate(layoutInflater)
@@ -41,6 +45,11 @@ class CinePopularAllActivity : AppCompatActivity() {
         }
 
         NativeAds.attach(this, binding.adSlotNative, NativeAds.VARIANT_COMPACT)
+        binding.rvPopularAll.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0) maybeLoadMore()
+            }
+        })
 
         lifecycleScope.launch {
             val catalog = CineRepository.getCineCatalog(this@CinePopularAllActivity)
@@ -134,7 +143,8 @@ class CinePopularAllActivity : AppCompatActivity() {
                     .sortedBy { Math.abs(it.title.hashCode()) }
             }
 
-            binding.rvPopularAll.adapter = CineSearchResultAdapter(list, onMediaClick = { m ->
+            initPaging(list)
+            binding.rvPopularAll.adapter = CineSearchResultAdapter(sliceForPage(), onMediaClick = { m ->
                 val real = if (kind == "alerts") catalog.find { it.title == m.title } ?: m else m
                 startActivity(
                     Intent(
@@ -144,5 +154,31 @@ class CinePopularAllActivity : AppCompatActivity() {
                 )
             })
         }
+    }
+    // ================= PAGINACION (10 por tanda, loading sin texto) =================
+
+    private fun initPaging(list: List<CineMedia>) {
+        fullList = list
+        shownCount = minOf(10, list.size)
+        loadingMore = false
+    }
+
+    private fun sliceForPage(): List<CineMedia> = fullList.take(shownCount)
+
+    /** Al llegar al final de la lista muestra un loading SIN TEXTO y anade
+     *  10 titulos mas: los catalogos extensos nunca congelan la pantalla. */
+    private fun maybeLoadMore() {
+        if (loadingMore || shownCount >= fullList.size) return
+        val lm = binding.rvPopularAll.layoutManager as? androidx.recyclerview.widget.GridLayoutManager ?: return
+        val total = binding.rvPopularAll.adapter?.itemCount ?: return
+        if (lm.findLastVisibleItemPosition() < total - 3) return
+        loadingMore = true
+        binding.pbPopularLoader.visibility = android.view.View.VISIBLE
+        binding.rvPopularAll.postDelayed({
+            shownCount = minOf(shownCount + 10, fullList.size)
+            (binding.rvPopularAll.adapter as? CineSearchResultAdapter)?.updateList(sliceForPage())
+            binding.pbPopularLoader.visibility = android.view.View.GONE
+            loadingMore = false
+        }, 450)
     }
 }

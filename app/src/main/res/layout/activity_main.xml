@@ -397,82 +397,121 @@
                     </LinearLayout>
                 </HorizontalScrollView>
 
-                <!-- v4 coverflow: saludo mini -->
+                <!-- Banner: 8 diapositivas (7 titulos + promo propia de la app) -->
+                <FrameLayout
+                    android:id="@+id/homeBanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:layout_marginTop="14dp">
+
+                    <ViewFlipper
+                        android:id="@+id/flipHomeBanner"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <LinearLayout
+                        android:id="@+id/dotsHomeBanner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingBottom="6dp" />
+                </FrameLayout>
+
+                <!-- Anuncio en bloque: aparece con el banner en modo aleatorio -->
+                <FrameLayout
+                    android:id="@+id/adSlotHomeRandom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone" />
+
+                <!-- Ultimamente nuevo: cuadricula 3x3 de lo ultimo subido -->
                 <TextView
-                    android:id="@+id/txtHomeGreeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Hola de nuevo"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
+                    android:layout_marginTop="20dp"
+                    android:text="ÚLTIMAMENTE NUEVO"
+                    android:textColor="#C9A96E"
+                    android:letterSpacing="0.12"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
-                <!-- v4 chips CANALES / CINE -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvHomeNew"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:orientation="horizontal">
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <LinearLayout
-                        android:id="@+id/llChipChannels"
-                        android:layout_width="0dp"
+                        android:id="@+id/btnHomeVerMas"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                        android:background="@drawable/bg_apple_glass_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="18dp"
+                        android:paddingVertical="10dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:src="@drawable/ic_ios_arrow_right"
+                            app:tint="#C9A96E"
+                            android:contentDescription="@null" />
 
                         <TextView
-                            android:id="@+id/txtChipChannels"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:letterSpacing="0.18"
-                            android:paddingVertical="10dp"
-                            android:text="CANALES"
-                            android:textColor="#7A7A7C"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <View
-                            android:id="@+id/viewChipChannelsU"
-                            android:layout_width="30dp"
-                            android:layout_height="3dp"
-                            android:layout_marginTop="3dp"
-                            android:alpha="0"
-                            android:background="@color/ios_blue" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/llChipCine"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="?android:attr/selectableItemBackgroundBorderless"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/txtChipCine"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:letterSpacing="0.18"
-                            android:paddingVertical="10dp"
-                            android:text="CINE"
+                            android:layout_marginStart="7dp"
+                            android:text="Ver más"
                             android:textColor="#FFFFFF"
                             android:textSize="13sp"
                             android:textStyle="bold" />
-
-                        <View
-                            android:id="@+id/viewChipCineU"
-                            android:layout_width="30dp"
-                            android:layout_height="3dp"
-                            android:layout_marginTop="3dp"
-                            android:alpha="1"
-                            android:background="@color/ios_blue" />
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:id="@+id/btnHomeCambiar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_apple_glass_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="18dp"
+                        android:paddingVertical="10dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:src="@drawable/ic_ios_refresh"
+                            app:tint="#C9A96E"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="7dp"
+                            android:text="Cambiar"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- v4 carrusel coverflow -->
@@ -2264,8 +2303,19 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvCineGrid"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
                     android:scrollbars="vertical" />
+
+                <!-- Loading de paginacion (sin texto) -->
+                <ProgressBar
+                    android:id="@+id/pbCineLoader"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="12dp"
+                    android:indeterminateTint="#C9A96E"
+                    android:visibility="gone" />
 
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>

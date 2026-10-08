@@ -99,8 +99,9 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupRecyclerViews()
         incrementOpenCounter()
-        binding.txtHomeGreeting.text = homeGreeting()
         setupHomeCoverflow()
+        setupHomeBanner()
+        setupHomeNewSection()
         setupSearchHistories()
         setupListeners()
         if (android.os.Build.VERSION.SDK_INT >= 33 &&
@@ -270,6 +271,14 @@ class MainActivity : AppCompatActivity() {
         )
         binding.rvCineGrid.adapter = cineAdapter
         cineAdapter.gridColumns = 2 // 2 columnas → anuncio cada 4 filas (8 títulos)
+        binding.rvCineGrid.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                if (dy <= 0) return
+                val lm = recyclerView.layoutManager as? androidx.recyclerview.widget.GridLayoutManager ?: return
+                val total = recyclerView.adapter?.itemCount ?: return
+                if (lm.findLastVisibleItemPosition() >= total - 4) cineLoadMore()
+            }
+        })
         cineGridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int =
                 if (cineAdapter.isAdAt(position)) cineGridLayout.spanCount else 1
@@ -398,6 +407,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         startHomeSearchRotator()
+        resumeHomeBanner()
         refreshContinueWatching()
         refreshFavorites()
         applyAccentColor()
@@ -467,15 +477,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun homeGreeting(): String {
-        val h = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-        return when {
-            h < 6 -> "Buenas noches"
-            h < 12 -> "Buenos dias"
-            h < 19 -> "Buenas tardes"
-            else -> "Buenas noches"
-        }
-    }
 
     // ================= HOME V4 - COVERFLOW =================
 
@@ -485,8 +486,6 @@ class MainActivity : AppCompatActivity() {
         binding.rvCoverflow.adapter = coverAdapter
         coverSnap.attachToRecyclerView(binding.rvCoverflow)
         binding.rvCoverflow.addOnScrollListener(coverScrollListener)
-        binding.llChipChannels.setOnClickListener { setCoverMode(false); it.springPress() }
-        binding.llChipCine.setOnClickListener { setCoverMode(true); it.springPress() }
         setCoverMode(true)
     }
 
@@ -501,17 +500,240 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ================= BANNER DE INICIO + ULTIMAMENTE NUEVO + PAGINACION =================
+
+    private val CINE_PAGE = 60
+    private var cinePagingFull: List<CineMedia> = emptyList()
+    private var cineShown = 0
+    private var cineLoadingMore = false
+    private var bannerRandom = false
+    private var bannerRunnable: Runnable? = null
+    private var bannerIdx = 0
+    private var bannerSize = 0
+    private var homeNewPool: List<CineMedia> = emptyList()
+    private var homeRandomAdAttached = false
+    private lateinit var homeNewAdapter: CineSearchResultAdapter
+
+    /** Paginacion del grid de Cine: ancha de a [CINE_PAGE] con loading sin
+     *  texto, para que catalogos extensos no congelen la UI. */
+    private fun cineLoadMore() {
+        if (cineLoadingMore || cineShown >= cinePagingFull.size) return
+        cineLoadingMore = true
+        binding.pbCineLoader.visibility = View.VISIBLE
+        binding.rvCineGrid.postDelayed({
+            cineShown = minOf(cineShown + CINE_PAGE, cinePagingFull.size)
+            cineAdapter.updateList(cinePagingFull.take(cineShown))
+            binding.pbCineLoader.visibility = View.GONE
+            cineLoadingMore = false
+        }, 450)
+    }
+
+    /** Configura el banner (rotacion manual cada 4.2s con puntos) y los
+     *  botones Ver mas / Cambiar de la seccion Ultimamente Nuevo. */
+    private fun setupHomeBanner() {
+        binding.flipHomeBanner.inAnimation =
+            android.view.animation.AnimationUtils.loadAnimation(this, R.anim.rot_in)
+        binding.flipHomeBanner.outAnimation =
+            android.view.animation.AnimationUtils.loadAnimation(this, R.anim.rot_out)
+        binding.btnHomeVerMas.setOnClickListener {
+            it.springPress()
+            openCineList("ULTIMAMENTE NUEVO", "new_month", "")
+        }
+        binding.btnHomeCambiar.setOnClickListener {
+            it.springPress()
+            bannerRandom = true
+            refreshHomeBanner()
+            if (::homeNewAdapter.isInitialized) homeNewAdapter.updateList(homeNewPool.shuffled().take(9))
+            binding.adSlotHomeRandom.visibility = View.VISIBLE
+            if (!homeRandomAdAttached) {
+                homeRandomAdAttached = true
+                NativeAds.attach(this, binding.adSlotHomeRandom, NativeAds.VARIANT_MEDIA)
+            }
+        }
+    }
+
+    /** Seccion Ultimamente Nuevo: cuadricula 3x3 con lo ultimo del catalogo. */
+    private fun setupHomeNewSection() {
+        homeNewAdapter = CineSearchResultAdapter(emptyList(), onMediaClick = { openCineDetail(it) })
+        homeNewAdapter.gridColumns = 3
+        binding.rvHomeNew.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 3)
+        binding.rvHomeNew.adapter = homeNewAdapter
+        binding.rvHomeNew.isNestedScrollingEnabled = false
+    }
+
+    private fun refreshHomeNewSection() {
+        if (!::homeNewAdapter.isInitialized) return
+        val withPoster = allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
+        homeNewPool = if (withPoster.size >= 9) withPoster.sortedByDescending { it.releaseDate ?: "" } else allCineMedia
+        if (!bannerRandom) homeNewAdapter.updateList(homeNewPool.take(9))
+    }
+
+    /** (Re)construye las 8 diapositivas del banner: 7 titulos del catalogo y
+     *  la ultima es publicidad propia de la app. En modo aleatorio muestra
+     *  contenido al azar (boton Cambiar). */
+    private fun refreshHomeBanner() {
+        val flipper = binding.flipHomeBanner
+        stopHomeBanner()
+        flipper.removeAllViews()
+        val withPoster = allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
+        val pool = if (bannerRandom) withPoster.shuffled()
+        else withPoster.sortedByDescending { it.releaseDate ?: "" }
+        val slides = pool.take(7)
+
+        val dotRow = binding.dotsHomeBanner
+        dotRow.removeAllViews()
+        bannerSize = slides.size + 1
+        val dots = (0 until bannerSize).map {
+            android.view.View(this).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(dp(7), dp(7)).apply {
+                    marginStart = dp(5); marginEnd = dp(5)
+                }
+                setBackgroundResource(R.drawable.bg_banner_dot)
+                alpha = 0.35f
+            }
+        }
+        dots.forEach { dotRow.addView(it) }
+
+        slides.forEach { m ->
+            val slide = android.widget.FrameLayout(this)
+            slide.addView(android.widget.ImageView(this).apply {
+                layoutParams = android.widget.FrameLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT)
+                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                Glide.with(this@MainActivity).load(m.posterUrl).centerCrop()
+                    .placeholder(R.drawable.bg_tile_glass).into(this)
+            })
+            slide.addView(android.view.View(this).apply {
+                layoutParams = android.widget.FrameLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT)
+                setBackgroundResource(R.drawable.bg_scrim_bottom)
+            })
+            slide.addView(android.widget.TextView(this).apply {
+                layoutParams = android.widget.FrameLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                    gravity = android.view.Gravity.BOTTOM or android.view.Gravity.START
+                    leftMargin = dp(12); bottomMargin = dp(24)
+                }
+                text = m.title
+                setTextColor(0xFFFFFFFF.toInt())
+                textSize = 15f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                maxLines = 1
+            })
+            slide.setOnClickListener { openCineDetail(m) }
+            flipper.addView(slide)
+        }
+
+        // Ultima diapositiva: publicidad propia de la app
+        val promo = android.widget.FrameLayout(this)
+        promo.setBackgroundResource(R.drawable.bg_ios_gradient)
+        val col = android.widget.LinearLayout(this).apply {
+            layoutParams = android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                gravity = android.view.Gravity.CENTER
+            }
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            addView(android.widget.ImageView(this@MainActivity).apply {
+                setImageResource(R.drawable.icon_lumen_play)
+                layoutParams = android.widget.LinearLayout.LayoutParams(dp(46), dp(46))
+            })
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = "LUMEN IPTV"
+                setTextColor(0xFFC9A96E.toInt()); textSize = 19f; letterSpacing = 0.18f
+                (layoutParams as? android.widget.LinearLayout.LayoutParams)?.topMargin = dp(8)
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                gravity = android.view.Gravity.CENTER
+            })
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = "Tu reproductor de listas M3U: películas, series y TV en vivo en un solo lugar"
+                setTextColor(0xFFD6DAE4.toInt()); textSize = 12.5f
+                gravity = android.view.Gravity.CENTER
+                setPadding(dp(26), dp(6), dp(26), 0)
+            })
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = "COMPARTIR"
+                setTextColor(0xFF0F2144.toInt()); textSize = 12f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setBackgroundResource(R.drawable.bg_chip_active)
+                setPadding(dp(24), dp(8), dp(24), dp(8))
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                    topMargin = dp(12)
+                }
+                setOnClickListener { shareAppPromo() }
+            })
+        }
+        promo.addView(col)
+        promo.setOnClickListener { shareAppPromo() }
+        flipper.addView(promo)
+
+        if (slides.isNotEmpty()) {
+            bannerIdx = 0
+            paintBannerDots()
+            armBannerLoop()
+        }
+    }
+
+    private fun paintBannerDots() {
+        (0 until binding.dotsHomeBanner.childCount).forEach { i ->
+            binding.dotsHomeBanner.getChildAt(i).alpha = if (i == bannerIdx) 1f else 0.35f
+        }
+    }
+
+    private fun armBannerLoop() {
+        stopHomeBanner()
+        val r = object : Runnable {
+            override fun run() {
+                bannerIdx = (bannerIdx + 1) % bannerSize
+                binding.flipHomeBanner.showNext()
+                paintBannerDots()
+                bannerRunnable = this
+                binding.flipHomeBanner.postDelayed(this, 4200)
+            }
+        }
+        bannerRunnable = r
+        binding.flipHomeBanner.postDelayed(r, 4200)
+    }
+
+    private fun stopHomeBanner() {
+        bannerRunnable?.let { binding.flipHomeBanner.removeCallbacks(it) }
+        bannerRunnable = null
+    }
+
+    private fun resumeHomeBanner() {
+        if (bannerRunnable == null && binding.flipHomeBanner.childCount > 1) armBannerLoop()
+    }
+
+    /** Publicidad propia de la app: comparte el enlace de la tienda. */
+    private fun shareAppPromo() {
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(
+                    android.content.Intent.EXTRA_TEXT,
+                    "Lumen IPTV: reproductor de listas M3U con películas, series y TV en vivo. " +
+                        "https://play.google.com/store/apps/details?id=$packageName"
+                )
+            }
+            startActivity(android.content.Intent.createChooser(intent, "Comparte la app"))
+        } catch (_: Exception) {}
+    }
+
     private fun setCoverMode(cine: Boolean) {
         coverModeCine = cine
-        binding.txtChipCine.setTextColor(if (cine) 0xFFFFFFFF.toInt() else 0xFF7A7A7C.toInt())
-        binding.txtChipChannels.setTextColor(if (!cine) 0xFFFFFFFF.toInt() else 0xFF7A7A7C.toInt())
-        binding.viewChipCineU.alpha = if (cine) 1f else 0f
-        binding.viewChipChannelsU.alpha = if (!cine) 1f else 0f
         refreshCoverData()
     }
 
     private fun refreshCoverData() {
         if (!::coverAdapter.isInitialized) return
+        refreshHomeBanner()
+        refreshHomeNewSection()
         coverItems.clear()
         if (coverModeCine) {
             allCineMedia.filter { !it.posterUrl.isNullOrBlank() }.take(30).forEach {
@@ -1609,13 +1831,16 @@ class MainActivity : AppCompatActivity() {
             matchesType && matchesQuery && matchesMood
         }
         val finalCineList = if (selectedCineType == "new") {
-            filtered.sortedByDescending { it.releaseDate ?: "" }.take(60)
+            filtered.sortedByDescending { it.releaseDate ?: "" }
         } else if (selectedCineType == "all" && cineMood == null && query.isEmpty()) {
             // orden casa: lo mejor segun TMDB primero, sin tocar el resto
             filtered.sortedByDescending { it.rating ?: -1.0 }
         } else filtered
-        cineAdapter.updateList(finalCineList)
-        binding.txtCineCount.text = if (selectedCineType == "new") "Novedades: ${finalCineList.size}" else "Total: ${finalCineList.size}"
+        cinePagingFull = finalCineList
+        cineShown = minOf(CINE_PAGE, cinePagingFull.size)
+        cineLoadingMore = false
+        cineAdapter.updateList(cinePagingFull.take(cineShown))
+        binding.txtCineCount.text = if (selectedCineType == "new") "Novedades: ${cinePagingFull.size}" else "Total: ${cinePagingFull.size}"
         
         // Trigger the Spiderman overlay if they search for Spiderman
         checkAndShowSpidermanEasterEgg(query)
@@ -2516,6 +2741,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         homeRotatorRunnable?.let { binding.homeSearchRotator.removeCallbacks(it) }
+        stopHomeBanner()
     }
 
     override fun onDestroy() {

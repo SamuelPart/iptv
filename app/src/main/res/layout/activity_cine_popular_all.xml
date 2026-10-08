@@ -65,4 +65,14 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:paddingBottom="24dp" />
+
+    <!-- Loading de paginacion (sin texto) -->
+    <ProgressBar
+        android:id="@+id/pbPopularLoader"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:indeterminateTint="#C9A96E"
+        android:visibility="gone" />
 </LinearLayout>
