@@ -43,11 +43,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private var coverModeCine = true
-    private var coverSnapPos = -1
-    private val coverItems = ArrayList<HomeCoverItem>()
-    private lateinit var coverAdapter: HomeCoverAdapter
-    private val coverSnap = PagerSnapHelper()
     private var cineMood: String? = null
     private lateinit var cineRecoAdapter: CineRecoAdapter
     private var deckMode = true
@@ -78,8 +73,6 @@ class MainActivity : AppCompatActivity() {
 
     // Cine & Series states
     private lateinit var cineAdapter: CineSearchResultAdapter
-    private lateinit var favoriteAdapter: FavoriteAdapter
-    private lateinit var continueWatchingAdapter: ContinueWatchingAdapter
 
     private var allCineMedia: List<CineMedia> = emptyList()
     private var selectedCineType: String = "all" // "all", "movie", "series"
@@ -99,7 +92,6 @@ class MainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupRecyclerViews()
         incrementOpenCounter()
-        setupHomeCoverflow()
         setupHomeBanner()
         setupHomeNewSection()
         setupSearchHistories()
@@ -223,8 +215,7 @@ class MainActivity : AppCompatActivity() {
             onFavoriteToggle = { channel ->
                 val added = FavoritesManager.toggleChannel(this, channel)
                 Toast.makeText(this, if (added) "Guardado en Favoritos ⭐" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
-                refreshFavorites()
-            }
+                    }
         )
         binding.rvChannelsGrid.adapter = channelsAdapter
         channelsAdapter.gridColumns = 1 // sintonizador: 1 columna → anuncio cada 4 filas (4 canales)
@@ -246,8 +237,7 @@ class MainActivity : AppCompatActivity() {
             onFavoriteToggle = { channel ->
                 val added = FavoritesManager.toggleChannel(this, channel)
                 Toast.makeText(this, if (added) "Guardado en Favoritos ⭐" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
-                refreshFavorites()
-            }
+                    }
         )
         binding.rvSearchGrid.adapter = searchAdapter
         searchAdapter.gridColumns = 3 // 3 columnas → anuncio cada 4 filas (12 canales)
@@ -266,8 +256,7 @@ class MainActivity : AppCompatActivity() {
             onFavoriteToggle = { media ->
                 val added = FavoritesManager.toggleMedia(this, media)
                 Toast.makeText(this, if (added) "Guardado en Favoritos ⭐" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
-                refreshFavorites()
-            }
+                    }
         )
         binding.rvCineGrid.adapter = cineAdapter
         cineAdapter.gridColumns = 2 // 2 columnas → anuncio cada 4 filas (8 títulos)
@@ -326,90 +315,12 @@ class MainActivity : AppCompatActivity() {
 
         setupCineMenu()
 
-        // 4. Favorites horizontal strip in Home
-        binding.rvFavorites.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        favoriteAdapter = FavoriteAdapter(
-            emptyList(),
-            onClick = { item ->
-                if (item.isChannel) {
-                    item.channel?.let { openPlayer(it) }
-                } else {
-                    item.media?.let { openCineDetail(it) }
-                }
-            },
-            onRemove = { item ->
-                val name = if (item.isChannel) item.channel?.name ?: "canal" else item.media?.title ?: "contenido"
-                AlertDialog.Builder(this)
-                    .setTitle("Quitar de Favoritos")
-                    .setMessage("¿Quitar \"$name\" de tus Favoritos?")
-                    .setPositiveButton("Quitar") { _, _ ->
-                        FavoritesManager.remove(this, item.url)
-                        refreshFavorites()
-                        Toast.makeText(this, "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            }
-        )
-        binding.rvFavorites.adapter = favoriteAdapter
-        refreshFavorites()
-
-        // 5. Continue Watching horizontal strip in Home
-        binding.rvContinueWatching.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        continueWatchingAdapter = ContinueWatchingAdapter(
-            emptyList(),
-            onClick = { entry -> resumeContinueWatching(entry) },
-            onRemove = { entry -> confirmRemoveContinueWatching(entry) }
-        )
-        binding.rvContinueWatching.adapter = continueWatchingAdapter
-        refreshContinueWatching()
-    }
-
-    /** Repaints the Home "Continue Watching" strip from the local store. */
-    private fun refreshContinueWatching() {
-        val items = ContinueWatchingManager.getAll(this)
-        if (items.isEmpty()) {
-            binding.sectionContinueWatching.visibility = View.GONE
-        } else {
-            binding.sectionContinueWatching.visibility = View.VISIBLE
-            if (::continueWatchingAdapter.isInitialized) continueWatchingAdapter.updateList(items)
-        }
-    }
-
-    private fun resumeContinueWatching(entry: ContinueWatchingManager.ResumeEntry) {
-        if (entry.isChannel) {
-            openPlayer(Channel(name = entry.title, url = entry.url, logoUrl = entry.channelLogo))
-        } else {
-            // Película / serie reanudada: también requiere anuncio recompensado.
-            RewardGate.requireAdThen(this) {
-                startActivity(Intent(this, PlayerActivity::class.java).apply {
-                    putExtra("channelName", entry.title)
-                    putExtra("channelUrl", entry.url)
-                    putExtra("startPosition", entry.positionMs)
-                    entry.media?.let { putExtra("cineMedia", it) }
-                })
-            }
-        }
-    }
-
-    private fun confirmRemoveContinueWatching(entry: ContinueWatchingManager.ResumeEntry) {
-        AlertDialog.Builder(this)
-            .setTitle("Quitar de Continuar viendo")
-            .setMessage("¿Quitar \"${entry.title}\" de la lista?")
-            .setPositiveButton("Quitar") { _, _ ->
-                ContinueWatchingManager.remove(this, entry.url)
-                refreshContinueWatching()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
     }
 
     override fun onResume() {
         super.onResume()
         startHomeSearchRotator()
         resumeHomeBanner()
-        refreshContinueWatching()
-        refreshFavorites()
         applyAccentColor()
         handlePendingSettings()
         syncCineCatalogIfNeeded()
@@ -423,7 +334,7 @@ class MainActivity : AppCompatActivity() {
             val sync = withContext(Dispatchers.IO) { CineRepository.refreshCatalog(this@MainActivity) }
             allCineMedia = sync.catalog
             applyCineFilters()
-            refreshCoverData()
+            refreshHomeSections()
             setupCineFeatured()
             if (sync.addedTitles > 0) {
                 Toast.makeText(
@@ -466,41 +377,15 @@ class MainActivity : AppCompatActivity() {
         prefs.edit().putInt("app_open_count", prefs.getInt("app_open_count", 0) + 1).apply()
     }
 
-    private fun refreshFavorites() {
-        val favs = FavoritesManager.getAll(this)
-        if (favs.isEmpty()) {
-            binding.sectionFavorites.visibility = View.GONE
-        } else {
-            binding.sectionFavorites.visibility = View.VISIBLE
-            binding.txtFavoritesCount.text = "${favs.size} guardados"
-            if (::favoriteAdapter.isInitialized) favoriteAdapter.updateList(favs)
-        }
-    }
-
-
     // ================= HOME V4 - COVERFLOW =================
 
-    private fun setupHomeCoverflow() {
-        coverAdapter = HomeCoverAdapter { onCoverTap(it) }
-        binding.rvCoverflow.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        binding.rvCoverflow.adapter = coverAdapter
-        coverSnap.attachToRecyclerView(binding.rvCoverflow)
-        binding.rvCoverflow.addOnScrollListener(coverScrollListener)
-        setCoverMode(true)
-    }
-
-    private val coverScrollListener = object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
-            applyCoverTransforms(recyclerView)
-        }
-
-        override fun onScrollStateChanged(recyclerView: androidx.recyclerview.widget.RecyclerView, newState: Int) {
-            if (newState == androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE) syncCoverInfo(recyclerView)
-            applyCoverTransforms(recyclerView)
-        }
-    }
-
     // ================= BANNER DE INICIO + ULTIMAMENTE NUEVO + PAGINACION =================
+
+    /** Repinta el banner y la cuadricula Ultimamente Nuevo tras cargar el catalogo. */
+    private fun refreshHomeSections() {
+        refreshHomeBanner()
+        refreshHomeNewSection()
+    }
 
     private val CINE_PAGE = 60
     private var cinePagingFull: List<CineMedia> = emptyList()
@@ -513,6 +398,7 @@ class MainActivity : AppCompatActivity() {
     private var homeNewPool: List<CineMedia> = emptyList()
     private var homeRandomAdAttached = false
     private lateinit var homeNewAdapter: CineSearchResultAdapter
+    private val bannerSlides = mutableListOf<CineMedia>()
 
     /** Paginacion del grid de Cine: ancha de a [CINE_PAGE] con loading sin
      *  texto, para que catalogos extensos no congelen la UI. */
@@ -535,6 +421,28 @@ class MainActivity : AppCompatActivity() {
             android.view.animation.AnimationUtils.loadAnimation(this, R.anim.rot_in)
         binding.flipHomeBanner.outAnimation =
             android.view.animation.AnimationUtils.loadAnimation(this, R.anim.rot_out)
+
+        // DESLIZAR con el dedo cambia la diapositiva; un toque abre el titulo
+        val detector = android.view.GestureDetector(this,
+            object : android.view.GestureDetector.SimpleOnGestureListener() {
+                override fun onDown(e: android.view.MotionEvent): Boolean = true
+                override fun onSingleTapUp(e: android.view.MotionEvent): Boolean {
+                    val m = bannerSlides.getOrNull(bannerIdx)
+                    if (m != null) openCineDetail(m) else shareAppPromo()
+                    return true
+                }
+                override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent,
+                                     vx: Float, vy: Float): Boolean {
+                    if (kotlin.math.abs(vx) > kotlin.math.abs(vy) && kotlin.math.abs(vx) > 2200) {
+                        if (vx < 0) showBannerAt(bannerIdx + 1) else showBannerAt(bannerIdx - 1)
+                        return true
+                    }
+                    return false
+                }
+            })
+        binding.flipHomeBanner.setOnTouchListener { _, ev ->
+            detector.onTouchEvent(ev); true
+        }
         binding.btnHomeVerMas.setOnClickListener {
             it.springPress()
             openCineList("ULTIMAMENTE NUEVO", "new_month", "")
@@ -544,7 +452,6 @@ class MainActivity : AppCompatActivity() {
             bannerRandom = true
             refreshHomeBanner()
             if (::homeNewAdapter.isInitialized) homeNewAdapter.updateList(homeNewPool.shuffled().take(9))
-            binding.adSlotHomeRandom.visibility = View.VISIBLE
             if (!homeRandomAdAttached) {
                 homeRandomAdAttached = true
                 NativeAds.attach(this, binding.adSlotHomeRandom, NativeAds.VARIANT_MEDIA)
@@ -594,8 +501,11 @@ class MainActivity : AppCompatActivity() {
         }
         dots.forEach { dotRow.addView(it) }
 
+        bannerSlides.clear()
+        bannerSlides.addAll(slides)
         slides.forEach { m ->
             val slide = android.widget.FrameLayout(this)
+            // Fondo: el mismo poster llenando y atenuado (estilo sala de cine)
             slide.addView(android.widget.ImageView(this).apply {
                 layoutParams = android.widget.FrameLayout.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
@@ -603,27 +513,18 @@ class MainActivity : AppCompatActivity() {
                 scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
                 Glide.with(this@MainActivity).load(m.posterUrl).centerCrop()
                     .placeholder(R.drawable.bg_tile_glass).into(this)
+                setColorFilter(0x99000000, android.graphics.PorterDuff.Mode.SRC_OVER)
             })
-            slide.addView(android.view.View(this).apply {
+            // EL CARTEL completo centrado: el poster ya muestra el nombre
+            slide.addView(android.widget.ImageView(this).apply {
                 layoutParams = android.widget.FrameLayout.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT)
-                setBackgroundResource(R.drawable.bg_scrim_bottom)
+                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                setPadding(0, dp(8), 0, dp(8))
+                Glide.with(this@MainActivity).load(m.posterUrl).fitCenter()
+                    .placeholder(R.drawable.bg_tile_glass).into(this)
             })
-            slide.addView(android.widget.TextView(this).apply {
-                layoutParams = android.widget.FrameLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                    gravity = android.view.Gravity.BOTTOM or android.view.Gravity.START
-                    leftMargin = dp(12); bottomMargin = dp(24)
-                }
-                text = m.title
-                setTextColor(0xFFFFFFFF.toInt())
-                textSize = 15f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                maxLines = 1
-            })
-            slide.setOnClickListener { openCineDetail(m) }
             flipper.addView(slide)
         }
 
@@ -666,11 +567,9 @@ class MainActivity : AppCompatActivity() {
                     android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                     topMargin = dp(12)
                 }
-                setOnClickListener { shareAppPromo() }
             })
         }
         promo.addView(col)
-        promo.setOnClickListener { shareAppPromo() }
         flipper.addView(promo)
 
         if (slides.isNotEmpty()) {
@@ -678,6 +577,18 @@ class MainActivity : AppCompatActivity() {
             paintBannerDots()
             armBannerLoop()
         }
+    }
+
+    /** Salta a la diapositiva [target] (con envoltura) y reinicia el ciclo. */
+    private fun showBannerAt(target: Int) {
+        if (bannerSize == 0) return
+        val newIdx = (target % bannerSize + bannerSize) % bannerSize
+        if (newIdx == bannerIdx) return
+        val forward = newIdx == (bannerIdx + 1) % bannerSize
+        if (forward) binding.flipHomeBanner.showNext() else binding.flipHomeBanner.showPrevious()
+        bannerIdx = newIdx
+        paintBannerDots()
+        armBannerLoop()
     }
 
     private fun paintBannerDots() {
@@ -723,83 +634,6 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(android.content.Intent.createChooser(intent, "Comparte la app"))
         } catch (_: Exception) {}
-    }
-
-    private fun setCoverMode(cine: Boolean) {
-        coverModeCine = cine
-        refreshCoverData()
-    }
-
-    private fun refreshCoverData() {
-        if (!::coverAdapter.isInitialized) return
-        refreshHomeBanner()
-        refreshHomeNewSection()
-        coverItems.clear()
-        if (coverModeCine) {
-            allCineMedia.filter { !it.posterUrl.isNullOrBlank() }.take(30).forEach {
-                coverItems.add(HomeCoverItem(it.posterUrl, it.title, coverCineMeta(it), null, null, it))
-            }
-            if (coverItems.isEmpty()) {
-                coverItems.add(HomeCoverItem(null, "Cine y series premium", "Explora el catalogo completo en la pestana Cine", null, null, null))
-            }
-        } else {
-            allChannels.take(20).forEach {
-                coverItems.add(HomeCoverItem(it.logoUrl, it.name, "Transmision en vivo · toca para ver", "EN VIVO", it, null))
-            }
-            if (coverItems.isEmpty()) {
-                coverItems.add(HomeCoverItem(null, "Conecta tu lista", "Ve a Ajustes, pega tu lista M3U o escanea un QR", null, null, null))
-            }
-        }
-        coverAdapter.submitAll(coverItems)
-        binding.rvCoverflow.post {
-            applyCoverTransforms(binding.rvCoverflow)
-            syncCoverInfo(binding.rvCoverflow)
-        }
-    }
-
-    private fun coverCineMeta(c: CineMedia): String {
-        val r = c.rating?.let { "★ %.1f".format(it) } ?: "Nuevo esta semana"
-        val srv = "${c.urls.size} servidores"
-        val eps = if (c.episodes.size > 1) " · ${c.episodes.size} episodios" else ""
-        return "$r · $srv$eps"
-    }
-
-    private fun onCoverTap(pos: Int) {
-        val item = coverItems.getOrNull(pos) ?: return
-        if (pos != coverSnapPos && coverItems.size > 1) {
-            binding.rvCoverflow.smoothScrollToPosition(pos)
-            return
-        }
-        item.channel?.let { openPlayer(it); return }
-        item.media?.let { openCineDetail(it); return }
-        binding.bottomNavigation.selectedItemId =
-            if (coverModeCine) R.id.navigation_cine else R.id.navigation_settings
-    }
-
-    private fun applyCoverTransforms(rv: androidx.recyclerview.widget.RecyclerView) {
-        val cx = rv.width / 2f
-        val radius = rv.width * 0.62f
-        for (i in 0 until rv.childCount) {
-            val v = rv.getChildAt(i)
-            val vcx = (v.left + v.right) / 2f
-            val t = (1f - kotlin.math.abs(vcx - cx) / radius).coerceIn(0f, 1f)
-            val e = 1f - (1f - t) * (1f - t)
-            val sc = 0.80f + 0.20f * e
-            v.scaleX = sc
-            v.scaleY = sc
-            v.alpha = 0.45f + 0.55f * e
-            v.translationZ = 12f * e
-        }
-    }
-
-    private fun syncCoverInfo(rv: androidx.recyclerview.widget.RecyclerView) {
-        val lv = coverSnap.findSnapView(rv.layoutManager) ?: return
-        val pos = rv.getChildAdapterPosition(lv)
-        if (pos == androidx.recyclerview.widget.RecyclerView.NO_POSITION) return
-        coverSnapPos = pos
-        val item = coverItems.getOrNull(pos) ?: return
-        binding.txtCoverTitle.text = item.title
-        binding.txtCoverMeta.text = item.meta
     }
 
     private fun setupListeners() {
@@ -1309,7 +1143,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyFiltersAndSorting() {
-        refreshCoverData()
+        refreshHomeSections()
         val sharedPref = getSharedPreferences("iptv_pref", Context.MODE_PRIVATE)
         val isParentalActive = sharedPref.getBoolean("parental_active", false)
 
@@ -1782,7 +1616,7 @@ class MainActivity : AppCompatActivity() {
                 allCineMedia = quick
                 // Solo lo ligero: el armado pesado (featured/secciones/reco) lo
                 // hace el pase completo de abajo para no duplicar trabajo en UI.
-                refreshCoverData()
+                refreshHomeSections()
             }
             binding.layoutCineLoading.visibility = View.GONE
 
@@ -1793,7 +1627,7 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Default) {
                 try { catalog.forEach { TasteProfile.genreKeysOf(it) } } catch (_: Exception) {}
             }
-            refreshCoverData()
+            refreshHomeSections()
             setupCineFeatured()
             CineNewNotifier.onCatalogLoaded(this@MainActivity, catalog)
             consumePendingDeepLink()
@@ -1932,8 +1766,7 @@ class MainActivity : AppCompatActivity() {
             val added = FavoritesManager.toggleMedia(this, m)
             if (added) TasteProfile.recordFavorite(this, m)
             Toast.makeText(this, if (added) "Guardado en Favoritos ⭐ tu mazo se afina" else "Quitado de Favoritos", Toast.LENGTH_SHORT).show()
-            refreshFavorites()
-            if (added) flyOutAndAdvance(1)
+                if (added) flyOutAndAdvance(1)
         }
         binding.txtCineCatalogToggle.setOnClickListener { setDeckMode(!deckMode) }
         binding.catSegAll.setOnClickListener { selectedCineType = "all"; updateCatalogSegments(); applyCineFilters() }
@@ -2451,12 +2284,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupNativeAds() {
         // Inicio: tarjeta inline (ya está en el layout)
-        NativeAds.load(
-            this,
-            binding.globalNativeAdView,
-            onLoaded = { binding.cardGlobalNativeAd.visibility = View.VISIBLE },
-            onFailed = { binding.cardGlobalNativeAd.visibility = View.GONE }
-        )
         // Canales y Buscador: bloque compacto
         NativeAds.attach(this, binding.adSlotChannels, NativeAds.VARIANT_COMPACT)
         NativeAds.attach(this, binding.adSlotSearch, NativeAds.VARIANT_COMPACT)
