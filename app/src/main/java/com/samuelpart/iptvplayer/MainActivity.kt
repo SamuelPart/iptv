@@ -389,6 +389,120 @@ class MainActivity : AppCompatActivity() {
         buildHomeSectionsAsync()
     }
 
+    /** BOT: crea la siguiente seccion aleatoria al final de Inicio (max 15),
+     *  con loading propio y carga fuera del hilo de UI. */
+    private fun maybeCreateRandomSection() {
+        if (randomBusy || randomCreated >= 15) return
+        if (!::homeSagasAdapter.isInitialized) return
+        randomBusy = true
+        val spec = randomSpecs[randomCursor % randomSpecs.size]
+        randomCursor++
+        val idx = randomCreated++
+
+        val ctx = this
+        fun dp2(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
+        // contenedor de la seccion
+        val box = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+        }
+        binding.containerRandomSections.addView(box)
+
+        val tv = android.widget.TextView(ctx).apply {
+            text = spec.first
+            setTextColor(0xFFC9A96E.toInt()); textSize = 13f
+            letterSpacing = 0.12f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, dp2(22), 0, 0)
+        }
+        val pb = android.widget.ProgressBar(ctx).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(dp2(30), dp2(30)).apply {
+                gravity = android.view.Gravity.CENTER_HORIZONTAL
+                topMargin = dp2(10)
+            }
+            isIndeterminate = true
+            indeterminateTintList = android.content.res.ColorStateList.valueOf(0xFFC9A96E.toInt())
+        }
+        val rv = androidx.recyclerview.widget.RecyclerView(ctx).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp2(10) }
+            layoutManager = androidx.recyclerview.widget.GridLayoutManager(ctx, 3)
+            isNestedScrollingEnabled = false
+            overScrollMode = android.view.View.OVER_SCROLL_NEVER
+        }
+        box.addView(tv); box.addView(pb); box.addView(rv)
+
+        lifecycleScope.launch {
+            val pool = withContext(Dispatchers.Default) {
+                allCineMedia
+                    .filter { TasteProfile.genreKeysOf(it).contains(spec.second) }
+                    .sortedByDescending { it.rating ?: -1.0 }
+            }
+            if (isFinishing || isDestroyed) return@launch
+            pb.visibility = android.view.View.GONE
+            if (pool.isEmpty()) {
+                val empty = android.widget.TextView(ctx).apply {
+                    text = "Pronto habrá contenido aquí"
+                    setTextColor(0xFF8A8A93.toInt()); textSize = 12f
+                    setPadding(0, dp2(10), 0, 0)
+                }
+                box.addView(empty)
+                randomBusy = false
+                return@launch
+            }
+            val adapter = CineSearchResultAdapter(pool.shuffled().take(9), onMediaClick = { openCineDetail(it) })
+            adapter.gridColumns = 3
+            rv.adapter = adapter
+            // botones
+            fun pill(label: String, icon: Int, action: () -> Unit): android.widget.LinearLayout =
+                android.widget.LinearLayout(ctx).apply {
+                    orientation = android.widget.LinearLayout.HORIZONTAL
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    background = androidx.core.content.ContextCompat.getDrawable(ctx, R.drawable.bg_apple_glass_pill)
+                    setPadding(dp2(18), dp2(10), dp2(18), dp2(10))
+                    isClickable = true; isFocusable = true
+                    addView(android.widget.ImageView(ctx).apply {
+                        setImageResource(icon)
+                        setColorFilter(0xFFC9A96E.toInt())
+                        layoutParams = android.widget.LinearLayout.LayoutParams(dp2(15), dp2(15))
+                    })
+                    addView(android.widget.TextView(ctx).apply {
+                        text = label
+                        setTextColor(0xFFFFFFFF.toInt()); textSize = 13f
+                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                            marginStart = dp2(7)
+                        }
+                    })
+                    setOnClickListener { action() }
+                }
+            val row = android.widget.LinearLayout(ctx).apply {
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                    topMargin = dp2(12)
+                }
+                gravity = android.view.Gravity.CENTER
+                orientation = android.widget.LinearLayout.HORIZONTAL
+                addView(pill("Ver más", R.drawable.ic_ios_arrow_right) {
+                    openCineList(spec.first, "genre", spec.second)
+                })
+                addView(android.view.View(ctx).apply {
+                    layoutParams = android.widget.LinearLayout.LayoutParams(dp2(10), 1)
+                })
+                addView(pill("Cambiar", R.drawable.ic_ios_refresh) {
+                    adapter.updateList(pool.shuffled().take(9))
+                })
+            }
+            box.addView(row)
+            // pequeño respiro entre secciones para no sobrecargar
+            binding.containerRandomSections.postDelayed({ randomBusy = false }, 350)
+        }
+    }
+
     /** Cablea las secciones STREAMING - PLATAFORMAS, EL NUEVO STREAMING DE
      *  HOY, ESTRENOS EN CINE y SAGAS (cuadriculas 3x3 con botones Ver mas y
      *  Cambiar, fila de logos y anuncio en bloque). */
@@ -441,11 +555,30 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnSagasCambiar.setOnClickListener {
             it.springPress()
-            sectionsData?.let { d -> homeSagasAdapter.submit(d.sagas.shuffled()) }
+            // Rota a la SIGUIENTE saga de las mejores (orden TMDB)
+            sectionsData?.let { d ->
+                if (d.sagaGroups.isNotEmpty()) {
+                    d.sagaCursor = (d.sagaCursor + 1) % d.sagaGroups.size
+                    val (name, items) = d.sagaGroups[d.sagaCursor]
+                    homeSagasAdapter.submit(
+                        listOf<SagaEntry>(SagaEntry.Header(name)) +
+                            items.take(14).map { SagaEntry.Poster(it) }
+                    )
+                }
+            }
         }
 
         // Anuncio en bloque permanente bajo los botones de Ultimamente Nuevo
         NativeAds.attach(this, binding.adSlotHomeSections, NativeAds.VARIANT_MEDIA)
+
+        // BOT de secciones aleatorias: al llegar cerca del final, crea la
+        // siguiente (con su loading) para bajar sin limite
+        binding.containerHome.setOnScrollChangeListener { v, _, _, _, _ ->
+            @Suppress("USELESS_CAST")
+            val sv = v as? android.widget.ScrollView ?: return@setOnScrollChangeListener
+            val child = sv.getChildAt(0) ?: return@setOnScrollChangeListener
+            if (sv.scrollY + sv.height >= child.height - 700) maybeCreateRandomSection()
+        }
 
         // Logos oficiales de las plataformas (TMDB watch/providers)
         lifecycleScope.launch {
@@ -468,13 +601,13 @@ class MainActivity : AppCompatActivity() {
                 val estrenos = allCineMedia
                     .filter { ((it.releaseDate ?: "").take(4).toIntOrNull() ?: 0) >= 2024 }
                     .sortedByDescending { it.releaseDate ?: "" }
-                val sagasFlat = Sagas.buildGroups(allCineMedia)
-                    .take(6)
-                    .flatMap { (name, items) ->
-                        listOf<SagaEntry>(SagaEntry.Header(name)) +
-                            items.take(12).map { SagaEntry.Poster(it) }
-                    }
-                HomeSectionsData(streaming, estrenos, sagasFlat)
+                val sagaGroups = Sagas.buildGroups(allCineMedia)
+                // SOLO la saga TOP (mejor rating TMDB) en la fila
+                val sagasFlat = sagaGroups.firstOrNull()?.let { (name, items) ->
+                    listOf<SagaEntry>(SagaEntry.Header(name)) +
+                        items.take(14).map { SagaEntry.Poster(it) }
+                } ?: emptyList()
+                HomeSectionsData(streaming, estrenos, sagasFlat, sagaGroups)
             }
             sectionsData = data
             // Carga escalonada: una seccion cada 120 ms
@@ -506,11 +639,30 @@ class MainActivity : AppCompatActivity() {
     private lateinit var platformAdapter: PlatformRowAdapter
     private lateinit var homeSagasAdapter: HomeSagasAdapter
     private var sectionsData: HomeSectionsData? = null
+    private var randomCreated = 0
+    private var randomCursor = 0
+    private var randomBusy = false
+    private val randomSpecs = listOf(
+        Triple("ACCIÓN Y ADRENALINA", "acción"),
+        Triple("COMEDIAS PARA REÍR", "comedia"),
+        Triple("TERROR DE NOCHE", "terror"),
+        Triple("ROMANCE", "romance"),
+        Triple("CIENCIA FICCIÓN", "ciencia ficción"),
+        Triple("THRILLERS", "thriller"),
+        Triple("FANTASÍA ÉPICA", "fantasía"),
+        Triple("PARA LA FAMILIA", "familia"),
+        Triple("DRAMA REAL", "drama"),
+        Triple("MÚSICA Y CONCIERTOS", "música"),
+        Triple("ÉPOCA E HISTORIA", "histórica"),
+        Triple("ANIMACIÓN", "animación")
+    )
 
     private data class HomeSectionsData(
         val streaming: List<CineMedia>,
         val estrenos: List<CineMedia>,
-        val sagas: List<SagaEntry>
+        val sagas: List<SagaEntry>,
+        val sagaGroups: List<Pair<String, List<CineMedia>>>,
+        var sagaCursor: Int = 0
     )
 
     /** Paginacion del grid de Cine: ancha de a [CINE_PAGE] con loading sin
@@ -1718,20 +1870,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadCineCatalog() {
         lifecycleScope.launch {
-            binding.layoutCineLoading.visibility = View.VISIBLE
-            binding.rvCineGrid.visibility = View.GONE
-            
-            // FAST PASS: catalogo empaquetado sin red -> peliculas visibles al instante
+            // FAST PASS: catalogo empaquetado sin red -> contenido visible YA.
+            // El loading verde SOLO aparece si no hay nada que mostrar todavia.
             val quick = withContext(Dispatchers.IO) {
                 CineRepository.getBundledQuickCatalog(this@MainActivity)
             }
             if (allCineMedia.isEmpty() && quick.isNotEmpty()) {
                 allCineMedia = quick
-                // Solo lo ligero: el armado pesado (featured/secciones/reco) lo
-                // hace el pase completo de abajo para no duplicar trabajo en UI.
+                applyCineFilters()
                 refreshHomeSections()
             }
-            binding.layoutCineLoading.visibility = View.GONE
+            if (allCineMedia.isEmpty()) {
+                binding.layoutCineLoading.visibility = View.VISIBLE
+                binding.rvCineGrid.visibility = View.GONE
+            }
 
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
@@ -1748,8 +1900,12 @@ class MainActivity : AppCompatActivity() {
             binding.layoutCineLoading.visibility = View.GONE
             binding.rvCineGrid.visibility = View.VISIBLE
             
-            cineAdapter.updateList(catalog)
-            binding.txtCineCount.text = "Total: ${catalog.size}"
+            // PAGINADO (60 + loading): jamas volcar 9.5k de golpe en el grid
+            cinePagingFull = catalog.sortedByDescending { it.rating ?: -1.0 }
+            cineShown = minOf(CINE_PAGE, cinePagingFull.size)
+            cineLoadingMore = false
+            cineAdapter.updateList(cinePagingFull.take(cineShown))
+            binding.txtCineCount.text = "Total: ${cinePagingFull.size}"
             buildCineReco()
         }
     }

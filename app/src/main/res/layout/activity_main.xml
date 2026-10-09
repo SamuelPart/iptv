@@ -231,10 +231,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
                 android:paddingTop="10dp"
-                android:paddingBottom="28dp">
+                android:paddingBottom="120dp">
 
                 <!-- Buscador de Inicio: icono a la izquierda + placeholder rotativo
                      con las busquedas pasadas; el reloj abre el historial visto -->
@@ -402,9 +402,7 @@
                     android:id="@+id/homeBanner"
                     android:layout_width="match_parent"
                     android:layout_height="240dp"
-                    android:layout_marginTop="14dp"
-                    android:layout_marginStart="-18dp"
-                    android:layout_marginEnd="-18dp">
+                    android:layout_marginTop="14dp">
 
                     <ViewFlipper
                         android:id="@+id/flipHomeBanner"
@@ -515,6 +513,13 @@
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
+                <!-- Secciones ALEATORIAS que el BOT va creando al bajar -->
+                <LinearLayout
+                    android:id="@+id/containerRandomSections"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical" />
                 <!-- Loading escalonado de las secciones de Inicio -->
                 <ProgressBar
                     android:id="@+id/pbHomeLoader"
@@ -542,23 +547,16 @@
                     android:letterSpacing="0.12"
                     android:textSize="13sp"
                     android:textStyle="bold" />
-                <HorizontalScrollView
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvHomePlatforms"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:scrollbars="none"
-                    android:overScrollMode="never">
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvHomePlatforms"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingEnd="8dp"
-                        android:clipToPadding="false"
-                        android:nestedScrollingEnabled="false"
-                        android:overScrollMode="never"
-                        android:scrollbars="none" />
-                </HorizontalScrollView>
+                    android:paddingEnd="8dp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none" />
 
                 <!-- EL NUEVO STREAMING DE HOY -->
                                 <TextView
