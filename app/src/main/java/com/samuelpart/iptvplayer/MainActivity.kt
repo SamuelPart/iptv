@@ -643,18 +643,18 @@ class MainActivity : AppCompatActivity() {
     private var randomCursor = 0
     private var randomBusy = false
     private val randomSpecs = listOf(
-        Triple("ACCIÓN Y ADRENALINA", "acción"),
-        Triple("COMEDIAS PARA REÍR", "comedia"),
-        Triple("TERROR DE NOCHE", "terror"),
-        Triple("ROMANCE", "romance"),
-        Triple("CIENCIA FICCIÓN", "ciencia ficción"),
-        Triple("THRILLERS", "thriller"),
-        Triple("FANTASÍA ÉPICA", "fantasía"),
-        Triple("PARA LA FAMILIA", "familia"),
-        Triple("DRAMA REAL", "drama"),
-        Triple("MÚSICA Y CONCIERTOS", "música"),
-        Triple("ÉPOCA E HISTORIA", "histórica"),
-        Triple("ANIMACIÓN", "animación")
+        Pair("ACCIÓN Y ADRENALINA", "acción"),
+        Pair("COMEDIAS PARA REÍR", "comedia"),
+        Pair("TERROR DE NOCHE", "terror"),
+        Pair("ROMANCE", "romance"),
+        Pair("CIENCIA FICCIÓN", "ciencia ficción"),
+        Pair("THRILLERS", "thriller"),
+        Pair("FANTASÍA ÉPICA", "fantasía"),
+        Pair("PARA LA FAMILIA", "familia"),
+        Pair("DRAMA REAL", "drama"),
+        Pair("MÚSICA Y CONCIERTOS", "música"),
+        Pair("ÉPOCA E HISTORIA", "histórica"),
+        Pair("ANIMACIÓN", "animación")
     )
 
     private data class HomeSectionsData(
