@@ -441,6 +441,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val pool = withContext(Dispatchers.Default) {
                 allCineMedia
+                    .filter { inScope(it) }
                     .filter { TasteProfile.genreKeysOf(it).contains(spec.second) }
                     .sortedByDescending { it.rating ?: -1.0 }
             }
@@ -536,7 +537,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnStreamingVerMas.setOnClickListener {
             it.springPress()
-            openCineList("EL NUEVO STREAMING DE HOY", "new_month", "", badges = true)
+            openCineList("EL NUEVO STREAMING DE HOY", "new_month", "", badges = true, scope = scopeKind to scopeParam)
         }
         binding.btnStreamingCambiar.setOnClickListener {
             it.springPress()
@@ -544,7 +545,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnEstrenosVerMas.setOnClickListener {
             it.springPress()
-            openCineList("ESTRENOS EN CINE", "recent", "")
+            openCineList("ESTRENOS EN CINE", "recent", "", scope = scopeKind to scopeParam)
         }
         binding.btnEstrenosCambiar.setOnClickListener {
             it.springPress()
@@ -552,7 +553,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnSagasVerMas.setOnClickListener {
             it.springPress()
-            openCineList("SAGAS", "sagas", "")
+            openCineList("SAGAS", "sagas", "", scope = scopeKind to scopeParam)
         }
         binding.btnSagasCambiar.setOnClickListener {
             it.springPress()
@@ -594,13 +595,14 @@ class MainActivity : AppCompatActivity() {
         binding.pbHomeLoader.visibility = View.VISIBLE
         lifecycleScope.launch {
             val data = withContext(Dispatchers.Default) {
-                val streaming = allCineMedia
+                val scoped = allCineMedia.filter { inScope(it) }
+                val streaming = scoped
                     .filter { PlatformCatalog.keyOf(it) != null }
                     .sortedByDescending { it.releaseDate ?: "" }
-                val estrenos = allCineMedia
+                val estrenos = scoped
                     .filter { ((it.releaseDate ?: "").take(4).toIntOrNull() ?: 0) >= 2024 }
                     .sortedByDescending { it.releaseDate ?: "" }
-                val sagaGroups = Sagas.buildGroups(allCineMedia)
+                val sagaGroups = Sagas.buildGroups(scoped)
                 // SOLO la saga TOP (mejor rating TMDB): carteles directos, sin titulo
                 val sagasFlat = sagaGroups.firstOrNull()
                     ?.second?.take(14)?.map { SagaEntry.Poster(it) } ?: emptyList()
@@ -637,6 +639,44 @@ class MainActivity : AppCompatActivity() {
     private lateinit var platformAdapter: PlatformRowAdapter
     private lateinit var homeSagasAdapter: HomeSagasAdapter
     private var sectionsData: HomeSectionsData? = null
+    private var scopeKind = "all"
+    private var scopeParam = ""
+
+    /** ¿Este titulo pertenece a la seccion elegida en los chips de Inicio? */
+    private fun inScope(m: CineMedia): Boolean = when (scopeKind) {
+        "type" -> if (scopeParam == "series") m.type != "movie" else m.type == "movie"
+        "genre" -> m.title.lowercase().contains("animac") ||
+            m.group.lowercase().contains("animac") ||
+            m.group.lowercase().contains("anime") ||
+            TasteProfile.genreKeysOf(m).contains("animación")
+        "platform_all" -> PlatformCatalog.keyOf(m) != null
+        else -> true
+    }
+
+    /** Cambia la seccion de Inicio: TODO se reconstruye con ese alcance. */
+    private fun setHomeScope(kind: String, param: String) {
+        if (scopeKind == kind && scopeParam == param) return
+        scopeKind = kind; scopeParam = param
+        // las secciones aleatorias ya creadas eran del alcance anterior
+        binding.containerRandomSections.removeAllViews()
+        randomCreated = 0
+        randomCursor = 0
+        paintSectionChips()
+        refreshHomeSections()
+    }
+
+    /** Chip activo dorado, el resto en vidrio. */
+    private fun paintSectionChips() {
+        fun paint(chip: android.widget.TextView, active: Boolean) {
+            chip.setBackgroundResource(if (active) R.drawable.bg_chip_active else R.drawable.bg_apple_glass_pill)
+            chip.setTextColor(if (active) 0xFF0F2144.toInt() else 0xFFD6DAE4.toInt())
+        }
+        paint(binding.chipHomeInicio, scopeKind == "all")
+        paint(binding.chipHomePeliculas, scopeKind == "type" && scopeParam == "movie")
+        paint(binding.chipHomeSeries, scopeKind == "type" && scopeParam == "series")
+        paint(binding.chipHomeAnimacion, scopeKind == "genre")
+        paint(binding.chipHomePlataformas, scopeKind == "platform_all")
+    }
     private var randomCreated = 0
     private var randomCursor = 0
     private var randomBusy = false
@@ -708,7 +748,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnHomeVerMas.setOnClickListener {
             it.springPress()
-            openCineList("ULTIMAMENTE NUEVO", "new_month", "")
+            openCineList("ULTIMAMENTE NUEVO", "new_month", "", scope = scopeKind to scopeParam)
         }
         binding.btnHomeCambiar.setOnClickListener {
             it.springPress()
@@ -733,8 +773,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshHomeNewSection() {
         if (!::homeNewAdapter.isInitialized) return
-        val withPoster = allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
-        homeNewPool = if (withPoster.size >= 9) withPoster.sortedByDescending { it.releaseDate ?: "" } else allCineMedia
+        val scoped = allCineMedia.filter { !it.posterUrl.isNullOrBlank() && inScope(it) }
+        val withPoster = if (scoped.isNotEmpty()) scoped else allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
+        homeNewPool = if (withPoster.size >= 9) withPoster.sortedByDescending { it.releaseDate ?: "" } else withPoster
         if (!bannerRandom) homeNewAdapter.updateList(homeNewPool.take(9))
     }
 
@@ -745,7 +786,10 @@ class MainActivity : AppCompatActivity() {
         val flipper = binding.flipHomeBanner
         stopHomeBanner()
         flipper.removeAllViews()
-        val withPoster = allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
+        val scoped = allCineMedia.filter { !it.posterUrl.isNullOrBlank() && inScope(it) }
+        // respaldo: si la seccion no tiene posters aun, usa el catalogo completo
+        val withPoster = if (scoped.isNotEmpty()) scoped
+        else allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
         val pool = if (bannerRandom) withPoster.shuffled()
         else withPoster.sortedByDescending { it.releaseDate ?: "" }
         val slides = pool.take(7)
@@ -1023,28 +1067,25 @@ class MainActivity : AppCompatActivity() {
             startActivity(android.content.Intent(this, WatchHistoryActivity::class.java))
         }
 
-        // Secciones de Inicio: cada chip abre su pantalla CON LA INTERFAZ DEL
-        // INICIO (buscador + cuadricula 3x3 con loading), solo de esa seccion
-        fun openSection(title: String, kind: String, param: String, badges: Boolean = false) {
-            startActivity(android.content.Intent(this, CineSectionActivity::class.java).apply {
-                putExtra("title", title)
-                putExtra("kind", kind)
-                putExtra("param", param)
-                putExtra("show_platform_badges", badges)
-            })
+        // Secciones de Inicio: ES LA MISMA PANTALLA; al tocar un chip, TODO el
+        // Inicio (banner, cuadriculas, sagas, aleatorias) se actualiza a esa
+        // seccion. Inicio vuelve al catalogo completo. Sin titulos ni "atras".
+        binding.chipHomeInicio.setOnClickListener {
+            it.springPress(); setHomeScope("all", "")
         }
         binding.chipHomePeliculas.setOnClickListener {
-            openSection("Películas", "type", "movie")
+            it.springPress(); setHomeScope("type", "movie")
         }
         binding.chipHomeSeries.setOnClickListener {
-            openSection("Series", "type", "series")
+            it.springPress(); setHomeScope("type", "series")
         }
         binding.chipHomeAnimacion.setOnClickListener {
-            openSection("Animación", "genre", "animación")
+            it.springPress(); setHomeScope("genre", "animación")
         }
         binding.chipHomePlataformas.setOnClickListener {
-            openSection("Plataformas", "platform_all", "", badges = true)
+            it.springPress(); setHomeScope("platform_all", "")
         }
+        paintSectionChips()
         startHomeSearchRotator()
 
 
@@ -2475,13 +2516,21 @@ class MainActivity : AppCompatActivity() {
             .start()
     }
 
-    private fun openCineList(title: String, kind: String, param: String = "", badges: Boolean = false) {
+    private fun openCineList(
+        title: String,
+        kind: String,
+        param: String = "",
+        badges: Boolean = false,
+        scope: Pair<String, String> = "all" to ""
+    ) {
         closeCineMenu()
         startActivity(Intent(this, CinePopularAllActivity::class.java).apply {
             putExtra("title", title)
             putExtra("kind", kind)
             putExtra("param", param)
             putExtra("show_platform_badges", badges)
+            putExtra("scope_kind", scope.first)
+            putExtra("scope_param", scope.second)
         })
     }
 

@@ -33,6 +33,8 @@ class CinePopularAllActivity : AppCompatActivity() {
         val kind = intent.getStringExtra("kind") ?: "all"
         val param = intent.getStringExtra("param") ?: ""
         val badges = intent.getBooleanExtra("show_platform_badges", false)
+        val scopeKind = intent.getStringExtra("scope_kind") ?: "all"
+        val scopeParam = intent.getStringExtra("scope_param") ?: ""
 
         binding.txtPopularAllTitle.text = title
         binding.btnPopularBack.setOnClickListener { finish() }
@@ -147,7 +149,18 @@ class CinePopularAllActivity : AppCompatActivity() {
                     .sortedBy { Math.abs(it.title.hashCode()) }
             }
 
-            initPaging(list)
+            val scoped = if (scopeKind != "all") list.filter { m ->
+                when (scopeKind) {
+                    "type" -> if (scopeParam == "series") m.type != "movie" else m.type == "movie"
+                    "genre" -> m.title.lowercase().contains("animac") ||
+                        m.group.lowercase().contains("animac") ||
+                        m.group.lowercase().contains("anime") ||
+                        TasteProfile.genreKeysOf(m).contains("animación")
+                    "platform_all" -> PlatformCatalog.keyOf(m) != null
+                    else -> true
+                }
+            } else list
+            initPaging(scoped)
             val adapter = CineSearchResultAdapter(sliceForPage(), onMediaClick = { m ->
                 val real = if (kind == "alerts") catalog.find { it.title == m.title } ?: m else m
                 startActivity(
