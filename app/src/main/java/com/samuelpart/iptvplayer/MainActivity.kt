@@ -777,8 +777,8 @@ class MainActivity : AppCompatActivity() {
             val card = androidx.cardview.widget.CardView(this).apply {
                 layoutParams = android.widget.FrameLayout.LayoutParams(dp(150), dp(216))
                     .apply { gravity = android.view.Gravity.CENTER }
-                radius = dp(12f)
-                cardElevation = dp(7f)
+                radius = dp(12).toFloat()
+                cardElevation = dp(7).toFloat()
                 preventCornerOverlap = false
                 useCompatPadding = false
             }
