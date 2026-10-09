@@ -1018,18 +1018,27 @@ class MainActivity : AppCompatActivity() {
             startActivity(android.content.Intent(this, WatchHistoryActivity::class.java))
         }
 
-        // Secciones de Inicio: cada chip abre su pantalla del catalogo
+        // Secciones de Inicio: cada chip abre su pantalla CON LA INTERFAZ DEL
+        // INICIO (buscador + cuadricula 3x3 con loading), solo de esa seccion
+        fun openSection(title: String, kind: String, param: String, badges: Boolean = false) {
+            startActivity(android.content.Intent(this, CineSectionActivity::class.java).apply {
+                putExtra("title", title)
+                putExtra("kind", kind)
+                putExtra("param", param)
+                putExtra("show_platform_badges", badges)
+            })
+        }
         binding.chipHomePeliculas.setOnClickListener {
-            openCineList("PELICULAS", "type", "movie")
+            openSection("Películas", "type", "movie")
         }
         binding.chipHomeSeries.setOnClickListener {
-            openCineList("SERIES", "type", "series")
+            openSection("Series", "type", "series")
         }
         binding.chipHomeAnimacion.setOnClickListener {
-            openCineList("ANIMACION", "genre", "animación")
+            openSection("Animación", "genre", "animación")
         }
         binding.chipHomePlataformas.setOnClickListener {
-            openCineList("PLATAFORMAS", "platform_all", "")
+            openSection("Plataformas", "platform_all", "", badges = true)
         }
         startHomeSearchRotator()
 

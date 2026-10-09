@@ -71,6 +71,10 @@
             android:name=".CineSearchActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".CineSectionActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".WatchHistoryActivity"
             android:exported="false" />
         <activity
