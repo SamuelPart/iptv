@@ -94,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         incrementOpenCounter()
         setupHomeBanner()
         setupHomeNewSection()
+        setupHomeSections()
         setupSearchHistories()
         setupListeners()
         if (android.os.Build.VERSION.SDK_INT >= 33 &&
@@ -381,10 +382,111 @@ class MainActivity : AppCompatActivity() {
 
     // ================= BANNER DE INICIO + ULTIMAMENTE NUEVO + PAGINACION =================
 
-    /** Repinta el banner y la cuadricula Ultimamente Nuevo tras cargar el catalogo. */
+    /** Repinta el banner y TODAS las secciones de Inicio tras cargar el catalogo. */
     private fun refreshHomeSections() {
         refreshHomeBanner()
         refreshHomeNewSection()
+        buildHomeSectionsAsync()
+    }
+
+    /** Cablea las secciones STREAMING - PLATAFORMAS, EL NUEVO STREAMING DE
+     *  HOY, ESTRENOS EN CINE y SAGAS (cuadriculas 3x3 con botones Ver mas y
+     *  Cambiar, fila de logos y anuncio en bloque). */
+    private fun setupHomeSections() {
+        homeStreamingAdapter = CineSearchResultAdapter(emptyList(), onMediaClick = { openCineDetail(it) })
+        homeStreamingAdapter.gridColumns = 3
+        homeStreamingAdapter.platformBadgeResolver = { m -> PlatformCatalog.logoOf(m) }
+        binding.rvHomeStreaming.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 3)
+        binding.rvHomeStreaming.adapter = homeStreamingAdapter
+        binding.rvHomeStreaming.isNestedScrollingEnabled = false
+
+        homeEstrenosAdapter = CineSearchResultAdapter(emptyList(), onMediaClick = { openCineDetail(it) })
+        homeEstrenosAdapter.gridColumns = 3
+        binding.rvHomeEstrenos.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 3)
+        binding.rvHomeEstrenos.adapter = homeEstrenosAdapter
+        binding.rvHomeEstrenos.isNestedScrollingEnabled = false
+
+        platformAdapter = PlatformRowAdapter { p ->
+            openCineList(p.name.uppercase(), "platform", p.key)
+        }
+        binding.rvHomePlatforms.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvHomePlatforms.adapter = platformAdapter
+
+        homeSagasAdapter = HomeSagasAdapter { openCineDetail(it) }
+        binding.rvHomeSagas.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvHomeSagas.adapter = homeSagasAdapter
+        binding.rvHomeSagas.isNestedScrollingEnabled = false
+
+        binding.btnStreamingVerMas.setOnClickListener {
+            it.springPress()
+            openCineList("EL NUEVO STREAMING DE HOY", "new_month", "", badges = true)
+        }
+        binding.btnStreamingCambiar.setOnClickListener {
+            it.springPress()
+            sectionsData?.let { d -> homeStreamingAdapter.updateList(d.streaming.shuffled().take(9)) }
+        }
+        binding.btnEstrenosVerMas.setOnClickListener {
+            it.springPress()
+            openCineList("ESTRENOS EN CINE", "recent", "")
+        }
+        binding.btnEstrenosCambiar.setOnClickListener {
+            it.springPress()
+            sectionsData?.let { d -> homeEstrenosAdapter.updateList(d.estrenos.shuffled().take(9)) }
+        }
+        binding.btnSagasVerMas.setOnClickListener {
+            it.springPress()
+            openCineList("SAGAS", "sagas", "")
+        }
+        binding.btnSagasCambiar.setOnClickListener {
+            it.springPress()
+            sectionsData?.let { d -> homeSagasAdapter.submit(d.sagas.shuffled()) }
+        }
+
+        // Anuncio en bloque permanente bajo los botones de Ultimamente Nuevo
+        NativeAds.attach(this, binding.adSlotHomeSections, NativeAds.VARIANT_MEDIA)
+
+        // Logos oficiales de las plataformas (TMDB watch/providers)
+        lifecycleScope.launch {
+            PlatformCatalog.fetchLogos(CineRepository.TMDB_API_KEY)
+            platformAdapter.notifyDataSetChanged()
+        }
+    }
+
+    /** Construye las secciones de Inicio FUERA del hilo de UI y las pinta
+     *  ESCALONADAS (una a una, con loading sin texto) para que el catalogo
+     *  grande nunca congele la pantalla. */
+    private fun buildHomeSectionsAsync() {
+        if (!::homeStreamingAdapter.isInitialized) return
+        binding.pbHomeLoader.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            val data = withContext(Dispatchers.Default) {
+                val streaming = allCineMedia
+                    .filter { PlatformCatalog.keyOf(it) != null }
+                    .sortedByDescending { it.releaseDate ?: "" }
+                val estrenos = allCineMedia
+                    .filter { ((it.releaseDate ?: "").take(4).toIntOrNull() ?: 0) >= 2024 }
+                    .sortedByDescending { it.releaseDate ?: "" }
+                val sagasFlat = Sagas.buildGroups(allCineMedia)
+                    .take(6)
+                    .flatMap { (name, items) ->
+                        listOf<SagaEntry>(SagaEntry.Header(name)) +
+                            items.take(12).map { SagaEntry.Poster(it) }
+                    }
+                HomeSectionsData(streaming, estrenos, sagasFlat)
+            }
+            sectionsData = data
+            // Carga escalonada: una seccion cada 120 ms
+            homeStreamingAdapter.updateList(data.streaming.take(9))
+            binding.rvHomeStreaming.postDelayed({
+                homeEstrenosAdapter.updateList(data.estrenos.take(9))
+                binding.rvHomeSagas.postDelayed({
+                    homeSagasAdapter.submit(data.sagas)
+                    binding.pbHomeLoader.visibility = View.GONE
+                }, 120)
+            }, 120)
+        }
     }
 
     private val CINE_PAGE = 60
@@ -399,6 +501,17 @@ class MainActivity : AppCompatActivity() {
     private var homeRandomAdAttached = false
     private lateinit var homeNewAdapter: CineSearchResultAdapter
     private val bannerSlides = mutableListOf<CineMedia>()
+    private lateinit var homeStreamingAdapter: CineSearchResultAdapter
+    private lateinit var homeEstrenosAdapter: CineSearchResultAdapter
+    private lateinit var platformAdapter: PlatformRowAdapter
+    private lateinit var homeSagasAdapter: HomeSagasAdapter
+    private var sectionsData: HomeSectionsData? = null
+
+    private data class HomeSectionsData(
+        val streaming: List<CineMedia>,
+        val estrenos: List<CineMedia>,
+        val sagas: List<SagaEntry>
+    )
 
     /** Paginacion del grid de Cine: ancha de a [CINE_PAGE] con loading sin
      *  texto, para que catalogos extensos no congelen la UI. */
@@ -2174,12 +2287,13 @@ class MainActivity : AppCompatActivity() {
             .start()
     }
 
-    private fun openCineList(title: String, kind: String, param: String = "") {
+    private fun openCineList(title: String, kind: String, param: String = "", badges: Boolean = false) {
         closeCineMenu()
         startActivity(Intent(this, CinePopularAllActivity::class.java).apply {
             putExtra("title", title)
             putExtra("kind", kind)
             putExtra("param", param)
+            putExtra("show_platform_badges", badges)
         })
     }
 

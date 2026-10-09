@@ -24,6 +24,10 @@ class CineSearchResultAdapter(
     /** Lista real + marcadores de anuncio. */
     private var displayList: List<Any?> = emptyList()
 
+    /** Resolver opcional del LOGO de plataforma por titulo (secciones de Inicio
+     *  y listados con badge). Si es null, el badge no se muestra. */
+    var platformBadgeResolver: ((CineMedia) -> String?)? = null
+
     /** Columnas de la cuadrícula: el anuncio se inserta cada [NativeAds.GRID_AD_ROWS] filas. */
     var gridColumns: Int = 3
         set(value) {
@@ -78,6 +82,19 @@ class CineSearchResultAdapter(
                 .error(fallback)
                 .fallback(fallback)
                 .into(binding.imgPoster)
+
+            // Badge de plataforma (opcional)
+            val badge = platformBadgeResolver?.invoke(media)
+            if (badge != null) {
+                binding.imgPlatformBadge.visibility = View.VISIBLE
+                Glide.with(binding.imgPlatformBadge)
+                    .load(badge)
+                    .fitCenter()
+                    .placeholder(R.drawable.bg_tile_glass)
+                    .into(binding.imgPlatformBadge)
+            } else {
+                binding.imgPlatformBadge.visibility = View.GONE
+            }
 
             // Favoritos opcionales (solo en la cuadricula principal de Cine)
             if (isFavorite != null && onFavoriteToggle != null) {

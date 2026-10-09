@@ -32,6 +32,7 @@ class CinePopularAllActivity : AppCompatActivity() {
         val title = intent.getStringExtra("title") ?: "POPULARES"
         val kind = intent.getStringExtra("kind") ?: "all"
         val param = intent.getStringExtra("param") ?: ""
+        val badges = intent.getBooleanExtra("show_platform_badges", false)
 
         binding.txtPopularAllTitle.text = title
         binding.btnPopularBack.setOnClickListener { finish() }
@@ -52,6 +53,7 @@ class CinePopularAllActivity : AppCompatActivity() {
         })
 
         lifecycleScope.launch {
+            binding.pbPopularLoader.visibility = android.view.View.VISIBLE
             val catalog = CineRepository.getCineCatalog(this@CinePopularAllActivity)
 
             val list: List<CineMedia> = when (kind) {
@@ -132,6 +134,8 @@ class CinePopularAllActivity : AppCompatActivity() {
                     }
                 }
 
+                "sagas" -> Sagas.buildGroups(catalog).flatMap { it.second }
+
                 "history" -> {
                     val terms = getSharedPreferences("IPTV_PREFS", Context.MODE_PRIVATE)
                         .getString("CINE_SEARCH_HISTORY", "") ?: ""
@@ -144,7 +148,7 @@ class CinePopularAllActivity : AppCompatActivity() {
             }
 
             initPaging(list)
-            binding.rvPopularAll.adapter = CineSearchResultAdapter(sliceForPage(), onMediaClick = { m ->
+            val adapter = CineSearchResultAdapter(sliceForPage(), onMediaClick = { m ->
                 val real = if (kind == "alerts") catalog.find { it.title == m.title } ?: m else m
                 startActivity(
                     Intent(
@@ -153,6 +157,11 @@ class CinePopularAllActivity : AppCompatActivity() {
                     ).apply { putExtra("media", real) }
                 )
             })
+            if (badges) {
+                adapter.platformBadgeResolver = { m -> PlatformCatalog.logoOf(m) }
+            }
+            binding.rvPopularAll.adapter = adapter
+            binding.pbPopularLoader.visibility = android.view.View.GONE
         }
     }
     // ================= PAGINACION (10 por tanda, loading sin texto) =================
