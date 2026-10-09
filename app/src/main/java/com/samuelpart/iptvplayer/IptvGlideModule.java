@@ -6,8 +6,6 @@ import com.bumptech.glide.GlideBuilder;
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.module.AppGlideModule;
 
-import java.io.File;
-
 /**
  * Configuracion global de Glide: RGB_565 (mitad de memoria por poster) y
  * cache de disco amplia. Evita que el catalogo grande se traben o dejen de
@@ -20,8 +18,6 @@ public class IptvGlideModule extends AppGlideModule {
         builder.setDefaultRequestOptions(
             new com.bumptech.glide.request.RequestOptions()
                 .format(DecodeFormat.PREFER_RGB_565));
-        builder.setDiskCache(
-            new com.bumptech.glide.load.engine.cache.InternalDiskCacheFactory(context, 256 * 1024 * 1024L));
     }
 
     @Override
