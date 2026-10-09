@@ -555,10 +555,8 @@ class MainActivity : AppCompatActivity() {
             sectionsData?.let { d ->
                 if (d.sagaGroups.isNotEmpty()) {
                     d.sagaCursor = (d.sagaCursor + 1) % d.sagaGroups.size
-                    val (name, items) = d.sagaGroups[d.sagaCursor]
                     homeSagasAdapter.submit(
-                        listOf<SagaEntry>(SagaEntry.Header(name)) +
-                            items.take(14).map { SagaEntry.Poster(it) }
+                        d.sagaGroups[d.sagaCursor].second.take(14).map { SagaEntry.Poster(it) }
                     )
                 }
             }
@@ -598,11 +596,9 @@ class MainActivity : AppCompatActivity() {
                     .filter { ((it.releaseDate ?: "").take(4).toIntOrNull() ?: 0) >= 2024 }
                     .sortedByDescending { it.releaseDate ?: "" }
                 val sagaGroups = Sagas.buildGroups(allCineMedia)
-                // SOLO la saga TOP (mejor rating TMDB) en la fila
-                val sagasFlat = sagaGroups.firstOrNull()?.let { (name, items) ->
-                    listOf<SagaEntry>(SagaEntry.Header(name)) +
-                        items.take(14).map { SagaEntry.Poster(it) }
-                } ?: emptyList()
+                // SOLO la saga TOP (mejor rating TMDB): carteles directos, sin titulo
+                val sagasFlat = sagaGroups.firstOrNull()
+                    ?.second?.take(14)?.map { SagaEntry.Poster(it) } ?: emptyList()
                 HomeSectionsData(streaming, estrenos, sagasFlat, sagaGroups)
             }
             sectionsData = data
@@ -767,7 +763,7 @@ class MainActivity : AppCompatActivity() {
         bannerSlides.addAll(slides)
         slides.forEach { m ->
             val slide = android.widget.FrameLayout(this)
-            // Fondo: el mismo poster llenando y atenuado (estilo sala de cine)
+            // Fondo: el mismo poster llenando y ligeramente atenuado
             slide.addView(android.widget.ImageView(this).apply {
                 layoutParams = android.widget.FrameLayout.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
@@ -775,18 +771,26 @@ class MainActivity : AppCompatActivity() {
                 scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
                 Glide.with(this@MainActivity).load(m.posterUrl).centerCrop()
                     .placeholder(R.drawable.bg_tile_glass).into(this)
-                setColorFilter(0x99000000.toInt(), android.graphics.PorterDuff.Mode.SRC_OVER)
+                setColorFilter(0x66000000.toInt(), android.graphics.PorterDuff.Mode.SRC_OVER)
             })
-            // EL CARTEL completo centrado: el poster ya muestra el nombre
-            slide.addView(android.widget.ImageView(this).apply {
-                layoutParams = android.widget.FrameLayout.LayoutParams(
+            // EL CARTEL como tarjeta redondeada con sombra: se ve el poster completo
+            val card = androidx.cardview.widget.CardView(this).apply {
+                layoutParams = android.widget.FrameLayout.LayoutParams(dp(150), dp(216))
+                    .apply { gravity = android.view.Gravity.CENTER }
+                radius = dp(12f)
+                cardElevation = dp(7f)
+                preventCornerOverlap = false
+                useCompatPadding = false
+            }
+            card.addView(android.widget.ImageView(this).apply {
+                layoutParams = android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT)
-                scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-                setPadding(0, dp(8), 0, dp(8))
-                Glide.with(this@MainActivity).load(m.posterUrl).fitCenter()
+                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                Glide.with(this@MainActivity).load(m.posterUrl).centerCrop()
                     .placeholder(R.drawable.bg_tile_glass).into(this)
             })
+            slide.addView(card)
             flipper.addView(slide)
         }
 

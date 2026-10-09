@@ -726,7 +726,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="SAGAS"
+                    android:text="SAGAS EN TENDENCIA"
                     android:textColor="#C9A96E"
                     android:letterSpacing="0.12"
                     android:textSize="13sp"
