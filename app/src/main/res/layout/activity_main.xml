@@ -513,13 +513,6 @@
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
-                <!-- Secciones ALEATORIAS que el BOT va creando al bajar -->
-                <LinearLayout
-                    android:id="@+id/containerRandomSections"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:orientation="vertical" />
                 <!-- Loading escalonado de las secciones de Inicio -->
                 <ProgressBar
                     android:id="@+id/pbHomeLoader"
@@ -812,6 +805,13 @@
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
+                <!-- Secciones ALEATORIAS que el BOT va creando al bajar -->
+                <LinearLayout
+                    android:id="@+id/containerRandomSections"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical" />
 
             </LinearLayout>
         </ScrollView>

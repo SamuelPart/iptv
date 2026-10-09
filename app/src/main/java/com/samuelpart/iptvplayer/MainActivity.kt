@@ -442,13 +442,9 @@ class MainActivity : AppCompatActivity() {
             if (isFinishing || isDestroyed) return@launch
             pb.visibility = android.view.View.GONE
             if (pool.isEmpty()) {
-                val empty = android.widget.TextView(ctx).apply {
-                    text = "Pronto habrá contenido aquí"
-                    setTextColor(0xFF8A8A93.toInt()); textSize = 12f
-                    setPadding(0, dp2(10), 0, 0)
-                }
-                box.addView(empty)
-                randomBusy = false
+                // Sin contenido para este genero: la seccion NO se crea
+                binding.containerRandomSections.removeView(box)
+                binding.containerRandomSections.postDelayed({ randomBusy = false }, 200)
                 return@launch
             }
             val adapter = CineSearchResultAdapter(pool.shuffled().take(9), onMediaClick = { openCineDetail(it) })
@@ -626,6 +622,7 @@ class MainActivity : AppCompatActivity() {
     private var cinePagingFull: List<CineMedia> = emptyList()
     private var cineShown = 0
     private var cineLoadingMore = false
+    private var cineFilterJob: kotlinx.coroutines.Job? = null
     private var bannerRandom = false
     private var bannerRunnable: Runnable? = null
     private var bannerIdx = 0
@@ -1880,10 +1877,6 @@ class MainActivity : AppCompatActivity() {
                 applyCineFilters()
                 refreshHomeSections()
             }
-            if (allCineMedia.isEmpty()) {
-                binding.layoutCineLoading.visibility = View.VISIBLE
-                binding.rvCineGrid.visibility = View.GONE
-            }
 
             val catalog = CineRepository.getCineCatalog(this@MainActivity)
             allCineMedia = catalog
@@ -1912,6 +1905,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyCineFilters() {
         val query = binding.edtCineSearch.text.toString().trim().lowercase()
+        cineFilterJob?.cancel()
+        cineFilterJob = lifecycleScope.launch {
+        val finalCineList = withContext(Dispatchers.Default) {
         val filtered = allCineMedia.filter {
             val matchesType = when (selectedCineType) {
                 "movie" -> it.type == "movie"
@@ -1933,20 +1929,23 @@ class MainActivity : AppCompatActivity() {
             }
             matchesType && matchesQuery && matchesMood
         }
-        val finalCineList = if (selectedCineType == "new") {
-            filtered.sortedByDescending { it.releaseDate ?: "" }
-        } else if (selectedCineType == "all" && cineMood == null && query.isEmpty()) {
-            // orden casa: lo mejor segun TMDB primero, sin tocar el resto
-            filtered.sortedByDescending { it.rating ?: -1.0 }
-        } else filtered
+            val ordered = if (selectedCineType == "new") {
+                filtered.sortedByDescending { it.releaseDate ?: "" }
+            } else if (selectedCineType == "all" && cineMood == null && query.isEmpty()) {
+                // orden casa: lo mejor segun TMDB primero, sin tocar el resto
+                filtered.sortedByDescending { it.rating ?: -1.0 }
+            } else filtered
+            ordered
+        }
         cinePagingFull = finalCineList
         cineShown = minOf(CINE_PAGE, cinePagingFull.size)
         cineLoadingMore = false
         cineAdapter.updateList(cinePagingFull.take(cineShown))
         binding.txtCineCount.text = if (selectedCineType == "new") "Novedades: ${cinePagingFull.size}" else "Total: ${cinePagingFull.size}"
-        
+
         // Trigger the Spiderman overlay if they search for Spiderman
         checkAndShowSpidermanEasterEgg(query)
+        }
     }
 
     private fun updateCineFilterButtons() {
