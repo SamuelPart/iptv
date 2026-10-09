@@ -24,14 +24,14 @@ import kotlinx.coroutines.launch
  */
 object CineNewNotifier {
 
-    private const val CHANNEL_ID = "lumen_cine_nuevo_sound"
-    private const val LEGACY_CHANNEL_ID = "lumen_cine_nuevo"
+    private const val CHANNEL_ID = "lumen_cine_nuevo_v2"
+    private const val LEGACY_CHANNEL_ID = "lumen_cine_nuevo_sound"
     private const val PREFS = "cine_latest_state"
     private const val KEY_SEEN = "seen_titles_v1"
 
     /** URI del sonido unico de estreno (campanilla propia de la app). */
     private fun cineSoundUri(context: Context): Uri =
-        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${R.raw.cine_new_sound}")
+        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/${R.raw.notif_chime}")
 
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

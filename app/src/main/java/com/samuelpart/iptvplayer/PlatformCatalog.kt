@@ -41,12 +41,29 @@ object PlatformCatalog {
     var logoByKey: Map<String, String> = emptyMap()
         private set
 
+    /** url -> plataforma confirmada por TMDB watch/providers (la verdad). */
+    private val externalByKey = HashMap<String, String>()
+
+    fun setExternal(url: String, key: String) {
+        externalByKey[url] = key
+    }
+
+    /** Convierte un nombre de proveedor TMDB a nuestra key. */
+    fun keyFromName(providerName: String): String? {
+        val name = providerName.lowercase()
+        return ALL.firstOrNull { p ->
+            p.tmdbNames.any { name == it.lowercase() } || p.aliases.any { name.contains(it) }
+        }?.key
+    }
+
     /** Logo de plataforma de un titulo (o null si no pertenece a ninguna). */
     fun logoOf(m: CineMedia): String? = keyOf(m)?.let { logoByKey[it] }
 
-    /** Detecta la plataforma de un titulo: primero el GRUPO del M3U, luego
-     *  platformName de TMDB y por ultimo el titulo (sin alias ambiguos). */
+    /** Detecta la plataforma de un titulo: PRIMERO la confirmada por TMDB
+     *  watch/providers (persistida), luego el grupo del M3U, platformName y
+     *  por ultimo el titulo. */
     fun keyOf(m: CineMedia): String? {
+        externalByKey[m.url]?.let { return it }
         val group = m.group.lowercase()
         val pname = m.platformName?.lowercase() ?: ""
         for (p in ALL) {

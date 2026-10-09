@@ -110,9 +110,47 @@ object CineRepository {
     private var posterCacheLoaded = false
     private var bakerJob: kotlinx.coroutines.Job? = null
     private val posterFile = { c: Context -> File(c.filesDir, "tmdb_posters.json") }
+    private val providerCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+    private var providerCacheLoaded = false
+    private val providerFile = { c: Context -> File(c.filesDir, "tmdb_providers.json") }
+
+    /** Carga (una vez) las plataformas confirmadas por TMDB. */
+    private fun loadProviderCache(context: Context) {
+        if (providerCacheLoaded) return
+        providerCacheLoaded = true
+        try {
+            val f = providerFile(context)
+            if (f.exists()) {
+                val arr = org.json.JSONArray(f.readText())
+                for (i in 0 until arr.length()) {
+                    val o = arr.optJSONObject(i) ?: continue
+                    val u = o.optString("u"); val k = o.optString("k")
+                    if (u.isNotEmpty() && k.isNotEmpty()) {
+                        providerCache[u] = k
+                        PlatformCatalog.setExternal(u, k)
+                    }
+                }
+            }
+        } catch (_: Exception) { }
+    }
+
+    private fun saveProviderCache(context: Context) {
+        try {
+            val arr = org.json.JSONArray()
+            for (e in providerCache) {
+                arr.put(org.json.JSONObject().put("u", e.key).put("k", e.value))
+            }
+            val tmp = File(context.filesDir, "tmdb_providers.tmp")
+            tmp.writeText(arr.toString())
+            val dst = providerFile(context)
+            if (dst.exists()) dst.delete()
+            tmp.renameTo(dst)
+        } catch (_: Exception) { }
+    }
 
     /** Carga (una vez) los posters ya horneados de sesiones anteriores. */
     fun loadPosterCache(context: Context) {
+        loadProviderCache(context)
         if (posterCacheLoaded) return
         posterCacheLoaded = true
         try {
@@ -160,7 +198,9 @@ object CineRepository {
         loadPosterCache(context)
         bakerJob = scope.launch(Dispatchers.IO) {
             var dirty = 0
+            var dirtyP = 0
             for (media in catalog) {
+                // POSTER (solo si aun no esta horneado)
                 if (media.tmdbId == null && posterCache[media.url] == null) {
                     try { fetchTmdMetadata(media) } catch (_: Exception) { }
                     val pk = media.posterUrl
@@ -169,7 +209,26 @@ object CineRepository {
                         dirty++
                         if (dirty % 25 == 0) {
                             savePosterCache(context)
-                            // REPINTAR la UI en vivo con los posters recien horneados
+                            onProgress?.let { cb ->
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { cb() }
+                            }
+                        }
+                    }
+                    kotlinx.coroutines.delay(150)
+                }
+                // PLATAFORMA (watch/providers: la confirmacion oficial de TMDB)
+                if (providerCache[media.url] == null) {
+                    if (media.tmdbId == null) {
+                        try { fetchTmdMetadata(media) } catch (_: Exception) { }
+                    }
+                    try { fetchWatchProviders(media) } catch (_: Exception) { }
+                    val key = media.platformName?.let { PlatformCatalog.keyFromName(it) }
+                    if (key != null) {
+                        providerCache[media.url] = key
+                        PlatformCatalog.setExternal(media.url, key)
+                        dirtyP++
+                        if (dirtyP % 25 == 0) {
+                            saveProviderCache(context)
                             onProgress?.let { cb ->
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { cb() }
                             }
@@ -178,11 +237,10 @@ object CineRepository {
                     kotlinx.coroutines.delay(150)
                 }
             }
-            if (dirty > 0) {
-                savePosterCache(context)
-                onProgress?.let { cb ->
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { cb() }
-                }
+            if (dirty > 0) savePosterCache(context)
+            if (dirtyP > 0) saveProviderCache(context)
+            onProgress?.let { cb ->
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { cb() }
             }
         }
     }
@@ -199,7 +257,11 @@ object CineRepository {
     }
 
     /** Resultado de la sincronización en segundo plano del bot. */
-    data class BotSync(val changed: Boolean, val addedTitles: Int)
+    data class BotSync(
+        val changed: Boolean,
+        val addedTitles: Int,
+        val samples: List<String> = emptyList()
+    )
 
     /** Sincroniza SOLO el texto del catálogo (lo usa el bot en segundo plano).
      *  Compara con la copia en disco y devuelve si cambió algo (nuevo o editado)
@@ -210,10 +272,14 @@ object CineRepository {
         if (oldText != null && oldText == newText) return@withContext BotSync(false, 0)
         // Primera copia (baseline): no hay "cambio" que notificar al usuario.
         if (oldText == null) return@withContext BotSync(false, 0)
-        val oldCount = countExtinf(oldText)
-        val newCount = countExtinf(newText)
-        val added = maxOf(0, newCount - oldCount)
-        BotSync(true, added)
+        val added = maxOf(0, countExtinf(newText) - countExtinf(oldText))
+        // Nombres de los titulos nuevos (para la notificacion instantanea)
+        val titles = Regex("#EXTINF:[^,]*,(.*)$").findAll(newText)
+            .map { it.groupValues[1].trim() }.toList()
+        val oldTitles = Regex("#EXTINF:[^,]*,(.*)$").findAll(oldText)
+            .map { it.groupValues[1].trim() }.toHashSet()
+        val fresh = titles.filter { it !in oldTitles }.take(3)
+        BotSync(true, added, fresh)
     }
 
     private fun countExtinf(text: String): Int {
