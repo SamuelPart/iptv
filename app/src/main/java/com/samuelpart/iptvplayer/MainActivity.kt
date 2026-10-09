@@ -1887,6 +1887,7 @@ class MainActivity : AppCompatActivity() {
             }
             if (allCineMedia.isEmpty() && quick.isNotEmpty()) {
                 allCineMedia = quick
+                quick.forEach { CineRepository.applyPosterCache(it) }
                 applyCineFilters()
                 refreshHomeSections()
             }
@@ -1898,6 +1899,10 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Default) {
                 try { catalog.forEach { TasteProfile.genreKeysOf(it) } } catch (_: Exception) {}
             }
+            catalog.forEach { CineRepository.applyPosterCache(it) }
+            // HORNO: completa los posters de TODO el catalogo con TMDB (2do
+            // plano, ritmo seguro) y los persiste para las proximas sesiones
+            CineRepository.startPosterBaker(this@MainActivity, catalog, lifecycleScope)
             refreshHomeSections()
             setupCineFeatured()
             CineNewNotifier.onCatalogLoaded(this@MainActivity, catalog)

@@ -100,7 +100,75 @@ object CineRepository {
     data class CatalogSync(val catalog: List<CineMedia>, val addedTitles: Int)
 
     suspend fun getCineCatalog(context: Context): List<CineMedia> = withContext(Dispatchers.IO) {
+        loadPosterCache(context)
         cachedCatalog ?: loadCatalogInternal(context).also { cachedCatalog = it }
+    }
+
+    // ═══ HORNOR DE POSTERS: TMDB para TODO el catalogo, persistido en disco ═══
+
+    private val posterCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+    private var posterCacheLoaded = false
+    private var bakerJob: kotlinx.coroutines.Job? = null
+    private val posterFile = { c: Context -> File(c.filesDir, "tmdb_posters.json") }
+
+    /** Carga (una vez) los posters ya horneados de sesiones anteriores. */
+    fun loadPosterCache(context: Context) {
+        if (posterCacheLoaded) return
+        posterCacheLoaded = true
+        try {
+            val f = posterFile(context)
+            if (f.exists()) {
+                val arr = org.json.JSONArray(f.readText())
+                for (i in 0 until arr.length()) {
+                    val o = arr.optJSONObject(i) ?: continue
+                    val u = o.optString("u"); val pk = o.optString("p")
+                    if (u.isNotEmpty() && pk.isNotEmpty()) posterCache[u] = pk
+                }
+            }
+        } catch (_: Exception) { }
+    }
+
+    /** Aplica el poster horneado (si existe) a un titulo recien parseado. */
+    fun applyPosterCache(media: CineMedia) {
+        if (media.posterUrl == null) posterCache[media.url]?.let { media.posterUrl = it }
+    }
+
+    private fun savePosterCache(context: Context) {
+        try {
+            val arr = org.json.JSONArray()
+            for (e in posterCache) {
+                arr.put(org.json.JSONObject().put("u", e.key).put("p", e.value))
+            }
+            val tmp = File(context.filesDir, "tmdb_posters.tmp")
+            tmp.writeText(arr.toString())
+            val dst = posterFile(context)
+            if (dst.exists()) dst.delete()
+            tmp.renameTo(dst)
+        } catch (_: Exception) { }
+    }
+
+    /** Completa los posters de TODO el catalogo con TMDB, en 2do plano, con
+     *  ritmo seguro (~5 req/s) y guardando cada lote en disco: las proximas
+     *  sesiones cargan TODOS los posters al instante y correctos. */
+    fun startPosterBaker(context: Context, catalog: List<CineMedia>, scope: CoroutineScope) {
+        if (bakerJob?.isActive == true) return
+        loadPosterCache(context)
+        bakerJob = scope.launch(Dispatchers.IO) {
+            var dirty = 0
+            for (media in catalog) {
+                if (media.tmdbId == null && posterCache[media.url] == null) {
+                    try { fetchTmdMetadata(media) } catch (_: Exception) { }
+                    val pk = media.posterUrl
+                    if (pk != null && pk.startsWith("https://image.tmdb.org")) {
+                        posterCache[media.url] = pk
+                        dirty++
+                        if (dirty % 25 == 0) savePosterCache(context)
+                    }
+                    kotlinx.coroutines.delay(200)
+                }
+            }
+            if (dirty > 0) savePosterCache(context)
+        }
     }
 
     /** Fuerza una descarga/parseo FRESCO y actualiza la cache en memoria.
