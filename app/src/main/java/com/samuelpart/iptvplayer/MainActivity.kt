@@ -320,6 +320,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Al volver a la app: aplica los posters horneados y repinta
+        if (allCineMedia.isNotEmpty()) {
+            allCineMedia.forEach { CineRepository.applyPosterCache(it) }
+            if (::cineAdapter.isInitialized) cineAdapter.notifyDataSetChanged()
+        }
         startHomeSearchRotator()
         resumeHomeBanner()
         applyAccentColor()
@@ -1902,7 +1907,17 @@ class MainActivity : AppCompatActivity() {
             catalog.forEach { CineRepository.applyPosterCache(it) }
             // HORNO: completa los posters de TODO el catalogo con TMDB (2do
             // plano, ritmo seguro) y los persiste para las proximas sesiones
-            CineRepository.startPosterBaker(this@MainActivity, catalog, lifecycleScope)
+            // Orden del horno: los MEJOR calificados primero (los visibles
+            // arriba reciben su poster en los primeros minutos)
+            CineRepository.startPosterBaker(
+                this@MainActivity,
+                catalog.sortedByDescending { it.rating ?: -1.0 },
+                lifecycleScope
+            ) {
+                // Posters nuevos listos: repinta Inicio y el grid de Cine
+                refreshHomeSections()
+                if (::cineAdapter.isInitialized) cineAdapter.notifyDataSetChanged()
+            }
             refreshHomeSections()
             setupCineFeatured()
             CineNewNotifier.onCatalogLoaded(this@MainActivity, catalog)

@@ -150,7 +150,12 @@ object CineRepository {
     /** Completa los posters de TODO el catalogo con TMDB, en 2do plano, con
      *  ritmo seguro (~5 req/s) y guardando cada lote en disco: las proximas
      *  sesiones cargan TODOS los posters al instante y correctos. */
-    fun startPosterBaker(context: Context, catalog: List<CineMedia>, scope: CoroutineScope) {
+    fun startPosterBaker(
+        context: Context,
+        catalog: List<CineMedia>,
+        scope: CoroutineScope,
+        onProgress: (() -> Unit)? = null
+    ) {
         if (bakerJob?.isActive == true) return
         loadPosterCache(context)
         bakerJob = scope.launch(Dispatchers.IO) {
@@ -162,12 +167,23 @@ object CineRepository {
                     if (pk != null && pk.startsWith("https://image.tmdb.org")) {
                         posterCache[media.url] = pk
                         dirty++
-                        if (dirty % 25 == 0) savePosterCache(context)
+                        if (dirty % 25 == 0) {
+                            savePosterCache(context)
+                            // REPINTAR la UI en vivo con los posters recien horneados
+                            onProgress?.let { cb ->
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { cb() }
+                            }
+                        }
                     }
-                    kotlinx.coroutines.delay(200)
+                    kotlinx.coroutines.delay(150)
                 }
             }
-            if (dirty > 0) savePosterCache(context)
+            if (dirty > 0) {
+                savePosterCache(context)
+                onProgress?.let { cb ->
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { cb() }
+                }
+            }
         }
     }
 
