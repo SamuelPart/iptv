@@ -160,6 +160,7 @@ class CineSectionActivity : AppCompatActivity() {
                     else -> catalog.sortedBy { it.title }
                 }
             }
+            filtered = full
             showFirstPage()
         }
     }
