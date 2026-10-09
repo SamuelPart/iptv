@@ -1,6 +1,7 @@
 package com.samuelpart.iptvplayer
 
 import android.app.NotificationChannel
+import android.net.Uri
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
