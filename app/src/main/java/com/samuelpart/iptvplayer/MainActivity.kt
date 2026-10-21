@@ -121,11 +121,6 @@ class MainActivity : AppCompatActivity() {
         // directo al Cine; en cuanto el catalogo cargue, se abre la ficha.
         pendingDeepLink = DeepLink.fromIntent(intent)
 
-        // Tip contextual de bienvenida (solo la primera vez que se abre la app)
-        binding.root.postDelayed({
-            if (!isFinishing) SmartTips.showOnce(this, "home",
-                "💡 Bienvenido: carga tu lista M3U en Inicio o toca Cine para +9.000 películas")
-        }, 3200)
     }
 
     private fun setupBottomNavigation() {
@@ -151,20 +146,14 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.navigation_channels -> {
                     showTab(View.GONE, View.VISIBLE, View.GONE, View.GONE, View.GONE)
-                    SmartTips.showOnce(this, "channels",
-                        "💡 Toca el filtro para ordenar los canales por país o categoría")
                     true
                 }
                 R.id.navigation_search -> {
                     showTab(View.GONE, View.GONE, View.GONE, View.GONE, View.VISIBLE)
-                    SmartTips.showOnce(this, "search",
-                        "💡 Busca canales y películas al instante, con historial incluido")
                     true
                 }
                 R.id.navigation_cine -> {
                     showTab(View.GONE, View.GONE, View.VISIBLE, View.GONE, View.GONE)
-                    SmartTips.showOnce(this, "cine",
-                        "💡 El BOT busca los mejores servidores por ti: toca una película y solo disfruta")
                     true
                 }
                 R.id.navigation_settings -> {
@@ -325,7 +314,7 @@ class MainActivity : AppCompatActivity() {
             allCineMedia.forEach { CineRepository.applyPosterCache(it) }
             if (::cineAdapter.isInitialized) cineAdapter.notifyDataSetChanged()
         }
-        startHomeSearchRotator()
+        refreshFavsRow()
         resumeHomeBanner()
         applyAccentColor()
         handlePendingSettings()
@@ -535,6 +524,11 @@ class MainActivity : AppCompatActivity() {
         binding.rvHomeSagas.adapter = homeSagasAdapter
         binding.rvHomeSagas.isNestedScrollingEnabled = false
 
+        homeFavsAdapter = HomeSagasAdapter { openCineDetail(it) }
+        binding.rvHomeFavs.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvHomeFavs.adapter = homeFavsAdapter
+
         binding.btnStreamingVerMas.setOnClickListener {
             it.springPress()
             openCineList("EL NUEVO STREAMING DE HOY", "new_month", "", badges = true, scope = scopeKind to scopeParam)
@@ -626,7 +620,6 @@ class MainActivity : AppCompatActivity() {
     private var cineShown = 0
     private var cineLoadingMore = false
     private var cineFilterJob: kotlinx.coroutines.Job? = null
-    private var bannerRandom = false
     private var bannerRunnable: Runnable? = null
     private var bannerIdx = 0
     private var bannerSize = 0
@@ -638,6 +631,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var homeEstrenosAdapter: CineSearchResultAdapter
     private lateinit var platformAdapter: PlatformRowAdapter
     private lateinit var homeSagasAdapter: HomeSagasAdapter
+    private lateinit var homeFavsAdapter: HomeSagasAdapter
     private var sectionsData: HomeSectionsData? = null
     private var scopeKind = "all"
     private var scopeParam = ""
@@ -665,17 +659,18 @@ class MainActivity : AppCompatActivity() {
         refreshHomeSections()
     }
 
-    /** Chip activo dorado, el resto en vidrio. */
+    /** Menú del héroe: elemento activo en BLANCO puro, el resto gris tenue. */
     private fun paintSectionChips() {
-        fun paint(chip: android.widget.TextView, active: Boolean) {
-            chip.setBackgroundResource(if (active) R.drawable.bg_chip_active else R.drawable.bg_apple_glass_pill)
-            chip.setTextColor(if (active) 0xFF0F2144.toInt() else 0xFFD6DAE4.toInt())
+        fun paint(t: android.widget.TextView, active: Boolean) {
+            t.setTextColor(if (active) 0xFFFFFFFF.toInt() else 0xFFA6ACBA.toInt())
+            t.setTypeface(t.typeface, android.graphics.Typeface.BOLD)
+            t.alpha = if (active) 1f else 0.9f
         }
-        paint(binding.chipHomeInicio, scopeKind == "all")
-        paint(binding.chipHomePeliculas, scopeKind == "type" && scopeParam == "movie")
-        paint(binding.chipHomeSeries, scopeKind == "type" && scopeParam == "series")
-        paint(binding.chipHomeAnimacion, scopeKind == "genre")
-        paint(binding.chipHomePlataformas, scopeKind == "platform_all")
+        paint(binding.navHomeInicio, scopeKind == "all")
+        paint(binding.navHomePeliculas, scopeKind == "type" && scopeParam == "movie")
+        paint(binding.navHomeSeries, scopeKind == "type" && scopeParam == "series")
+        paint(binding.navHomeAnimacion, scopeKind == "genre")
+        paint(binding.navHomePlataformas, scopeKind == "platform_all")
     }
     private var randomCreated = 0
     private var randomCursor = 0
@@ -730,8 +725,7 @@ class MainActivity : AppCompatActivity() {
             object : android.view.GestureDetector.SimpleOnGestureListener() {
                 override fun onDown(e: android.view.MotionEvent): Boolean = true
                 override fun onSingleTapUp(e: android.view.MotionEvent): Boolean {
-                    val m = bannerSlides.getOrNull(bannerIdx)
-                    if (m != null) openCineDetail(m) else shareAppPromo()
+                    bannerSlides.getOrNull(bannerIdx)?.let { openCineDetail(it) }
                     return true
                 }
                 override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent,
@@ -746,14 +740,26 @@ class MainActivity : AppCompatActivity() {
         binding.flipHomeBanner.setOnTouchListener { _, ev ->
             detector.onTouchEvent(ev); true
         }
+        // PLAY del héroe: reproduce el título visible (misma regla que la ficha)
+        binding.btnHeroPlay.setOnClickListener {
+            it.springPress()
+            bannerSlides.getOrNull(bannerIdx)?.let { m -> playCineDirect(m) }
+        }
+        // + del héroe: agrega / quita de MI LISTA
+        binding.btnHeroAdd.setOnClickListener {
+            it.springPress()
+            val m = bannerSlides.getOrNull(bannerIdx) ?: return@setOnClickListener
+            val added = FavoritesStore.toggle(this, m.url)
+            binding.imgHeroAdd.setImageResource(
+                if (added) R.drawable.ic_ios_check else R.drawable.ic_ios_plus)
+            refreshFavsRow()
+        }
         binding.btnHomeVerMas.setOnClickListener {
             it.springPress()
             openCineList("ULTIMAMENTE NUEVO", "new_month", "", scope = scopeKind to scopeParam)
         }
         binding.btnHomeCambiar.setOnClickListener {
             it.springPress()
-            bannerRandom = true
-            refreshHomeBanner()
             if (::homeNewAdapter.isInitialized) homeNewAdapter.updateList(homeNewPool.shuffled().take(9))
             if (!homeRandomAdAttached) {
                 homeRandomAdAttached = true
@@ -776,121 +782,99 @@ class MainActivity : AppCompatActivity() {
         val scoped = allCineMedia.filter { !it.posterUrl.isNullOrBlank() && inScope(it) }
         val withPoster = if (scoped.isNotEmpty()) scoped else allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
         homeNewPool = if (withPoster.size >= 9) withPoster.sortedByDescending { it.releaseDate ?: "" } else withPoster
-        if (!bannerRandom) homeNewAdapter.updateList(homeNewPool.take(9))
+        homeNewAdapter.updateList(homeNewPool.take(9))
     }
 
-    /** (Re)construye las 8 diapositivas del banner: 7 titulos del catalogo y
-     *  la ultima es publicidad propia de la app. En modo aleatorio muestra
-     *  contenido al azar (boton Cambiar). */
+    /** (Re)construye el HÉROE: pósters a pantalla completa (los 7 más
+     *  nuevos del alcance actual). El título, el año y el estado de MI LISTA
+     *  se pintan encima con paintHeroTexts() en cada giro. */
     private fun refreshHomeBanner() {
         val flipper = binding.flipHomeBanner
         stopHomeBanner()
         flipper.removeAllViews()
         val scoped = allCineMedia.filter { !it.posterUrl.isNullOrBlank() && inScope(it) }
-        // respaldo: si la seccion no tiene posters aun, usa el catalogo completo
+        // respaldo: si la sección no tiene posters aún, usa el catálogo completo
         val withPoster = if (scoped.isNotEmpty()) scoped
         else allCineMedia.filter { !it.posterUrl.isNullOrBlank() }
-        val pool = if (bannerRandom) withPoster.shuffled()
-        else withPoster.sortedByDescending { it.releaseDate ?: "" }
-        val slides = pool.take(7)
-
-        val dotRow = binding.dotsHomeBanner
-        dotRow.removeAllViews()
-        bannerSize = slides.size + 1
-        val dots = (0 until bannerSize).map {
-            android.view.View(this).apply {
-                layoutParams = android.widget.LinearLayout.LayoutParams(dp(7), dp(7)).apply {
-                    marginStart = dp(5); marginEnd = dp(5)
-                }
-                setBackgroundResource(R.drawable.bg_banner_dot)
-                alpha = 0.35f
-            }
-        }
-        dots.forEach { dotRow.addView(it) }
+        val slides = withPoster.sortedByDescending { it.releaseDate ?: "" }.take(7)
 
         bannerSlides.clear()
         bannerSlides.addAll(slides)
+        bannerSize = slides.size
         slides.forEach { m ->
-            val slide = android.widget.FrameLayout(this)
-            // Fondo: el mismo poster llenando y ligeramente atenuado
-            slide.addView(android.widget.ImageView(this).apply {
+            flipper.addView(android.widget.ImageView(this).apply {
                 layoutParams = android.widget.FrameLayout.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT)
                 scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
                 Glide.with(this@MainActivity).load(m.posterUrl).centerCrop()
                     .placeholder(R.drawable.bg_tile_glass).into(this)
-                setColorFilter(0x66000000.toInt(), android.graphics.PorterDuff.Mode.SRC_OVER)
-            })
-            // EL CARTEL como tarjeta redondeada con sombra: se ve el poster completo
-            val card = androidx.cardview.widget.CardView(this).apply {
-                layoutParams = android.widget.FrameLayout.LayoutParams(dp(150), dp(216))
-                    .apply { gravity = android.view.Gravity.CENTER }
-                radius = dp(12).toFloat()
-                cardElevation = dp(7).toFloat()
-                preventCornerOverlap = false
-                useCompatPadding = false
-            }
-            card.addView(android.widget.ImageView(this).apply {
-                layoutParams = android.view.ViewGroup.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT)
-                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                Glide.with(this@MainActivity).load(m.posterUrl).centerCrop()
-                    .placeholder(R.drawable.bg_tile_glass).into(this)
-            })
-            slide.addView(card)
-            flipper.addView(slide)
-        }
-
-        // Ultima diapositiva: publicidad propia de la app
-        val promo = android.widget.FrameLayout(this)
-        promo.setBackgroundResource(R.drawable.bg_ios_gradient)
-        val col = android.widget.LinearLayout(this).apply {
-            layoutParams = android.widget.FrameLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                gravity = android.view.Gravity.CENTER
-            }
-            orientation = android.widget.LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
-            addView(android.widget.ImageView(this@MainActivity).apply {
-                setImageResource(R.drawable.icon_lumen_play)
-                layoutParams = android.widget.LinearLayout.LayoutParams(dp(46), dp(46))
-            })
-            addView(android.widget.TextView(this@MainActivity).apply {
-                text = "LUMEN IPTV"
-                setTextColor(0xFFC9A96E.toInt()); textSize = 19f; letterSpacing = 0.18f
-                (layoutParams as? android.widget.LinearLayout.LayoutParams)?.topMargin = dp(8)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                gravity = android.view.Gravity.CENTER
-            })
-            addView(android.widget.TextView(this@MainActivity).apply {
-                text = "Tu reproductor de listas M3U: películas, series y TV en vivo en un solo lugar"
-                setTextColor(0xFFD6DAE4.toInt()); textSize = 12.5f
-                gravity = android.view.Gravity.CENTER
-                setPadding(dp(26), dp(6), dp(26), 0)
-            })
-            addView(android.widget.TextView(this@MainActivity).apply {
-                text = "COMPARTIR"
-                setTextColor(0xFF0F2144.toInt()); textSize = 12f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setBackgroundResource(R.drawable.bg_chip_active)
-                setPadding(dp(24), dp(8), dp(24), dp(8))
-                layoutParams = android.widget.LinearLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                    topMargin = dp(12)
-                }
+                setColorFilter(0x33000000.toInt(), android.graphics.PorterDuff.Mode.SRC_OVER)
             })
         }
-        promo.addView(col)
-        flipper.addView(promo)
-
         if (slides.isNotEmpty()) {
             bannerIdx = 0
-            paintBannerDots()
+            binding.heroOverlay.visibility = View.VISIBLE
+            paintHeroTexts()
             armBannerLoop()
+        } else {
+            binding.heroOverlay.visibility = View.GONE
+        }
+    }
+
+    /** Pinta el título, el tipo/año, el % para ti y el estado de MI LISTA
+     *  del título visible del héroe. */
+    private fun paintHeroTexts() {
+        val m = bannerSlides.getOrNull(bannerIdx) ?: return
+        binding.txtHeroTitle.text = m.title
+        val year = (m.releaseDate ?: "").take(4)
+        val kind = if (m.type == "movie") "Película" else "Serie"
+        binding.txtHeroMeta.text = if (year.isNotEmpty()) "$kind · $year" else kind
+        val r = m.rating
+        if (r != null && r > 0.0) {
+            binding.txtHeroMatch.visibility = View.VISIBLE
+            binding.txtHeroMatch.text = "${(r * 10).toInt().coerceIn(1, 98)}% para ti"
+        } else {
+            binding.txtHeroMatch.visibility = View.GONE
+        }
+        binding.imgHeroAdd.setImageResource(
+            if (FavoritesStore.isFav(this, m.url)) R.drawable.ic_ios_check else R.drawable.ic_ios_plus)
+    }
+
+    /** MI LISTA: fila de pósters con lo guardado; sin contenido NO se crea. */
+    private fun refreshFavsRow() {
+        if (!::homeFavsAdapter.isInitialized) return
+        val favUrls = FavoritesStore.urls(this)
+        val items = allCineMedia.filter { it.url in favUrls && !it.posterUrl.isNullOrBlank() }
+        val empty = items.isEmpty()
+        binding.txtHomeFavsTitle.visibility = if (empty) View.GONE else View.VISIBLE
+        binding.rvHomeFavs.visibility = if (empty) View.GONE else View.VISIBLE
+        homeFavsAdapter.submit(items.map { SagaEntry.Poster(it) })
+    }
+
+    /** PLAY directo desde el héroe: misma regla que la ficha (directo → VLC,
+     *  página/embed → WebPlayer) con su anuncio recompensado. */
+    private fun playCineDirect(m: CineMedia) {
+        val streamUrl = if (m.urls.isNotEmpty()) m.urls[0] else m.url
+        RewardGate.requireAdThen(this) {
+            if (CineRepository.isDirectStreamUrl(streamUrl)) {
+                startActivity(
+                    android.content.Intent(this, PlayerActivity::class.java).apply {
+                        putExtra("channelName", m.title)
+                        putExtra("channelUrl", streamUrl)
+                        putStringArrayListExtra("allSources", ArrayList(m.urls))
+                        putExtra("cineMedia", m)
+                    }
+                )
+            } else {
+                startActivity(
+                    android.content.Intent(this, WebVideoPlayerActivity::class.java).apply {
+                        putExtra("channelName", m.title)
+                        putExtra("channelUrl", streamUrl)
+                        putStringArrayListExtra("allSources", ArrayList(m.urls))
+                    }
+                )
+            }
         }
     }
 
@@ -902,14 +886,8 @@ class MainActivity : AppCompatActivity() {
         val forward = newIdx == (bannerIdx + 1) % bannerSize
         if (forward) binding.flipHomeBanner.showNext() else binding.flipHomeBanner.showPrevious()
         bannerIdx = newIdx
-        paintBannerDots()
+        paintHeroTexts()
         armBannerLoop()
-    }
-
-    private fun paintBannerDots() {
-        (0 until binding.dotsHomeBanner.childCount).forEach { i ->
-            binding.dotsHomeBanner.getChildAt(i).alpha = if (i == bannerIdx) 1f else 0.35f
-        }
     }
 
     private fun armBannerLoop() {
@@ -918,7 +896,7 @@ class MainActivity : AppCompatActivity() {
             override fun run() {
                 bannerIdx = (bannerIdx + 1) % bannerSize
                 binding.flipHomeBanner.showNext()
-                paintBannerDots()
+                paintHeroTexts()
                 bannerRunnable = this
                 binding.flipHomeBanner.postDelayed(this, 4200)
             }
@@ -934,21 +912,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun resumeHomeBanner() {
         if (bannerRunnable == null && binding.flipHomeBanner.childCount > 1) armBannerLoop()
-    }
-
-    /** Publicidad propia de la app: comparte el enlace de la tienda. */
-    private fun shareAppPromo() {
-        try {
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(
-                    android.content.Intent.EXTRA_TEXT,
-                    "Lumen IPTV: reproductor de listas M3U con películas, series y TV en vivo. " +
-                        "https://play.google.com/store/apps/details?id=$packageName"
-                )
-            }
-            startActivity(android.content.Intent.createChooser(intent, "Comparte la app"))
-        } catch (_: Exception) {}
     }
 
     private fun setupListeners() {
@@ -1058,35 +1021,33 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Barra de Inicio: abre el BUSCADOR DE CINE (peliculas/series; nada de
-        // canales). El reloj abre el historial de lo visto.
-        binding.homeSearchBar.setOnClickListener {
-            startActivity(android.content.Intent(this, CineSearchActivity::class.java))
-        }
-        binding.btnWatchHistory.setOnClickListener {
-            startActivity(android.content.Intent(this, WatchHistoryActivity::class.java))
-        }
 
-        // Secciones de Inicio: ES LA MISMA PANTALLA; al tocar un chip, TODO el
-        // Inicio (banner, cuadriculas, sagas, aleatorias) se actualiza a esa
-        // seccion. Inicio vuelve al catalogo completo. Sin titulos ni "atras".
-        binding.chipHomeInicio.setOnClickListener {
+        // Menú del héroe: ES LA MISMA PANTALLA; al tocar un elemento, TODO el
+        // Inicio (héroe, filas, sagas, aleatorias) se actualiza a esa sección.
+        binding.navHomeInicio.setOnClickListener {
             it.springPress(); setHomeScope("all", "")
         }
-        binding.chipHomePeliculas.setOnClickListener {
+        binding.navHomePeliculas.setOnClickListener {
             it.springPress(); setHomeScope("type", "movie")
         }
-        binding.chipHomeSeries.setOnClickListener {
+        binding.navHomeSeries.setOnClickListener {
             it.springPress(); setHomeScope("type", "series")
         }
-        binding.chipHomeAnimacion.setOnClickListener {
+        binding.navHomeAnimacion.setOnClickListener {
             it.springPress(); setHomeScope("genre", "animación")
         }
-        binding.chipHomePlataformas.setOnClickListener {
+        binding.navHomePlataformas.setOnClickListener {
             it.springPress(); setHomeScope("platform_all", "")
         }
+        binding.imgHomeSearch.setOnClickListener {
+            it.springPress()
+            startActivity(android.content.Intent(this, CineSearchActivity::class.java))
+        }
+        binding.imgHomeHistory.setOnClickListener {
+            it.springPress()
+            startActivity(android.content.Intent(this, WatchHistoryActivity::class.java))
+        }
         paintSectionChips()
-        startHomeSearchRotator()
 
 
         // Toggle Cine Search History Click Listener
@@ -2290,10 +2251,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         try { binding.bottomNavigation.selectedItemId = R.id.navigation_cine } catch (_: Exception) {}
-        if (media == null) {
-            SmartTips.showOnce(this, "deeplink_miss_$t", "💡 \"$t\" no está en el catálogo: usa el buscador")
-            return
-        }
+        if (media == null) return
         try {
             val dest = if (media.type == "movie") CineMovieDetailActivity::class.java
                        else CineTvShowDetailActivity::class.java
@@ -2643,73 +2601,6 @@ class MainActivity : AppCompatActivity() {
         NativeAds.attach(this, binding.adSlotCine, NativeAds.VARIANT_MEDIA)
     }
 
-    private var homeRotatorRunnable: Runnable? = null
-
-    /** Placeholder rotativo del buscador de Inicio: muestra las busquedas
-     *  pasadas una a una (3s, transicion vertical). Se reconstruye en cada
-     *  onResume para reflejar las busquedas nuevas. Con una sola busqueda la
-     *  muestra FIJA (sin transicion que repita el mismo texto). */
-    private fun startHomeSearchRotator() {
-        homeRotatorRunnable?.let { binding.homeSearchRotator.removeCallbacks(it) }
-        homeRotatorRunnable = null
-        val suggestions = LinkedHashSet<String>().apply {
-            addAll(getSearchHistory(CINE_HISTORY_KEY))
-            addAll(getSearchHistory(CHANNELS_HISTORY_KEY))
-        }.toList().filter { it.isNotBlank() }.take(8)
-        val switcher = binding.homeSearchRotator
-        when {
-            suggestions.isEmpty() ->
-                switcher.setText("Busca películas, series y canales…")
-            suggestions.size == 1 ->
-                switcher.setText(suggestions[0])
-            else -> {
-                switcher.setText(suggestions[0])
-                var idx = 0
-                val r = object : Runnable {
-                    override fun run() {
-                        idx = (idx + 1) % suggestions.size
-                        switcher.setText(suggestions[idx])
-                        switcher.postDelayed(this, 3000)
-                    }
-                }
-                homeRotatorRunnable = r
-                switcher.postDelayed(r, 3000)
-            }
-        }
-    }
-
-    private fun getSearchHistory(key: String): MutableList<String> {
-        val prefs = getSharedPreferences("IPTV_PREFS", Context.MODE_PRIVATE)
-        val historyStr = prefs.getString(key, "") ?: ""
-        if (historyStr.isEmpty()) return mutableListOf()
-        return historyStr.split("|||").filter { it.isNotEmpty() }.toMutableList()
-    }
-
-    private fun saveSearchHistory(key: String, list: List<String>) {
-        val prefs = getSharedPreferences("IPTV_PREFS", Context.MODE_PRIVATE)
-        val historyStr = list.joinToString("|||")
-        prefs.edit().putString(key, historyStr).apply()
-    }
-
-    private fun addSearchQuery(key: String, query: String) {
-        val trimmed = query.trim()
-        if (trimmed.isEmpty()) return
-        val current = getSearchHistory(key)
-        current.remove(trimmed) // Remove duplicates
-        current.add(0, trimmed) // Add to top
-        if (current.size > 10) { // Keep last 10 recent searches
-            current.removeAt(current.size - 1)
-        }
-        saveSearchHistory(key, current)
-    }
-
-    private lateinit var channelsHistoryAdapter: SearchHistoryAdapter
-    private lateinit var cineHistoryAdapter: SearchHistoryAdapter
-    
-    private val CHANNELS_HISTORY_KEY = "CHANNELS_SEARCH_HISTORY"
-    private val CINE_HISTORY_KEY = "CINE_SEARCH_HISTORY"
-    private val PLAYLIST_HISTORY_KEY = "PLAYLIST_URL_HISTORY"
-
     private fun setupSearchHistories() {
         // Channels search history
         binding.rvChannelsSearchHistory.layoutManager = LinearLayoutManager(this)
@@ -2918,7 +2809,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        homeRotatorRunnable?.let { binding.homeSearchRotator.removeCallbacks(it) }
         stopHomeBanner()
     }
 
