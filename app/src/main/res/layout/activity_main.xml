@@ -929,62 +929,7 @@
             android:visibility="gone">
 
             <!-- Estado vacio: hero amigable -->
-            <LinearLayout
-                android:id="@+id/layoutChannelsEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="32dp"
-                android:visibility="visible">
-
-                <FrameLayout
-                    android:layout_width="118dp"
-                    android:layout_height="118dp"
-                    android:background="@drawable/bg_tile_indigo">
-
-                    <ImageView
-                        android:layout_width="58dp"
-                        android:layout_height="58dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_ios_tv"
-                        app:tint="#FFFFFF" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:text="Sin canales todavia"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:text="Ve a Ajustes y conecta tu lista M3U\no escanea un codigo QR para empezar"
-                    android:textColor="@color/ios_gray"
-                    android:textSize="14sp"
-                    android:lineSpacingMultiplier="1.25" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:background="@drawable/bg_chip_ios"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingTop="9dp"
-                    android:paddingBottom="9dp"
-                    android:text="1 · Inicio    2 · Pega tu URL    3 · Listo"
-                    android:textColor="@color/ios_cyan"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
+            
 
             <!-- Contenido cargado: panel "TV EN VIVO" -->
             <LinearLayout
@@ -1088,31 +1033,7 @@
             android:visibility="gone">
 
             <!-- Empty state (No list loaded) -->
-            <LinearLayout
-                android:id="@+id/layoutSearchEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="20dp"
-                android:visibility="visible">
-
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:src="@drawable/ic_ios_search"
-                    app:tint="@color/ios_gray" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center"
-                    android:text="INTRODUCIR UNA URL CON SU LISTA DE CANALES EN INICIO"
-                    android:textColor="@color/ios_blue"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+            
 
             <!-- Search Content (Loaded) -->
             <LinearLayout

@@ -1830,25 +1830,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateEmptyStates() {
+        // Sin pantallas de instrucciones: solo contenido real.
         val hasList = allChannels.isNotEmpty()
-
-        if (hasList) {
-            // TAB 2 (CANALES): Hide empty message, show channels list & categories
-            binding.layoutChannelsEmpty.visibility = View.GONE
-            binding.layoutChannelsContent.visibility = View.VISIBLE
-
-            // TAB 3 (BUSCADOR): Hide empty message, show search input & grid
-            binding.layoutSearchEmpty.visibility = View.GONE
-            binding.layoutSearchContent.visibility = View.VISIBLE
-        } else {
-            // TAB 2 (CANALES): Show empty instructions message
-            binding.layoutChannelsEmpty.visibility = View.VISIBLE
-            binding.layoutChannelsContent.visibility = View.GONE
-
-            // TAB 3 (BUSCADOR): Show empty instructions message
-            binding.layoutSearchEmpty.visibility = View.VISIBLE
-            binding.layoutSearchContent.visibility = View.GONE
-        }
+        binding.layoutChannelsContent.visibility = if (hasList) View.VISIBLE else View.GONE
+        binding.layoutSearchContent.visibility = if (hasList) View.VISIBLE else View.GONE
     }
 
     private fun openPlayer(channel: Channel) {
